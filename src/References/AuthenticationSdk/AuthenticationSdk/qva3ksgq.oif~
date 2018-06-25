@@ -1,0 +1,47 @@
+﻿using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+
+namespace Authentication_SDK
+{
+    /*
+    public class GenerateJwtToken
+    {
+        private readonly MerchantConfig _merchant = new MerchantConfig();
+        private Token _token = new Token();
+
+        public HttpClient FetchGetHttpClient()
+        {
+            var client = new HttpClient();
+            var jwtToken = _token.TokenForGet();
+                
+            client.DefaultRequestHeaders
+                .Accept
+                .Add(new MediaTypeWithQualityHeaderValue(_merchant.GetMediaType));
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+
+            return client;
+        }
+
+        public HttpClient FetchPostHttpClient()
+        {
+            var client = new HttpClient();
+            string requestJsonData;
+
+            using (var r = new StreamReader(_merchant.JsonFilePath))
+            {
+                requestJsonData = r.ReadToEnd();
+            }
+
+            var jwtToken = _token.TokenForPost(requestJsonData);
+
+            var content = new StringContent(requestJsonData);
+            content.Headers.ContentType = new MediaTypeHeaderValue(_merchant.PostMediaType); 
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+
+            return client;
+        }
+        
+    }
+    */
+}

@@ -1,0 +1,12 @@
+﻿{
+  "startDay":"23",
+  "timeZone":"America/Chicago",
+  "reportDefinitionName":"TransactionRequestClass",
+  "startTime":"1100",
+  "reportFrequency":"DAILY",
+  "reportFormat":"XML",
+  "reportName":"Demo_Report",
+  "orgId":"testrest",
+  "reportType":"detail",
+  "reportFields": ["Request.RequestID","Request.TransactionDate","Request.MerchantID"]
+}

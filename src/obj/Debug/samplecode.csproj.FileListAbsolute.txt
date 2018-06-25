@@ -1,0 +1,66 @@
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\NLog.config
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.exe.config
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.exe
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.pdb
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Dependency_API.dll
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Dependency_Authentication.dll
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\jose-jwt.dll
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Newtonsoft.Json.dll
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\NLog.dll
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Dependency_API.pdb
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Dependency_Authentication.pdb
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.exe
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.pdb
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.csprojResolveAssemblyReference.cache
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.exe.config
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.exe
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.pdb
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\NLog.config
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.exe
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.pdb
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Dependency_API.dll
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Dependency_Authentication.dll
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\jose-jwt.dll
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Newtonsoft.Json.dll
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\NLog.dll
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Dependency_API.pdb
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Dependency_Authentication.pdb
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.csprojResolveAssemblyReference.cache
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.dll
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.pdb
+C:\CYBS\Infy Solution\PR3334_Ver3_Combined\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.xml
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\NLog.config
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.exe.config
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.exe
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.pdb
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\ApiSdk.dll
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\AuthenticationSdk.dll
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\jose-jwt.dll
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Newtonsoft.Json.dll
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\NLog.dll
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.dll
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\ApiSdk.pdb
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\AuthenticationSdk.pdb
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.pdb
+C:\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.xml
+C:\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.csprojResolveAssemblyReference.cache
+C:\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.exe
+C:\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.pdb
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\NLog.config
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.exe.config
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.exe
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\samplecode.pdb
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\ApiSdk.dll
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\AuthenticationSdk.dll
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\jose-jwt.dll
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Newtonsoft.Json.dll
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\NLog.dll
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.dll
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\ApiSdk.pdb
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\AuthenticationSdk.pdb
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.pdb
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.xml
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.csprojResolveAssemblyReference.cache
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.csproj.CoreCompileInputs.cache
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.exe
+C:\Users\glondhe\Documents\MAPPD-Projects\Rest-API\Authentication-sample-code\dotNet-sdk\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\samplecode.pdb
