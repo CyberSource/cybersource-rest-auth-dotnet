@@ -35,3 +35,20 @@ C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_d
 C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Dependency_Authentication.dll
 C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\NLog.dll
 C:\CYBS\Infy Solution\PR3334_Ver3_Combined\Lite\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\CyberSource_Authentication_SDK_dotNet.csprojResolveAssemblyReference.cache
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\CyberSource_Authentication_SDK_dotNet.csprojResolveAssemblyReference.cache
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\CyberSource_Authentication_SDK_dotNet.exe
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\obj\Debug\CyberSource_Authentication_SDK_dotNet.pdb
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\NLog.config
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\CyberSource_Authentication_SDK_dotNet.exe.config
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\CyberSource_Authentication_SDK_dotNet.exe
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\CyberSource_Authentication_SDK_dotNet.pdb
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\ApiSdk.dll
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\AuthenticationSdk.dll
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\jose-jwt.dll
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\Newtonsoft.Json.dll
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\NLog.dll
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.dll
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\ApiSdk.pdb
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\AuthenticationSdk.pdb
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.pdb
+C:\CYBS\CyberSource_Authentication_SDK_dotNet\src\bin\Debug\nunit.framework.xml
