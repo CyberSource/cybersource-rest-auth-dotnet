@@ -4,24 +4,26 @@ using ApiSdk.model;
 using Newtonsoft.Json;
 using NLog;
 
-namespace CyberSource_Authentication_SDK_dotNet.data
+namespace SampleCode.data
 {
     public class RequestData
     {
-        private  Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public string JsonFileData(string path)
         {
             if (string.IsNullOrEmpty(path))
+            {
                 throw new Exception($"Error: Empty/Null Path provided to JsonFileData Function");
+            }
 
             Console.WriteLine($"\n Using Payload of the Json File at:{Path.GetFullPath(path)}");
-            logger.Trace($"Using Payload of the Json File at:{Path.GetFullPath(path)}");
+            _logger.Trace($"Using Payload of the Json File at:{Path.GetFullPath(path)}");
 
             try
             {
                 using (var r = new StreamReader(path))
-                {                    
+                {
                     return r.ReadToEnd();
                 }
             }
@@ -33,10 +35,9 @@ namespace CyberSource_Authentication_SDK_dotNet.data
 
         public string SamplePaymentsData()
         {
-            //Create the Sample Data using Model Classes of Payments API
-
+            // Create the Sample Data using Model Classes of Payments API
             Console.WriteLine("\n Using sample Payload of Payments");
-            logger.Trace("Using sample Payload of Payments");
+            _logger.Trace("Using sample Payload of Payments");
 
             var clientReferenceInformation = new ClientReferenceInformation { code = "TC50171_3" };
 
@@ -113,7 +114,6 @@ namespace CyberSource_Authentication_SDK_dotNet.data
             };
 
             return JsonConvert.SerializeObject(payments, Formatting.Indented);
-            //return JsonConvert.SerializeObject(payments);
         }
     }
 }

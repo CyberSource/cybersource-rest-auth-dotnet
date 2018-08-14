@@ -17,7 +17,7 @@ namespace AuthenticationSdk.util
 
                 var cachedCertificateFromP12File = cache["certiFromP12File"] as X509Certificate2;
 
-                //If no entry found from cache, create a cache entry and return the created object
+                // If no entry found from cache, create a cache entry and return the created object
                 if (cachedCertificateFromP12File == null)
                 {
                     var policy = new CacheItemPolicy();
@@ -31,15 +31,18 @@ namespace AuthenticationSdk.util
                     return certi;
                 }
 
-                //otherwise return the cache entry
+                // otherwise return the cache entry
                 return cachedCertificateFromP12File;
             }
             catch (CryptographicException e)
             {
                 if (e.Message.Equals("The specified network password is not correct.\r\n"))
-                    throw new Exception($"{ConstantsAuth.ErrorPrefix} KeyPassword provided:{keyPassword} is incorrect");
+                {
+                    throw new Exception($"{Constants.ErrorPrefix} KeyPassword provided:{keyPassword} is incorrect");
+                }
+
                 return null;
             }
-        }                    
+        }
     }
 }

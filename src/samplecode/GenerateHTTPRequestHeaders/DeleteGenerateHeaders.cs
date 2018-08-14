@@ -2,29 +2,29 @@
 using AuthenticationSdk.core;
 using AuthenticationSdk.util;
 
-namespace CyberSource_Authentication_SDK_dotNet.samplecode.GenerateHTTPRequestHeaders
+namespace SampleCode.samplecode.GenerateHTTPRequestHeaders
 {
     public class DeleteGenerateHeaders
-    {        
-        //Request Target of the CYBS REST API that needs to be hit      
+    {
+        // DELETE Request to Delete subscription of (Unsubscribe) a report name by organization 
+        // Below request unsubscribes 'TRR Report' Subscription for Organization ID: testrest
         private const string RequestTarget = "/reporting/v2/reportSubscriptions/TRRReport?organizationId=testrest";
 
         public static void Main(string[] args)
         {
             try
             {
-                //Setting up Merchant Config
+                // Setting up Merchant Config
                 var merchantConfig = new MerchantConfig
                 {
                     RequestTarget = RequestTarget,
                     RequestType = Enumerations.RequestType.DELETE.ToString(),
                 };
 
-                //Call to the Authorize class of AuthSDK to get the signature and token objects                 
+                // Call to the Authorize class of AuthSDK to get the signature and token objects                 
                 var authorizeObj = new Authorize(merchantConfig);
 
-                if (string.Equals(merchantConfig.AuthenticationType,
-                    Enumerations.AuthenticationType.HTTP_SIGNATURE.ToString(), StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(merchantConfig.AuthenticationType, Enumerations.AuthenticationType.HTTP_SIGNATURE.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     var requestHeaders = authorizeObj.GetSignature();
 
@@ -34,8 +34,7 @@ namespace CyberSource_Authentication_SDK_dotNet.samplecode.GenerateHTTPRequestHe
                     Console.WriteLine("{0} {1}", "Host:", requestHeaders.HostName);
                     Console.WriteLine("{0} {1}", "signature:", requestHeaders.SignatureParam);
                 }
-                else if (string.Equals(merchantConfig.AuthenticationType, Enumerations.AuthenticationType.JWT.ToString(),
-                    StringComparison.OrdinalIgnoreCase))
+                else if (string.Equals(merchantConfig.AuthenticationType, Enumerations.AuthenticationType.JWT.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     var requestHeaders = authorizeObj.GetToken();
 

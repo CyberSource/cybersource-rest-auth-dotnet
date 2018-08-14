@@ -1,35 +1,36 @@
 ﻿using System;
 using ApiSdk.controller;
+using AuthenticationSdk.core;
 using AuthenticationSdk.util;
-using CyberSource_Authentication_SDK_dotNet.data;
+using SampleCode.data;
 
-namespace CyberSource_Authentication_SDK_dotNet.samplecode.CallHTTPMethods
+namespace SampleCode.samplecode.CallHTTPMethods
 {
     public class GetObjectMethod
     {
-        //Request Target of the CYBS REST API that needs to be hit
-        //private const string RequestTarget = "/reporting/v2/reportSubscriptions/TRRReport?organizationId=testrest";
-        //private const string RequestTarget = "/pts/v2/payments/5289697403596987704107";
-        private const string RequestTarget = "/pts/v2/captures/5289697403596987704107";
+        // GET request to retrieve the payment details of the provided Payment ID
+        // Below Request fetches the payment details of payment ID: 5319754772076048103525
+        private const string RequestTarget = "/pts/v2/payments/5289697403596987704107";
 
         public static void Main(string[] args)
         {
             try
             {
-                //Setting up Merchant Config
+                // Creating a dictionary object which contains the merchant configuration
                 var config = new Configuration();
 
+                // Passing the dictionary object to the Merchant Config Constructor to bypass the config set up via App.Config File
                 var merchantConfig = new MerchantConfig(config.GetConfiguration())
                 {
                     RequestTarget = RequestTarget,
                     RequestType = Enumerations.RequestType.GET.ToString()
                 };
 
-                //Call to the Controller of API_SDK   
+                // Call to the Controller of API_SDK
                 var apiController = new APIController(merchantConfig);
                 var response = apiController.GetPayment();
 
-                //printing the response details
+                // printing the response details
                 if (response != null)
                 {
                     Console.WriteLine("\n v-c-correlation-id:{0}", response.GetResponseHeaderValue(response.Headers, "v-c-correlation-id"));

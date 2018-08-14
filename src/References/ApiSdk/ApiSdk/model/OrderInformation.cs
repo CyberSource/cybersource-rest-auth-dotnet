@@ -3,11 +3,7 @@
     public class OrderInformation
     {
         public BillTo billTo { get; set; }
-        public AmountDetails amountDetails { get; set; }
 
-        public OrderInformation()
-        {
-            
-        }        
+        public AmountDetails amountDetails { get; set; }
     }
 }

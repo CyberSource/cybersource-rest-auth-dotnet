@@ -11,16 +11,19 @@ namespace AuthenticationSdk.util
             var logger = LogManager.GetCurrentClassLogger();
 
             if (!_exceptionIsCaughtAlready)
-            {               
+            {
                 if (!string.IsNullOrEmpty(exceptionMessage))
-                {                     
+                {
                     logger.Error(exceptionMessage);
 
                     if (!string.IsNullOrEmpty(stackTrace))
+                    {
                         logger.Trace(stackTrace);
+                    }
                 }
+
                 _exceptionIsCaughtAlready = true;
             }
-        }        
+        }
     }
 }

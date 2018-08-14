@@ -1,33 +1,32 @@
 ﻿using System;
 using ApiSdk.controller;
+using AuthenticationSdk.core;
 using AuthenticationSdk.util;
 
-namespace CyberSource_Authentication_SDK_dotNet.samplecode.CallHTTPMethods
+namespace SampleCode.samplecode.CallHTTPMethods
 {
     public class GetMethod
     {
-        //Request Target of the CYBS REST API that needs to be hit
-        //private const string RequestTarget = "/reporting/v2/reportSubscriptions?organizationId=testrest";
-        private const string RequestTarget = "/reporting/v2/reportSubscriptions/TRRReport?organizationId=testrest";
-        //private const string RequestTarget = "/pts/v2/payments/5319754772076048103525";
-        //private const string RequestTarget = "/pts/v2/captures/5289697403596987704107";
+        // GET request to retrieve the payment details of the provided Payment ID
+        // Below Request fetches the payment details of payment ID: 5319754772076048103525
+        private const string RequestTarget = "/pts/v2/payments/5319754772076048103525";
 
         public static void Main(string[] args)
         {
             try
             {
-                //Setting up Merchant Config
+                // Setting up Merchant Config
                 var merchantConfig = new MerchantConfig
                 {
                     RequestTarget = RequestTarget,
-                    RequestType = Enumerations.RequestType.GET.ToString()                    
+                    RequestType = Enumerations.RequestType.GET.ToString()
                 };
 
-                //Call to the Controller of API_SDK   
+                // Call to the Controller of API_SDK
                 var apiController = new APIController(merchantConfig);
                 var response = apiController.GetPayment();
 
-                //printing the response details
+                // printing the response details
                 if (response != null)
                 {
                     Console.WriteLine("\n v-c-correlation-id:{0}", response.GetResponseHeaderValue(response.Headers, "v-c-correlation-id"));

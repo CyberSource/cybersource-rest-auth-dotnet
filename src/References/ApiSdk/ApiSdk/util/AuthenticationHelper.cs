@@ -2,7 +2,6 @@
 using AuthenticationSdk.authentication.http;
 using AuthenticationSdk.authentication.jwt;
 using AuthenticationSdk.core;
-using AuthenticationSdk.util;
 
 namespace ApiSdk.util
 {
@@ -14,7 +13,9 @@ namespace ApiSdk.util
             var signature = authorizeObj.GetSignature();
 
             if (signature == null)
-                throw new Exception($"{ConstantsApi.ErrorPrefix} Null Signature Returned by the AuthSdk");
+            {
+                throw new Exception($"{Constants.ErrorPrefix} Null Signature Returned by the AuthSdk");
+            }
 
             return signature;
         }
@@ -25,7 +26,9 @@ namespace ApiSdk.util
             var token = authorizeObj.GetToken();
 
             if (token == null)
-                throw new Exception($"{ConstantsApi.ErrorPrefix} Null Token Returned by the AuthSdk");
+            {
+                throw new Exception($"{Constants.ErrorPrefix} Null Token Returned by the AuthSdk");
+            }
 
             return token;
         }

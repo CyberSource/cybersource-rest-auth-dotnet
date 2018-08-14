@@ -1,13 +1,16 @@
 ﻿using System;
 using ApiSdk.controller;
+using AuthenticationSdk.core;
 using AuthenticationSdk.util;
-using CyberSource_Authentication_SDK_dotNet.data;
+using SampleCode.data;
 
-namespace CyberSource_Authentication_SDK_dotNet.samplecode.CallHTTPMethods
+namespace SampleCode.samplecode.CallHTTPMethods
 {
     public class PutMethod
-    {                
-        //Request Target of the CYBS REST API that needs to be hit
+    {
+        // PUT Request to Create Report Subscription for a report name by organization
+        // Report Details provided in the JSON File are sent along with the Request as Request Body
+        // Below request subscribes 'TRR Report' for Organization ID: testrest
         private const string RequestTarget = "/reporting/v2/reportSubscriptions/TRRReport?organizationId=testrest";
         private const string RequestJsonFilePath = "..\\..\\Resource\\TRRReport.json";
 
@@ -15,21 +18,21 @@ namespace CyberSource_Authentication_SDK_dotNet.samplecode.CallHTTPMethods
         {
             try
             {
-                //Setting up Merchant Config
+                // Setting up Merchant Config
                 var requestData = new RequestData();
 
                 var merchantConfig = new MerchantConfig
                 {
                     RequestTarget = RequestTarget,
-                    RequestType = Enumerations.RequestType.PUT.ToString(),                    
+                    RequestType = Enumerations.RequestType.PUT.ToString(),
                     RequestJsonData = requestData.JsonFileData(RequestJsonFilePath)
                 };
 
-                //Call to the Controller of API_SDK 
+                // Call to the Controller of API_SDK
                 var apiController = new APIController(merchantConfig);
                 var response = apiController.PutPayment();
 
-                //printing the response details
+                // printing the response details
                 if (response != null)
                 {
                     Console.WriteLine("\n v-c-correlation-id:{0}", response.GetResponseHeaderValue(response.Headers, "v-c-correlation-id"));

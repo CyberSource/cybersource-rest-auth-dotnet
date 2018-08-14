@@ -4,7 +4,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using AuthenticationSdk.core;
-using AuthenticationSdk.util;
 
 namespace AuthenticationSdk.authentication.jwt
 {
@@ -25,14 +24,28 @@ namespace AuthenticationSdk.authentication.jwt
             return _jwtToken;
         }
 
+        private static string GenerateDigest(string requestJsonData)
+        {
+            using (var sha256Hash = SHA256.Create())
+            {
+                var payloadBytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(requestJsonData));
+                var digest = Convert.ToBase64String(payloadBytes);
+                return digest;
+            }
+        }
+
         private string SetToken()
         {
-            var token = "";            
+            var token = string.Empty;
 
             if (_merchantConfig.IsGetRequest || _merchantConfig.IsDeleteRequest)
+            {
                 token = TokenForGetOrDelete();
+            }
             else if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest)
+            {
                 token = TokenForPostOrPut();
+            }
 
             return token;
         }
@@ -88,17 +101,6 @@ namespace AuthenticationSdk.authentication.jwt
             var token = Jose.JWT.Encode(jwtBody, privateKey, Jose.JwsAlgorithm.RS256, cybsHeaders);
 
             return token;
-        }
-
-        private static string GenerateDigest(string requestJsonData)
-        {
-
-            using (var sha256Hash = SHA256.Create())
-            {
-                var payloadBytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(requestJsonData));
-                var digest = Convert.ToBase64String(payloadBytes);
-                return digest;
-            }
         }
     }
 }

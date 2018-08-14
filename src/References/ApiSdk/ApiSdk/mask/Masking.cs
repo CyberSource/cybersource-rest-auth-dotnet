@@ -5,8 +5,12 @@ namespace ApiSdk.mask
 {
     public class Masking
     {
-        // Filters to be masked       
-        private readonly string[] _filters = { "country", "email", "cardNumber", "expirationDate", "cardCode", "cardType "};            
+        // Filters to be masked
+        private readonly string[] _filters =
+        {
+            "country", "email", "cardNumber", "expirationDate", "cardCode",
+            "cardType "
+        };
 
         public string MaskMessage(string message)
         {
@@ -16,7 +20,7 @@ namespace ApiSdk.mask
 
             return maskedMessage;
         }
-        
+
         private string Mask(string item)
         {
             foreach (var filter in _filters)
@@ -24,6 +28,7 @@ namespace ApiSdk.mask
                 var reg = string.Concat(@"(\\""", filter, @"\\"":\\""[\w|\d|.@-]+\\"")");
                 item = Regex.Replace(item, reg, string.Concat(@"""\", filter, @"\:\XXXXXXX\"));
             }
+
             return item;
         }
     }

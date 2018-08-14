@@ -14,13 +14,16 @@ namespace ApiSdk.model
         }
 
         public int StatusCode { get; }
+
         public string Data { get; }
+
         public string Headers { get; }
+
         public string StatusInfo { get; }
 
         public string GetResponseHeaderValue(string responseHeadersString, string headerToFind)
         {
-            var responseHeaderarray = responseHeadersString.Split(new[] { ConstantsApi.ResponseHeadersSeparator }, StringSplitOptions.None);
+            var responseHeaderarray = responseHeadersString.Split(new[] { Constants.ResponseHeadersSeparator }, StringSplitOptions.None);
 
             foreach (var header in responseHeaderarray)
             {
@@ -31,9 +34,10 @@ namespace ApiSdk.model
                 {
                     var headerValue = headerKeyValue[1];
                     return headerValue.Trim();
-                }                                    
+                }
             }
-            return "";
+
+            return string.Empty;
         }
 
         private string GetStatusInfo(int statusCode)
@@ -45,7 +49,7 @@ namespace ApiSdk.model
                 case 201:
                     return "Transaction Successful";
                 case 400:
-                    return "Bad Request";                    
+                    return "Bad Request";
                 case 401:
                     return "Authentication Failed";
                 case 403:
@@ -59,9 +63,9 @@ namespace ApiSdk.model
                 case 503:
                     return "SERVICE UNAVAILABLE";
                 case 504:
-                    return "Gateway Timeout";                                
+                    return "Gateway Timeout";
                 default:
-                    return "";
+                    return string.Empty;
             }
         }
     }

@@ -2,7 +2,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using AuthenticationSdk.core;
-using AuthenticationSdk.util;
 
 namespace AuthenticationSdk.authentication.http
 {
@@ -18,19 +17,23 @@ namespace AuthenticationSdk.authentication.http
         }
 
         public Token GetToken()
-        {                            
+        {
             _httpToken.SignatureParam = SetSignatureParam();
             return _httpToken;
         }
 
         private string SetSignatureParam()
         {
-            var signature = "";            
+            var signature = string.Empty;
 
             if (_merchantConfig.IsGetRequest || _merchantConfig.IsDeleteRequest)
+            {
                 signature = SignatureForGetOrDelete();
+            }
             else if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest)
+            {
                 signature = SignatureForPostOrPut();
+            }
 
             return signature;
         }
@@ -115,7 +118,6 @@ namespace AuthenticationSdk.authentication.http
 
             return signatureHeaderValue.ToString();
         }
-
 
         private string GenerateDigest()
         {

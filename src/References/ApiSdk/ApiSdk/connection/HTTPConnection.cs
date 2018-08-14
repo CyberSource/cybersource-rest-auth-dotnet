@@ -1,23 +1,21 @@
 ﻿using System.Net.Http;
 using System.Net.Http.Headers;
 using ApiSdk.util;
-using AuthenticationSdk.util;
+using AuthenticationSdk.core;
 
 namespace ApiSdk.connection
 {
     public class HTTPConnection : IConnection
     {
         public HttpClient GetConnectionForGet(MerchantConfig merchantConfig)
-        {                       
+        {
             var signature = AuthenticationHelper.GetSignature(merchantConfig);
-            var httpConnUtility = new HttpConnUtility(merchantConfig.ProxyAddress, merchantConfig.ProxyPort,
-                merchantConfig.TimeOut);
+            var httpConnUtility = new HttpConnUtility(merchantConfig.ProxyAddress, merchantConfig.ProxyPort, merchantConfig.TimeOut);
             var client = httpConnUtility.GetHttpClient();
-            
 
             client.DefaultRequestHeaders
                         .Accept
-                        .Add(new MediaTypeWithQualityHeaderValue(ConstantsApi.MediaTypeHalAndJson));
+                        .Add(new MediaTypeWithQualityHeaderValue(Constants.MediaTypeHalAndJson));
 
             client.DefaultRequestHeaders.Add("v-c-merchant-id", signature.MerchantId);
 
@@ -33,9 +31,7 @@ namespace ApiSdk.connection
         public HttpClient GetConnectionForPost(MerchantConfig merchantConfig)
         {
             var signature = AuthenticationHelper.GetSignature(merchantConfig);
-            var httpConnUtility = new HttpConnUtility(merchantConfig.ProxyAddress, merchantConfig.ProxyPort,
-                merchantConfig.TimeOut);
-            
+            var httpConnUtility = new HttpConnUtility(merchantConfig.ProxyAddress, merchantConfig.ProxyPort, merchantConfig.TimeOut);
             var client = httpConnUtility.GetHttpClient();
 
             client.DefaultRequestHeaders.Add("v-c-merchant-id", signature.MerchantId);
@@ -52,12 +48,9 @@ namespace ApiSdk.connection
         }
 
         public HttpClient GetConnectionForPut(MerchantConfig merchantConfig)
-        {            
-           
+        {
             var signature = AuthenticationHelper.GetSignature(merchantConfig);
-            var httpConnUtility = new HttpConnUtility(merchantConfig.ProxyAddress, merchantConfig.ProxyPort,
-                merchantConfig.TimeOut);
-                        
+            var httpConnUtility = new HttpConnUtility(merchantConfig.ProxyAddress, merchantConfig.ProxyPort, merchantConfig.TimeOut);
             var client = httpConnUtility.GetHttpClient();
 
             client.DefaultRequestHeaders.Add("v-c-merchant-id", signature.MerchantId);
@@ -76,14 +69,12 @@ namespace ApiSdk.connection
         public HttpClient GetConnectionForDelete(MerchantConfig merchantConfig)
         {
             var signature = AuthenticationHelper.GetSignature(merchantConfig);
-            var httpConnUtility = new HttpConnUtility(merchantConfig.ProxyAddress, merchantConfig.ProxyPort,
-                merchantConfig.TimeOut);
+            var httpConnUtility = new HttpConnUtility(merchantConfig.ProxyAddress, merchantConfig.ProxyPort, merchantConfig.TimeOut);
             var client = httpConnUtility.GetHttpClient();
-
 
             client.DefaultRequestHeaders
                         .Accept
-                        .Add(new MediaTypeWithQualityHeaderValue(ConstantsApi.MediaTypeHalAndJson));
+                        .Add(new MediaTypeWithQualityHeaderValue(Constants.MediaTypeHalAndJson));
 
             client.DefaultRequestHeaders.Add("v-c-merchant-id", signature.MerchantId);
 

@@ -1,9 +1,10 @@
 ﻿using System;
+using AuthenticationSdk.core;
 
 namespace AuthenticationSdk.util
 {
     public class Enumerations
-    {        
+    {
         public enum AuthenticationType
         {
             HTTP_SIGNATURE,
@@ -15,20 +16,25 @@ namespace AuthenticationSdk.util
             GET,
             POST,
             PUT,
-            DELETE              
+            DELETE
         }
-      
+
         public static bool ValidateAuthenticationType(string authType)
         {
-            //Validating the Authentication type by comparing with the values in Enum
+            // Validating the Authentication type by comparing with the values in Enum
             if (string.IsNullOrEmpty(authType))
+            {
                 throw new Exception(
-                    $"{ConstantsAuth.ErrorPrefix} No Authentication type provided in config file");
+                    $"{Constants.ErrorPrefix} No Authentication type provided in config file");
+            }
+
             if (Enum.IsDefined(typeof(AuthenticationType), authType.ToUpper()))
+            {
                 return true;
-                
+            }
+
             throw new Exception(
-                $"{ConstantsAuth.ErrorPrefix}Invalid Auth type {authType} provided in config file");
+                $"{Constants.ErrorPrefix}Invalid Auth type {authType} provided in config file");
         }
 
         public static bool ValidateRequestType(string requestType)
@@ -36,19 +42,19 @@ namespace AuthenticationSdk.util
             if (requestType == null)
             {
                 throw new Exception(
-                    $"{ConstantsAuth.ErrorPrefix} RequestType has not been set. Set it to any one of the Valid Values: GET/POST/PUT/DELETE");
+                    $"{Constants.ErrorPrefix} RequestType has not been set. Set it to any one of the Valid Values: GET/POST/PUT/DELETE");
             }
 
             if (requestType.Trim() == string.Empty)
             {
                 throw new Exception(
-                    $"{ConstantsAuth.ErrorPrefix} RequestType has been set as blank. Set it to any one of the Valid Values: GET/POST/PUT/DELETE");
+                    $"{Constants.ErrorPrefix} RequestType has been set as blank. Set it to any one of the Valid Values: GET/POST/PUT/DELETE");
             }
 
-            if (!Enum.IsDefined(typeof (RequestType), requestType.ToUpper()))
+            if (!Enum.IsDefined(typeof(RequestType), requestType.ToUpper()))
             {
                 throw new Exception(
-                    $"{ConstantsAuth.ErrorPrefix} Invalid Request Type:{requestType} . Valid Values: GET/POST/PUT/DELETE");
+                    $"{Constants.ErrorPrefix} Invalid Request Type:{requestType} . Valid Values: GET/POST/PUT/DELETE");
             }
 
             return true;
@@ -56,18 +62,22 @@ namespace AuthenticationSdk.util
 
         public static void SetRequestType(MerchantConfig merchantConfig)
         {
-            if (string.Equals(merchantConfig.RequestType, RequestType.GET.ToString(),
-                StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(merchantConfig.RequestType, RequestType.GET.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
                 merchantConfig.IsGetRequest = true;
-            else if (string.Equals(merchantConfig.RequestType, RequestType.POST.ToString(),
-                StringComparison.OrdinalIgnoreCase))
+            }
+            else if (string.Equals(merchantConfig.RequestType, RequestType.POST.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
                 merchantConfig.IsPostRequest = true;
-            else if (string.Equals(merchantConfig.RequestType, RequestType.PUT.ToString(),
-                StringComparison.OrdinalIgnoreCase))
+            }
+            else if (string.Equals(merchantConfig.RequestType, RequestType.PUT.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
                 merchantConfig.IsPutRequest = true;
-            else if (string.Equals(merchantConfig.RequestType, RequestType.DELETE.ToString(),
-                StringComparison.OrdinalIgnoreCase))
+            }
+            else if (string.Equals(merchantConfig.RequestType, RequestType.DELETE.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
                 merchantConfig.IsDeleteRequest = true;
+            }
         }
     }
 }

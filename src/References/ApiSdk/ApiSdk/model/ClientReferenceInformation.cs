@@ -3,10 +3,5 @@
     public class ClientReferenceInformation
     {
         public string code { get; set; }
-
-        public ClientReferenceInformation()
-        {
-            
-        }       
     }
 }

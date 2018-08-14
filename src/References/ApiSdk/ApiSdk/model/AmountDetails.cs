@@ -3,11 +3,7 @@
     public class AmountDetails
     {
         public string totalAmount { get; set; }
-        public string currency { get; set; }
 
-        public AmountDetails()
-        {
-            
-        }        
+        public string currency { get; set; }
     }
 }

@@ -3,10 +3,5 @@
     public class PaymentInformation
     {
         public Card card { get; set; }
-
-        public PaymentInformation()
-        {
-            
-        }        
     }
 }

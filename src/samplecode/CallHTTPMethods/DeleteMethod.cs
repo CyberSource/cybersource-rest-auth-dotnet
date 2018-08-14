@@ -1,35 +1,37 @@
 ﻿using System;
 using ApiSdk.controller;
+using AuthenticationSdk.core;
 using AuthenticationSdk.util;
 
-namespace CyberSource_Authentication_SDK_dotNet.samplecode.CallHTTPMethods
+namespace SampleCode.samplecode.CallHTTPMethods
 {
     public class DeleteMethod
-    {        
-        //Request Target of the CYBS REST API that needs to be hit
+    {
+        // DELETE Request to Delete subscription of (Unsubscribe) a report name by organization
+        // Below request unsubscribes 'TRR Report' Subscription for Organization ID: testrest
         private const string RequestTarget = "/reporting/v2/reportSubscriptions/TRRReport?organizationId=testrest";
-        
+
         public static void Main(string[] args)
         {
             try
             {
-                //Setting up Merchant Config
+                // Setting up Merchant Config
                 var merchantConfig = new MerchantConfig
                 {
                     RequestTarget = RequestTarget,
                     RequestType = Enumerations.RequestType.DELETE.ToString()
                 };
 
-                //Call to the Controller of API_SDK   
+                // Call to the Controller of API_SDK
                 var apiController = new APIController(merchantConfig);
                 var response = apiController.DeletePayment();
 
-                //printing the response details
+                // printing the response details
                 if (response != null)
                 {
                     Console.WriteLine("\n v-c-correlation-id:{0}", response.GetResponseHeaderValue(response.Headers, "v-c-correlation-id"));
                     Console.WriteLine("\n Response Code:{0}", response.StatusCode);
-                    Console.WriteLine("\n Response Message:{0}", response.Data);                    
+                    Console.WriteLine("\n Response Message:{0}", response.Data);
                 }
             }
             catch (Exception e)

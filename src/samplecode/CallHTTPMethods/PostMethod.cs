@@ -1,17 +1,17 @@
 ﻿using System;
 using ApiSdk.controller;
+using AuthenticationSdk.core;
 using AuthenticationSdk.util;
-using CyberSource_Authentication_SDK_dotNet.data;
+using SampleCode.data;
 
-namespace CyberSource_Authentication_SDK_dotNet.samplecode.CallHTTPMethods
+namespace SampleCode.samplecode.CallHTTPMethods
 {
     public class PostMethod
-    {                                     
-        //Request Target of the CYBS REST API that needs to be hit
+    {
+        // POST Request to Authorize the payment for a transaction.
+        // Transaction details provided in the JSON File are sent along with the Request as Request Body
         private const string RequestTarget = "/pts/v2/payments/";
-        //private const string RequestTarget = "/pts/v2/payments/5289697403596987704107/captures/"; 
         private const string RequestJsonFilePath = "..\\..\\Resource\\request_payments.json";
-        //private const string RequestJsonFilePath = "..\\..\\Resource\\request_captures.json";
 
         public static void Main(string[] args)
         {
@@ -19,7 +19,7 @@ namespace CyberSource_Authentication_SDK_dotNet.samplecode.CallHTTPMethods
             {
                 var requestData = new RequestData();
 
-                //Setting up Merchant Config                
+                // Setting up Merchant Config
                 var merchantConfig = new MerchantConfig
                 {
                     RequestTarget = RequestTarget,
@@ -27,11 +27,11 @@ namespace CyberSource_Authentication_SDK_dotNet.samplecode.CallHTTPMethods
                     RequestJsonData = requestData.JsonFileData(RequestJsonFilePath)
                 };
 
-                //Call to the Controller of API_SDK  
+                // Call to the Controller of API_SDK
                 var apiController = new APIController(merchantConfig);
                 var response = apiController.PostPayment();
 
-                //printing the response details                
+                // printing the response details
                 if (response != null)
                 {
                     Console.WriteLine("\n v-c-correlation-id:{0}", response.GetResponseHeaderValue(response.Headers, "v-c-correlation-id"));

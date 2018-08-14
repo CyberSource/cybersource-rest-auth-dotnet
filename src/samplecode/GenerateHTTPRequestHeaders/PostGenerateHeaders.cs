@@ -1,13 +1,14 @@
 using System;
 using AuthenticationSdk.core;
 using AuthenticationSdk.util;
-using CyberSource_Authentication_SDK_dotNet.data;
+using SampleCode.data;
 
-namespace CyberSource_Authentication_SDK_dotNet.samplecode.GenerateHTTPRequestHeaders
+namespace SampleCode.samplecode.GenerateHTTPRequestHeaders
 {
     public class PostGenerateHeaders
     {
-        //Request Target of the CYBS REST API that needs to be hit
+        // POST Request to Authorize the payment for a transaction.
+        // Transaction details provided in the JSON File are sent along with the Request as Request Body
         private const string RequestTarget = "/pts/v2/payments"; 
         private const string RequestJsonFilePath = "..\\..\\Resource\\request_payments.json";
 
@@ -17,18 +18,18 @@ namespace CyberSource_Authentication_SDK_dotNet.samplecode.GenerateHTTPRequestHe
             {
                 var requestData = new RequestData();
 
-                //Setting up Merchant Config
+                // Setting up Merchant Config
                 var merchantConfig = new MerchantConfig
                 {
                     RequestTarget = RequestTarget,
-                    RequestType = Enumerations.RequestType.POST.ToString(),//sharath
+                    RequestType = Enumerations.RequestType.POST.ToString(),
                     RequestJsonData = requestData.JsonFileData(RequestJsonFilePath)
                 };
-                //Call to the Authorize class of AuthSDK to get the signature and token objects 
+
+                // Call to the Authorize class of AuthSDK to get the signature and token objects
                 var authorizeObj = new Authorize(merchantConfig);
 
-                if (string.Equals(merchantConfig.AuthenticationType,
-                    Enumerations.AuthenticationType.HTTP_SIGNATURE.ToString(), StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(merchantConfig.AuthenticationType, Enumerations.AuthenticationType.HTTP_SIGNATURE.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     var requestHeaders = authorizeObj.GetSignature();
 
@@ -39,8 +40,7 @@ namespace CyberSource_Authentication_SDK_dotNet.samplecode.GenerateHTTPRequestHe
                     Console.WriteLine("{0} {1}", "digest:", requestHeaders.Digest);
                     Console.WriteLine("{0} {1}", "signature:", requestHeaders.SignatureParam);
                 }
-                else if (string.Equals(merchantConfig.AuthenticationType, Enumerations.AuthenticationType.JWT.ToString(),
-                    StringComparison.OrdinalIgnoreCase))
+                else if (string.Equals(merchantConfig.AuthenticationType, Enumerations.AuthenticationType.JWT.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     var requestHeaders = authorizeObj.GetToken();
 
