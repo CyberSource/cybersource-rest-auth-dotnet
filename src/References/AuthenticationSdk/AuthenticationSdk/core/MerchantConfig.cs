@@ -46,7 +46,16 @@ namespace AuthenticationSdk.core
                 }
             }
 
-            // Log initialization, Fallback logic, Validations... and so much more....
+            LogUtility.InitLogConfig(EnableLog, LogDirectory, LogFileName, LogfileMaxSize);
+
+            // Logger object is ready to Log
+            Logger.Trace("\n");
+            Logger.Trace("START> =======================================");
+
+            // Logging the source of properties' values
+            Logger.Trace("Reading Merchant Configuration from " + _propertiesSetUsing);
+
+            // Validations
             ValidateProperties();
         }
 
@@ -68,13 +77,13 @@ namespace AuthenticationSdk.core
 
         public string KeyPass { get; set; }
 
-        public string EnableLog { get; set; }
+        public string EnableLog { get; set; } = "TRUE";
 
-        public string LogDirectory { get; set; }
+        public string LogDirectory { get; set; } = "../../logs";
 
-        public string LogfileMaxSize { get; set; }
+        public string LogfileMaxSize { get; set; } = "10485760"; // 10 MB = 10485760 bytes
 
-        public string LogFileName { get; set; }
+        public string LogFileName { get; set; } = "cybs.log";
 
         public string TimeOut { get; set; }
 
@@ -186,43 +195,6 @@ namespace AuthenticationSdk.core
 
         private void ValidateProperties()
         {
-            /*Setting up the Log Properties first and Initializing the logger object,
-            before moving to other Validations.
-            Because Initialization of logger object is dependent on these properties' values*/
-            if (string.IsNullOrEmpty(EnableLog))
-            {
-                EnableLog = "TRUE";
-            }
-
-            if (!string.Equals(EnableLog, "true", StringComparison.OrdinalIgnoreCase))
-            {
-                EnableLog = "FALSE";
-            }
-
-            if (string.IsNullOrEmpty(LogDirectory))
-            {
-                LogDirectory = "../../logs";
-            }
-
-            if (string.IsNullOrEmpty(LogFileName))
-            {
-                LogFileName = "cybs.log";
-            }
-
-            if (string.IsNullOrEmpty(LogfileMaxSize))
-            {
-                LogfileMaxSize = "10485760";    // 10 MB = 10485760 bytes
-            }
-
-            LogUtility.InitLogConfig(EnableLog, LogDirectory, LogFileName, LogfileMaxSize);
-
-            // Logger object is ready to Log
-            Logger.Trace("\n");
-            Logger.Trace("START> =======================================");
-
-            // Logging the source of properties' values
-            Logger.Trace("Reading Merchant Configuration from " + _propertiesSetUsing);
-
             // VALIDATIONS COMMON FOR BOTH AUTH MECH.
             if (string.IsNullOrEmpty(MerchantId))
             {

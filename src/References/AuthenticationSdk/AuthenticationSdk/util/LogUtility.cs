@@ -48,6 +48,11 @@ namespace AuthenticationSdk.util
 
         public static void InitLogConfig(string enableLog, string logDirectory, string logFileName, string logFileMaxSize)
         {
+            if (!string.Equals(enableLog, "true", StringComparison.OrdinalIgnoreCase))
+            {
+                enableLog = "FALSE";
+            }
+
             if (_singletonLogUtility == null)
             {
                 _singletonLogUtility = new LogUtility(enableLog, logDirectory, logFileName, logFileMaxSize);
