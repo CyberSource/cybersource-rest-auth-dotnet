@@ -4,9 +4,9 @@
   "reportDefinitionName":"TransactionRequestClass",
   "startTime":"1100",
   "reportFrequency":"DAILY",
-  "reportFormat":"XML",
-  "reportName":"Demo_Report",
+  "ReportName":"TRRReport",
+  "reportFormat":"csv",
   "orgId":"testrest",
   "reportType":"detail",
-  "reportFields": ["Request.RequestID","Request.TransactionDate","Request.MerchantID"]
+  "reportFields": ["Request.RequestID","Request.TransactionDate","Request.MerchantReferenceNumber","Request.MerchantID"]
 }

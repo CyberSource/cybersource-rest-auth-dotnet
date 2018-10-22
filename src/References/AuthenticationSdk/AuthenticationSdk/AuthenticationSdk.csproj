@@ -11,6 +11,7 @@
     <RootNamespace>AuthenticationSdk</RootNamespace>
     <AssemblyName>AuthenticationSdk</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <DebugType>Full</DebugType>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
@@ -23,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AuthenticationSdk.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,6 +33,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AuthenticationSdk.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="jose-jwt, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -58,24 +61,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="com\cybersource\authentication\authentication\http\HttpTokenGenerator.cs" />
-    <Compile Include="com\cybersource\authentication\authentication\jwt\JwtTokenGenerator.cs" />
-    <Compile Include="com\cybersource\authentication\core\Authorize.cs" />
-    <Compile Include="com\cybersource\authentication\core\ITokenGenerator.cs" />
-    <Compile Include="com\cybersource\authentication\core\Token.cs" />
-    <Compile Include="com\cybersource\authentication\util\Cache.cs" />
-    <Compile Include="com\cybersource\authentication\util\GlobalLabelParameters.cs" />
-    <Compile Include="com\cybersource\authentication\util\LogUtility.cs" />
-    <Compile Include="com\cybersource\authentication\util\MerchantConfig.cs" />
+    <Compile Include="authentication\http\HttpToken.cs" />
+    <Compile Include="authentication\http\HttpTokenGenerator.cs" />
+    <Compile Include="authentication\jwt\JwtToken.cs" />
+    <Compile Include="authentication\jwt\JwtTokenGenerator.cs" />
+    <Compile Include="core\Authorize.cs" />
+    <Compile Include="core\ITokenGenerator.cs" />
+    <Compile Include="core\MerchantConfig.cs" />
+    <Compile Include="core\Token.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="com\cybersource\authentication\authentication\http\HttpToken.cs" />
-    <Compile Include="com\cybersource\authentication\authentication\jwt\JwtToken.cs" />
+    <Compile Include="util\Cache.cs" />
+    <Compile Include="util\Enumerations.cs" />
+    <Compile Include="util\ExceptionUtility.cs" />
+    <Compile Include="util\Constants.cs" />
+    <Compile Include="util\LogUtility.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AuthenticationSdk.ruleset" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\packages\StyleCop.Analyzers.1.0.2\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
+    <Analyzer Include="..\packages\StyleCop.Analyzers.1.0.2\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

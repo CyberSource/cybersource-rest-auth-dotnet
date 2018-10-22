@@ -1,46 +1,47 @@
 ﻿using System;
 using System.IO;
-using ApiSdk.com.cybersource.api.model;
+using ApiSdk.model;
 using Newtonsoft.Json;
 using NLog;
 
-namespace samplecode.data
+namespace SampleCode.data
 {
     public class RequestData
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public string JsonFileData(string path)
-        {            
-            if (string.IsNullOrEmpty(path)) 
+        {
+            if (string.IsNullOrEmpty(path))
+            {
                 throw new Exception($"Error: Empty/Null Path provided to JsonFileData Function");
+            }
 
             Console.WriteLine($"\n Using Payload of the Json File at:{Path.GetFullPath(path)}");
-            Logger.Trace($"Using Payload of the Json File at:{Path.GetFullPath(path)}");
+            _logger.Trace($"Using Payload of the Json File at:{Path.GetFullPath(path)}");
 
             try
             {
                 using (var r = new StreamReader(path))
                 {
-                    return r.ReadToEnd();                        
+                    return r.ReadToEnd();
                 }
             }
             catch (FileNotFoundException)
             {
-                throw new Exception($"Error: Request Json File missing. File Path :: {path}");                    
-            }            
+                throw new Exception($"Error: Request Json File missing. File Path :: {path}");
+            }
         }
 
         public string SamplePaymentsData()
         {
-            //Create the Sample Data using Model Classes of Payments API
-
+            // Create the Sample Data using Model Classes of Payments API
             Console.WriteLine("\n Using sample Payload of Payments");
-            Logger.Trace("Using sample Payload of Payments");
+            _logger.Trace("Using sample Payload of Payments");
 
-            var clientReferenceInformation = new ClientReferenceInformation {code = "TC50171_3"};
+            var clientReferenceInformation = new ClientReferenceInformation { code = "TC50171_3" };
 
-            var processingInformation = new ProcessingInformation {commerceIndicator = "internet"};
+            var processingInformation = new ProcessingInformation { commerceIndicator = "internet" };
 
             var subMerchant = new SubMerchant
             {
@@ -101,7 +102,7 @@ namespace samplecode.data
                 type = "002"
             };
 
-            var paymentInformation = new PaymentInformation {card = card};
+            var paymentInformation = new PaymentInformation { card = card };
 
             var payments = new Payments
             {
@@ -112,8 +113,7 @@ namespace samplecode.data
                 paymentInformation = paymentInformation
             };
 
-            //return JsonConvert.SerializeObject(payments, Formatting.Indented);
-            return JsonConvert.SerializeObject(payments);           
+            return JsonConvert.SerializeObject(payments, Formatting.Indented);
         }
     }
 }
