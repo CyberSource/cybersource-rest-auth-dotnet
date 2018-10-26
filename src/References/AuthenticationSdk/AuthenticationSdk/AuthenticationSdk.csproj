@@ -82,6 +82,7 @@
     <Compile Include="util\LogUtility.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AuthenticationSdk.nuspec" />
     <None Include="AuthenticationSdk.ruleset" />
     <None Include="packages.config" />
   </ItemGroup>
