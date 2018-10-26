@@ -35,17 +35,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AuthenticationSdk">
-      <HintPath>..\AuthenticationSdk\bin\Debug\AuthenticationSdk.dll</HintPath>
-    </Reference>
     <Reference Include="jose-jwt">
-      <HintPath>..\AuthenticationSdk\bin\Debug\jose-jwt.dll</HintPath>
+      <HintPath>..\packages\jose-jwt.2.4.0\lib\net461\jose-jwt.dll</HintPath>
     </Reference>
     <Reference Include="NLog">
-      <HintPath>..\AuthenticationSdk\bin\Debug\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.5.10\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
-      <HintPath>..\AuthenticationSdk\bin\Debug\nunit.framework.dll</HintPath>
+      <HintPath>..\packages\NUnit.3.10.1\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>
@@ -74,6 +71,12 @@
     <None Include="Resource\request_payments.json" />
     <None Include="Resource\testrest.p12" />
     <None Include="Resource\TRRReport.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AuthenticationSdk\AuthenticationSdk.csproj">
+      <Project>{910f28d1-8bd0-4359-aacb-b96c04cf68e8}</Project>
+      <Name>AuthenticationSdk</Name>
+    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
