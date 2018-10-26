@@ -6,9 +6,7 @@
     <title>CyberSource</title>
     <authors>CyberSource</authors>
     <owners>CyberSource</owners>
-    <licenseUrl></licenseUrl>
     <projectUrl>https://github.com/CyberSource/cybersource-rest-auth-dotnet</projectUrl>
-    <iconUrl></iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Use this SDK to generate Authentication Headers to be sent for the Cybersource REST API Calls</description>
     <releaseNotes>Authentication SDK for CyberSource REST APIs</releaseNotes>
