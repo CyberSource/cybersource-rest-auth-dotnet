@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>CyberSource</id>
+    <id>CyberSource.Authentication</id>
     <version>0.0.0.1</version>
-    <title>CyberSource</title>
-    <authors>CyberSource</authors>
+    <title>CyberSource.Authentication</title>
+    <authors>CyberSource Corporation</authors>
     <owners>CyberSource</owners>
     <projectUrl>https://github.com/CyberSource/cybersource-rest-auth-dotnet</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
