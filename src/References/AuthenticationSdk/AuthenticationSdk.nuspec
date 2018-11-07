@@ -9,7 +9,7 @@
     <projectUrl>https://github.com/CyberSource/cybersource-rest-auth-dotnet</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Use this SDK to generate Authentication Headers to be sent for the Cybersource REST API Calls</description>
-    <releaseNotes>Added support HTTP PATCH requests</releaseNotes>
+    <releaseNotes>Authentication SDK for CyberSource REST APIs</releaseNotes>
   </metadata>
   <files>
 		<file src="AuthenticationSdk\bin\Release\AuthenticationSdk.dll" target="lib\AuthenticationSdk.dll"/>
