@@ -113,6 +113,8 @@ namespace AuthenticationSdk.core
 
         public bool IsDeleteRequest { get; set; }
 
+        public bool IsPatchRequest { get; set; }
+
         public bool IsHttpSignAuthType { get; set; }
 
         public bool IsJwtTokenAuthType { get; set; }

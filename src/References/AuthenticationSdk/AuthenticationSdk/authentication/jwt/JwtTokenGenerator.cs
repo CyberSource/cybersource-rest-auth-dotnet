@@ -40,17 +40,19 @@ namespace AuthenticationSdk.authentication.jwt
 
             if (_merchantConfig.IsGetRequest || _merchantConfig.IsDeleteRequest)
             {
-                token = TokenForGetOrDelete();
+                // Category 1 : GET / DELETE
+                token = TokenForCategory1();
             }
-            else if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest)
+            else if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest ||_merchantConfig.IsPatchRequest)
             {
-                token = TokenForPostOrPut();
+                // Category 2 : POST / PUT / PATCH 
+                token = TokenForCategory2();
             }
 
             return token;
         }
 
-        private string TokenForGetOrDelete()
+        private string TokenForCategory1()
         {
             var jwtBody = "{ \"iat\":\"" + DateTime.Now.ToUniversalTime().ToString("r") + "\"}";
 
@@ -76,7 +78,7 @@ namespace AuthenticationSdk.authentication.jwt
             return token;
         }
 
-        private string TokenForPostOrPut()
+        private string TokenForCategory2()
         {
             var digest = GenerateDigest(_jwtToken.RequestJsonData);
 
