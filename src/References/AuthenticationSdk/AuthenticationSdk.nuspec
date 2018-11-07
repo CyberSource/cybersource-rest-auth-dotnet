@@ -2,14 +2,14 @@
 <package >
   <metadata>
     <id>CyberSource.Authentication</id>
-    <version>0.0.0.1</version>
+    <version>0.0.0.2</version>
     <title>CyberSource.Authentication</title>
     <authors>CyberSource Corporation</authors>
     <owners>CyberSource</owners>
     <projectUrl>https://github.com/CyberSource/cybersource-rest-auth-dotnet</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Use this SDK to generate Authentication Headers to be sent for the Cybersource REST API Calls</description>
-    <releaseNotes>Authentication SDK for CyberSource REST APIs</releaseNotes>
+    <releaseNotes>Added support HTTP PATCH requests</releaseNotes>
   </metadata>
   <files>
 		<file src="AuthenticationSdk\bin\Release\AuthenticationSdk.dll" target="lib\AuthenticationSdk.dll"/>
