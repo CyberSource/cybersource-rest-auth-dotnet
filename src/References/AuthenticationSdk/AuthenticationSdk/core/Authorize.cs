@@ -42,7 +42,7 @@ namespace AuthenticationSdk.core
                         _logger.Trace("{0} {1}", "Content-Type:", "application/json");
                     }
 
-                    if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest)
+                    if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest || _merchantConfig.IsPatchRequest)
                     {
                         _logger.Trace("{0} {1}", "Content-Type:", "application/hal+json");
                     }
@@ -51,7 +51,7 @@ namespace AuthenticationSdk.core
                     _logger.Trace("{0} {1}", "Date:", signatureObj.GmtDateTime);
                     _logger.Trace("{0} {1}", "Host:", signatureObj.HostName);
 
-                    if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest)
+                    if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest || _merchantConfig.IsPatchRequest)
                     {
                         _logger.Trace("{0} {1}", "digest:", signatureObj.Digest);
                     }
@@ -91,7 +91,7 @@ namespace AuthenticationSdk.core
                     {
                         _logger.Trace("{0} {1}", "Content-Type:", "application/json");
                     }
-                    else if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest)
+                    else if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest || _merchantConfig.IsPatchRequest)
                     {
                         _logger.Trace("{0} {1}", "Content-Type:", "application/hal+json");
                     }

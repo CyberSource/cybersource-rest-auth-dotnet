@@ -10,7 +10,7 @@ namespace AuthenticationSdk.authentication.http
         {
             // props that don't use merchant config object
             SignatureAlgorithm = Constants.SignatureAlgorithm;
-            GmtDateTime = DateTime.Now.ToUniversalTime().ToString("r");
+            GmtDateTime = DateTime.Now.ToUniversalTime().ToString("r");            
 
             // props that use merchant config object for their values to be set
             RequestJsonData = merchantConfig.RequestJsonData;

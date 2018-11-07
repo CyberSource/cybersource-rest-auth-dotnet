@@ -28,21 +28,23 @@ namespace AuthenticationSdk.authentication.http
 
             if (_merchantConfig.IsGetRequest || _merchantConfig.IsDeleteRequest)
             {
-                signature = SignatureForGetOrDelete();
+                // Category 1 : GET / DELETE
+                signature = SignatureForCategory1();
             }
-            else if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest)
+            else if (_merchantConfig.IsPostRequest || _merchantConfig.IsPutRequest || _merchantConfig.IsPatchRequest)
             {
-                signature = SignatureForPostOrPut();
+                // Category 2 : POST / PUT / PATCH 
+                signature = SignatureForCategory2();
             }
 
             return signature;
         }
 
-        private string SignatureForGetOrDelete()
+        private string SignatureForCategory1()
         {
             var signatureString = new StringBuilder();
             var signatureHeaderValue = new StringBuilder();
-            const string getOrDeleteHeaders = "host date (request-target) v-c-merchant-id";
+            const string getOrDeleteHeaders = "host date (request-target) v-c-merchant-id";            
 
             signatureString.Append('\n');
             signatureString.Append("host");
@@ -76,7 +78,7 @@ namespace AuthenticationSdk.authentication.http
             return signatureHeaderValue.ToString();
         }
 
-        private string SignatureForPostOrPut()
+        private string SignatureForCategory2()
         {
             var signatureString = new StringBuilder();
             var signatureHeaderValue = new StringBuilder();

@@ -16,7 +16,8 @@ namespace AuthenticationSdk.util
             GET,
             POST,
             PUT,
-            DELETE
+            DELETE,
+            PATCH
         }
 
         public static bool ValidateAuthenticationType(string authType)
@@ -77,6 +78,11 @@ namespace AuthenticationSdk.util
             else if (string.Equals(merchantConfig.RequestType, RequestType.DELETE.ToString(), StringComparison.OrdinalIgnoreCase))
             {
                 merchantConfig.IsDeleteRequest = true;
+            }
+            else if (string.Equals(merchantConfig.RequestType, RequestType.PATCH.ToString(),
+                StringComparison.OrdinalIgnoreCase))
+            {
+                merchantConfig.IsPatchRequest = true;
             }
         }
     }
