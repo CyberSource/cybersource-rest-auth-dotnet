@@ -1,6 +1,6 @@
 language: csharp
 mono:
   - latest
-solution: AuthenticationSdk.sln
+solution: src/References/AuthenticationSdk/AuthenticationSdk.sln
 script:
   - /bin/sh ./mono_nunit_test.sh
