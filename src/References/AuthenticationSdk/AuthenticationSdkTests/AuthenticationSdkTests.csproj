@@ -60,7 +60,6 @@
   </Choose>
   <ItemGroup>
     <Compile Include="core\AuthorizeTests.cs" />
-    <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="util\EnumerationsTests.cs" />
     <Compile Include="util\MerchantConfigTests.cs" />
