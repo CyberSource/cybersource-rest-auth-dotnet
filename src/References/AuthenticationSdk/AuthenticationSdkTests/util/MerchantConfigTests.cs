@@ -9,9 +9,7 @@ namespace AuthenticationSdkTests.util
     [TestFixture]
     public class MerchantConfigTests
     {
-        private string resourceFolderPath =
-            $"{AppDomain.CurrentDomain.BaseDirectory}{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}Resource";
-
+        private string resourceFolderPath = $"..{Path.DirectorySeparatorChar}Resource";
 
         [Test]        
         public void NullMerchantId()
