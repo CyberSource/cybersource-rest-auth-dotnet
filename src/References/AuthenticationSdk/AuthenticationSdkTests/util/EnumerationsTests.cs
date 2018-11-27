@@ -10,8 +10,9 @@ namespace AuthenticationSdkTests.util
     [TestFixture]
     public class EnumerationsTests
     {
-        private string resourceFolderPath = $"..{Path.DirectorySeparatorChar}Resource";
-
+        //private string resourceFolderPath = $"..{Path.DirectorySeparatorChar}Resource";
+        private string resourceFolderPath =
+            $"src{Path.DirectorySeparatorChar}References{Path.DirectorySeparatorChar}AuthenticationSdk{Path.DirectorySeparatorChar}AuthenticationSdkTests{Path.DirectorySeparatorChar}Resource";
 
         private MerchantConfig MerchantConfigObj(string authType, string requestType)
         {

@@ -11,7 +11,9 @@ namespace AuthenticationSdkTests.core
     [TestFixture]
     public class AuthorizeTests
     {
-        private string resourceFolderPath = $"..{Path.DirectorySeparatorChar}Resource";
+        //private string resourceFolderPath = $"..{Path.DirectorySeparatorChar}Resource";
+        private string resourceFolderPath =
+            $"src{Path.DirectorySeparatorChar}References{Path.DirectorySeparatorChar}AuthenticationSdk{Path.DirectorySeparatorChar}AuthenticationSdkTests{Path.DirectorySeparatorChar}Resource";
 
         [Test]
         public void GetTokenTest_Get_DictObj()
