@@ -4,15 +4,14 @@ using AuthenticationSdk.authentication.http;
 using AuthenticationSdk.authentication.jwt;
 using AuthenticationSdk.core;
 using NUnit.Framework;
-using System;
 
 namespace AuthenticationSdkTests.core
 {
     [TestFixture]
     public class AuthorizeTests
     {
-        //private string resourceFolderPath = $"..{Path.DirectorySeparatorChar}Resource";
-        private string resourceFolderPath =
+        //private readonly string _resourceFolderPath = $"..{Path.DirectorySeparatorChar}Resource";
+        private readonly string _resourceFolderPath =
             $"src{Path.DirectorySeparatorChar}References{Path.DirectorySeparatorChar}AuthenticationSdk{Path.DirectorySeparatorChar}AuthenticationSdkTests{Path.DirectorySeparatorChar}Resource";
 
         [Test]
@@ -27,7 +26,7 @@ namespace AuthenticationSdkTests.core
                 {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
                 {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
                 {"authenticationType", authType},
-                {"keysDirectory", resourceFolderPath},
+                {"keysDirectory", _resourceFolderPath},
                 {"keyFilename", ""},
                 {"runEnvironment", "apitest.cybersource.com"},
                 {"keyAlias", ""},
@@ -77,7 +76,7 @@ namespace AuthenticationSdkTests.core
                 {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
                 {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
                 {"authenticationType", authType},
-                {"keysDirectory", resourceFolderPath},
+                {"keysDirectory", _resourceFolderPath},
                 {"keyFilename", ""},
                 {"runEnvironment", "apitest.cybersource.com"},
                 {"keyAlias", ""},
@@ -93,7 +92,7 @@ namespace AuthenticationSdkTests.core
 
             var merchConfigObj = new MerchantConfig(configurationDictionary) { RequestType = requestType };
 
-            using (var r = new StreamReader(resourceFolderPath+$"{Path.DirectorySeparatorChar}request_payments.json"))
+            using (var r = new StreamReader(_resourceFolderPath + $"{Path.DirectorySeparatorChar}request_payments.json"))
             {
                 merchConfigObj.RequestJsonData = r.ReadToEnd();
             }
@@ -114,7 +113,7 @@ namespace AuthenticationSdkTests.core
                 RequestType = "POST"
             };
 
-            using (var r = new StreamReader(resourceFolderPath + $"{Path.DirectorySeparatorChar}request_payments.json"))
+            using (var r = new StreamReader(_resourceFolderPath + $"{Path.DirectorySeparatorChar}request_payments.json"))
             {
                 merchConfigObj.RequestJsonData = r.ReadToEnd();
             }
@@ -168,7 +167,7 @@ namespace AuthenticationSdkTests.core
                 {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
                 {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
                 {"authenticationType", authType},
-                {"keysDirectory", $"..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}Resource"},
+                {"keysDirectory", ""},
                 {"keyFilename", ""},
                 {"runEnvironment", "apitest.cybersource.com"},
                 {"keyAlias", ""},
@@ -202,7 +201,7 @@ namespace AuthenticationSdkTests.core
                 {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
                 {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
                 {"authenticationType", authType},
-                {"keysDirectory", resourceFolderPath},
+                {"keysDirectory", ""},
                 {"keyFilename", ""},
                 {"runEnvironment", "apitest.cybersource.com"},
                 {"keyAlias", ""},
@@ -218,7 +217,7 @@ namespace AuthenticationSdkTests.core
 
             var merchConfigObj = new MerchantConfig(configurationDictionary) { RequestType = requestType };
 
-            using (var r = new StreamReader(resourceFolderPath+ $"{Path.DirectorySeparatorChar}request_payments.json"))
+            using (var r = new StreamReader(_resourceFolderPath + $"{Path.DirectorySeparatorChar}request_payments.json"))
             {
                 merchConfigObj.RequestJsonData = r.ReadToEnd();
             }
