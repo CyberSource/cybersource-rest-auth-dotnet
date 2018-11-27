@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using AuthenticationSdk.authentication.http;
 using AuthenticationSdk.authentication.jwt;
 using AuthenticationSdk.core;
+using AuthenticationSdk.util;
 using NUnit.Framework;
 
 namespace AuthenticationSdkTests.core
@@ -13,6 +15,15 @@ namespace AuthenticationSdkTests.core
         //private readonly string _resourceFolderPath = $"..{Path.DirectorySeparatorChar}Resource";
         private readonly string _resourceFolderPath =
             $"src{Path.DirectorySeparatorChar}References{Path.DirectorySeparatorChar}AuthenticationSdk{Path.DirectorySeparatorChar}AuthenticationSdkTests{Path.DirectorySeparatorChar}Resource";
+
+        [Test]
+        public void CheckAccessibilityOfP12File()
+        {
+            var p12FileName = "testrest.p12";
+            var p12FileExists = File.Exists(_resourceFolderPath + Path.DirectorySeparatorChar + p12FileName);
+
+            Assert.AreEqual(true, p12FileExists);
+        }
 
         [Test]
         public void GetTokenTest_Get_DictObj()
