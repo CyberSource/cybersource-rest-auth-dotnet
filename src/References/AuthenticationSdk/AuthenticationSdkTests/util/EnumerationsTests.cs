@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using AuthenticationSdk.core;
 using AuthenticationSdk.util;
 using NUnit.Framework;
@@ -10,10 +8,6 @@ namespace AuthenticationSdkTests.util
     [TestFixture]
     public class EnumerationsTests
     {
-        //private string resourceFolderPath = $"..{Path.DirectorySeparatorChar}Resource";
-        private string resourceFolderPath =
-            $"src{Path.DirectorySeparatorChar}References{Path.DirectorySeparatorChar}AuthenticationSdk{Path.DirectorySeparatorChar}AuthenticationSdkTests{Path.DirectorySeparatorChar}Resource";
-
         private MerchantConfig MerchantConfigObj(string authType, string requestType)
         {
             var configurationDictionary = new Dictionary<string, string>
@@ -22,7 +16,7 @@ namespace AuthenticationSdkTests.util
                 {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
                 {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
                 {"authenticationType", authType},
-                {"keysDirectory", resourceFolderPath},
+                {"keysDirectory", ""},
                 {"keyFilename", ""},
                 {"runEnvironment", "apitest.cybersource.com"},
                 {"keyAlias", ""},
