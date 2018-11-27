@@ -92,7 +92,7 @@ namespace AuthenticationSdkTests.core
 
             var merchConfigObj = new MerchantConfig(configurationDictionary) { RequestType = requestType };
 
-            using (var r = new StreamReader(resourceFolderPath+"\\request_payments.json"))
+            using (var r = new StreamReader(resourceFolderPath+$"{Path.DirectorySeparatorChar}request_payments.json"))
             {
                 merchConfigObj.RequestJsonData = r.ReadToEnd();
             }
@@ -113,7 +113,7 @@ namespace AuthenticationSdkTests.core
                 RequestType = "POST"
             };
 
-            using (var r = new StreamReader(resourceFolderPath +"\\request_payments.json"))
+            using (var r = new StreamReader(resourceFolderPath + $"{Path.DirectorySeparatorChar}request_payments.json"))
             {
                 merchConfigObj.RequestJsonData = r.ReadToEnd();
             }
@@ -167,7 +167,7 @@ namespace AuthenticationSdkTests.core
                 {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
                 {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
                 {"authenticationType", authType},
-                {"keysDirectory", "..\\..\\Resource"},
+                {"keysDirectory", $"..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}Resource"},
                 {"keyFilename", ""},
                 {"runEnvironment", "apitest.cybersource.com"},
                 {"keyAlias", ""},
@@ -217,7 +217,7 @@ namespace AuthenticationSdkTests.core
 
             var merchConfigObj = new MerchantConfig(configurationDictionary) { RequestType = requestType };
 
-            using (var r = new StreamReader(resourceFolderPath+"\\request_payments.json"))
+            using (var r = new StreamReader(resourceFolderPath+ $"{Path.DirectorySeparatorChar}request_payments.json"))
             {
                 merchConfigObj.RequestJsonData = r.ReadToEnd();
             }
