@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using AuthenticationSdk.core;
 using NUnit.Framework;
 
@@ -9,7 +10,7 @@ namespace AuthenticationSdkTests.util
     public class MerchantConfigTests
     {
         private string resourceFolderPath =
-            "C:\\CYBS\\CyberSource_Authentication_SDK_dotNet\\src\\References\\AuthenticationSdk\\AuthenticationSdkTests\\Resource";
+            $"{AppDomain.CurrentDomain.BaseDirectory}{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}Resource";
 
 
         [Test]        

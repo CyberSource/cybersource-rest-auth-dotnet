@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using AuthenticationSdk.core;
 using AuthenticationSdk.util;
 using NUnit.Framework;
@@ -9,7 +11,7 @@ namespace AuthenticationSdkTests.util
     public class EnumerationsTests
     {
         private string resourceFolderPath =
-            "C:\\CYBS\\CyberSource_Authentication_SDK_dotNet\\src\\References\\AuthenticationSdk\\AuthenticationSdkTests\\Resource";
+            $"{AppDomain.CurrentDomain.BaseDirectory}{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}Resource";
 
 
         private MerchantConfig MerchantConfigObj(string authType, string requestType)
