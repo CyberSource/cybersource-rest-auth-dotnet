@@ -20,5 +20,19 @@ namespace AuthenticationSdkTests.authentication.jwt
 
             Assert.IsInstanceOf(typeof(Token), token);
         }
+
+        [Test]
+        public void GetTokenTest_VerifyBearerTokenNotEmpty()
+        {
+            var merchConfigObj = new MerchantConfig
+            {
+                AuthenticationType = "jwt",
+                RequestType = "GET"
+            };
+
+            var token = (JwtToken)new JwtTokenGenerator(merchConfigObj).GetToken();
+
+            Assert.IsNotEmpty(token.BearerToken);
+        }
     }
 }
