@@ -23,6 +23,20 @@ namespace AuthenticationSdkTests.core
         }
 
         [Test]
+        public void AuthorizeTest_Jwt_Get_MerchCfgObj()
+        {
+            var merchConfigObj = new MerchantConfig
+            {
+                AuthenticationType = "jwt",
+                RequestType = "GET"
+            };
+
+            var authorizeObj = new Authorize(merchConfigObj);
+
+            Assert.IsInstanceOf(typeof(Authorize), authorizeObj);
+        }
+
+        [Test]
         public void GetTokenTest_Get_DictObj()
         {            
             var authType = "jwt";
