@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using AuthenticationSdk.util;
 using NLog;
@@ -287,7 +288,7 @@ namespace AuthenticationSdk.core
                     Logger.Warn($"{Constants.WarningPrefix} KeyfileName not provided. Assigning the value of: [MerchantId]");
                 }
 
-                P12Keyfilepath = KeyDirectory + "\\" + KeyfileName + ".p12";
+                P12Keyfilepath = KeyDirectory + Path.DirectorySeparatorChar + KeyfileName + ".p12";
             }
         }
     }
