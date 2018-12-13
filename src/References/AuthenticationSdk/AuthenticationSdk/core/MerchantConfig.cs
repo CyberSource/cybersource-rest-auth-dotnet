@@ -170,15 +170,28 @@ namespace AuthenticationSdk.core
                 {
                     _propertiesSetUsing = "Dictionary Object";
 
-                    MerchantId = merchantConfigDictionary["merchantID"];
-                    MerchantSecretKey = merchantConfigDictionary["merchantsecretKey"];
-                    MerchantKeyId = merchantConfigDictionary["merchantKeyId"];
+                    // Reading authentication type, 
+                    // Based on which only those key/value pairs to be read, which belong to this auth type.
                     AuthenticationType = merchantConfigDictionary["authenticationType"];
-                    KeyDirectory = merchantConfigDictionary["keysDirectory"];
-                    KeyfileName = merchantConfigDictionary["keyFilename"];
+                    Enumerations.AuthenticationType authTypeInput;                    
+                    Enum.TryParse(AuthenticationType, out authTypeInput);
+
+                    if(Equals(authTypeInput, Enumerations.AuthenticationType.HTTP_SIGNATURE))
+                    {
+                        MerchantSecretKey = merchantConfigDictionary["merchantsecretKey"];
+                        MerchantKeyId = merchantConfigDictionary["merchantKeyId"];
+                    }
+
+                    if(Equals(authTypeInput, Enumerations.AuthenticationType.JWT))
+                    {
+                        KeyDirectory = merchantConfigDictionary["keysDirectory"];
+                        KeyAlias = merchantConfigDictionary["keyAlias"];
+                        KeyfileName = merchantConfigDictionary["keyFilename"];
+                        KeyPass = merchantConfigDictionary["keyPass"];
+                    }
+
+                    MerchantId = merchantConfigDictionary["merchantID"];
                     RunEnvironment = merchantConfigDictionary["runEnvironment"];
-                    KeyAlias = merchantConfigDictionary["keyAlias"];
-                    KeyPass = merchantConfigDictionary["keyPass"];
                     EnableLog = merchantConfigDictionary["enableLog"];
                     LogDirectory = merchantConfigDictionary["logDirectory"];
                     LogfileMaxSize = merchantConfigDictionary["logFileMaxSize"];
