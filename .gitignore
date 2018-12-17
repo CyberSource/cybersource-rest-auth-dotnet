@@ -330,3 +330,4 @@ ASALocalRun/
 .mfractor/
 /src/.vs
 /src/References/ApiSdk/.vs
+/src/References/ApiSdk/ApiSdkTests/.sonarqube
