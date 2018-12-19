@@ -4,5 +4,3 @@ mono:
 solution: src/References/AuthenticationSdk/AuthenticationSdk.sln
 script:
   - /bin/sh ./mono_nunit_test.sh
-os:
-  - osx
