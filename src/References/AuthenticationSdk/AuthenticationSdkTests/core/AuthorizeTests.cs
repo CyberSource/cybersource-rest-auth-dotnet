@@ -12,6 +12,8 @@ namespace AuthenticationSdkTests.core
     {
         private string resourceFolderPath = $"..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}Resource";
 
+        // READING MERCHANT CONFIG FROM DICTIONARY OBJECT
+        // GET
         [Test]
         public void GetTokenTest_Get_DictObj()
         {            
@@ -47,24 +49,43 @@ namespace AuthenticationSdkTests.core
         }
 
         [Test]
-        public void GetTokenTest_Get_MerchCfgObj()
-        {           
-            var merchConfigObj = new MerchantConfig
+        public void GetSignatureTest_Get_DictObj()
+        {
+            var authType = "http_signature";
+            var requestType = "GET";
+
+            var configurationDictionary = new Dictionary<string, string>
             {
-                AuthenticationType = "jwt",
-                RequestType = "GET"
+                {"merchantID", "testrest"},
+                {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
+                {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
+                {"authenticationType", authType},
+                {"keysDirectory", "..\\..\\Resource"},
+                {"keyFilename", ""},
+                {"runEnvironment", "apitest.cybersource.com"},
+                {"keyAlias", ""},
+                {"keyPass", ""},
+                {"enableLog", ""},
+                {"logDirectory", ""},
+                {"logFileMaxSize", ""},
+                {"logFileName",""},
+                {"timeout", ""},
+                {"proxyAddress", ""},
+                {"proxyPort", ""}
             };
+
+            var merchConfigObj = new MerchantConfig(configurationDictionary) { RequestType = requestType };
+
             var authObj = new Authorize(merchConfigObj);
+            var testObj = authObj.GetSignature();
 
-            var testObj = authObj.GetToken();
-
-            Assert.IsInstanceOf(typeof (JwtToken), testObj);
+            Assert.IsInstanceOf(typeof(HttpToken), testObj);
         }
 
-
+        // POST
         [Test]
         public void GetTokenTest_Post_DictObj()
-        {            
+        {
             var authType = "jwt";
             var requestType = "POST";
 
@@ -90,7 +111,7 @@ namespace AuthenticationSdkTests.core
 
             var merchConfigObj = new MerchantConfig(configurationDictionary) { RequestType = requestType };
 
-            using (var r = new StreamReader(resourceFolderPath+"\\request_payments.json"))
+            using (var r = new StreamReader(resourceFolderPath + "\\request_payments.json"))
             {
                 merchConfigObj.RequestJsonData = r.ReadToEnd();
             }
@@ -98,10 +119,66 @@ namespace AuthenticationSdkTests.core
             var authObj = new Authorize(merchConfigObj);
             var testObj = authObj.GetToken();
 
+            Assert.IsInstanceOf(typeof(JwtToken), testObj);
+        }
+
+        [Test]
+        public void GetSignatureTest_Post_DictObj()
+        {
+            var authType = "http_signature";
+            var requestType = "POST";
+
+            var configurationDictionary = new Dictionary<string, string>
+            {
+                {"merchantID", "testrest"},
+                {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
+                {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
+                {"authenticationType", authType},
+                {"keysDirectory", resourceFolderPath},
+                {"keyFilename", ""},
+                {"runEnvironment", "apitest.cybersource.com"},
+                {"keyAlias", ""},
+                {"keyPass", ""},
+                {"enableLog", ""},
+                {"logDirectory", ""},
+                {"logFileName",""},
+                {"logFileMaxSize", ""},
+                {"timeout", ""},
+                {"proxyAddress", ""},
+                {"proxyPort", ""}
+            };
+
+            var merchConfigObj = new MerchantConfig(configurationDictionary) { RequestType = requestType };
+
+            using (var r = new StreamReader(resourceFolderPath + "\\request_payments.json"))
+            {
+                merchConfigObj.RequestJsonData = r.ReadToEnd();
+            }
+
+            var authObj = new Authorize(merchConfigObj);
+            var testObj = authObj.GetSignature();
+
+            Assert.IsInstanceOf(typeof(HttpToken), testObj);
+        }
+
+        // READING MERCHANT CONFIG FROM APP.CONFIG FILE
+        // GET
+        [Test]
+        public void GetTokenTest_Get_MerchCfgObj()
+        {           
+            var merchConfigObj = new MerchantConfig
+            {
+                AuthenticationType = "jwt",
+                RequestType = "GET"
+            };
+            var authObj = new Authorize(merchConfigObj);
+
+            var testObj = authObj.GetToken();
+
             Assert.IsInstanceOf(typeof (JwtToken), testObj);
         }
 
-
+        // POST
         [Test]
         public void GetTokenTest_Post_MerchCfgObj()
         {            
@@ -152,80 +229,6 @@ namespace AuthenticationSdkTests.core
 
             Assert.AreEqual(null, authObj.GetToken());
         }
-        
-        [Test]
-        public void GetSignatureTest_Get_DictObj()
-        {
-            var authType = "http_signature";
-            var requestType = "GET";
-
-            var configurationDictionary = new Dictionary<string, string>
-            {
-                {"merchantID", "testrest"},
-                {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
-                {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
-                {"authenticationType", authType},
-                {"keysDirectory", "..\\..\\Resource"},
-                {"keyFilename", ""},
-                {"runEnvironment", "apitest.cybersource.com"},
-                {"keyAlias", ""},
-                {"keyPass", ""},
-                {"enableLog", ""},
-                {"logDirectory", ""},
-                {"logFileMaxSize", ""},
-                {"logFileName",""},
-                {"timeout", ""},
-                {"proxyAddress", ""},
-                {"proxyPort", ""}
-            };
-
-            var merchConfigObj = new MerchantConfig(configurationDictionary) { RequestType = requestType };
-
-            var authObj = new Authorize(merchConfigObj);
-            var testObj = authObj.GetSignature();
-
-            Assert.IsInstanceOf(typeof(HttpToken), testObj);            
-        }
-
-        [Test]
-        public void GetSignatureTest_Post_DictObj()
-        {
-            var authType = "http_signature";
-            var requestType = "POST";
-            
-            var configurationDictionary = new Dictionary<string, string>
-            {
-                {"merchantID", "testrest"},
-                {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
-                {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
-                {"authenticationType", authType},
-                {"keysDirectory", resourceFolderPath},
-                {"keyFilename", ""},
-                {"runEnvironment", "apitest.cybersource.com"},
-                {"keyAlias", ""},
-                {"keyPass", ""},
-                {"enableLog", ""},
-                {"logDirectory", ""},
-                {"logFileName",""},
-                {"logFileMaxSize", ""},
-                {"timeout", ""},
-                {"proxyAddress", ""},
-                {"proxyPort", ""}
-            };
-
-            var merchConfigObj = new MerchantConfig(configurationDictionary) { RequestType = requestType };
-
-            using (var r = new StreamReader(resourceFolderPath+"\\request_payments.json"))
-            {
-                merchConfigObj.RequestJsonData = r.ReadToEnd();
-            }
-
-            var authObj = new Authorize(merchConfigObj);
-            var testObj = authObj.GetSignature();
-
-            Assert.IsInstanceOf(typeof(HttpToken), testObj);
-        }
-        
     }
 }
 
