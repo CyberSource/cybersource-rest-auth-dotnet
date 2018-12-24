@@ -10,8 +10,7 @@ namespace AuthenticationSdkTests.core
     [TestFixture]
     public class AuthorizeTests
     {
-        private string resourceFolderPath =
-            "C:\\CYBS\\CyberSource_Authentication_SDK_dotNet\\src\\References\\AuthenticationSdk\\AuthenticationSdkTests\\Resource";
+        private string resourceFolderPath = $"..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}Resource";
 
         [Test]
         public void GetTokenTest_Get_DictObj()
