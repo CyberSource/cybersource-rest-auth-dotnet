@@ -49,11 +49,15 @@ namespace AuthenticationSdk.authentication.jwt
                 token = TokenForCategory2();
             }
 
+            Console.WriteLine($"SetToken(): Token Generated = {token}");
+
             return token;
         }
 
         private string TokenForCategory1()
         {
+            Console.WriteLine("creating TokenForCategory1");
+
             var jwtBody = "{ \"iat\":\"" + DateTime.Now.ToUniversalTime().ToString("r") + "\"}";
 
             var x5Cert = _jwtToken.Certificate;
@@ -80,6 +84,8 @@ namespace AuthenticationSdk.authentication.jwt
 
         private string TokenForCategory2()
         {
+            Console.WriteLine("creating TokenForCategory2");
+
             var digest = GenerateDigest(_jwtToken.RequestJsonData);
 
             var jwtBody = "{\n            \"digest\":\"" + digest + "\", \"digestAlgorithm\":\"SHA-256\", \"iat\":\"" + DateTime.Now.ToUniversalTime().ToString("r") + "\"}";

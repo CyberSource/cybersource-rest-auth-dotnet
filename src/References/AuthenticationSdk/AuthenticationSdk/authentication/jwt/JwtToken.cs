@@ -14,6 +14,8 @@ namespace AuthenticationSdk.authentication.jwt
             HostName = merchantConfig.HostName;
             P12FilePath = merchantConfig.P12Keyfilepath;
 
+            Console.WriteLine($"P12 File Path: {Path.GetFullPath(P12FilePath)}");
+
             if (!File.Exists(P12FilePath))
             {
                 throw new Exception($"{Constants.ErrorPrefix} File not found at the given path: {Path.GetFullPath(P12FilePath)}");
@@ -22,6 +24,8 @@ namespace AuthenticationSdk.authentication.jwt
             KeyAlias = merchantConfig.KeyAlias;
             KeyPass = merchantConfig.KeyPass;
             Certificate = Cache.FetchCachedCertificate(P12FilePath, KeyPass);
+
+            Console.WriteLine("JwtToken Constructor call ends: Object is now in ready state");
         }
 
         public string BearerToken { get; set; }
