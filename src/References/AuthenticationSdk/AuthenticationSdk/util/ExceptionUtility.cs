@@ -1,4 +1,5 @@
 ﻿using NLog;
+using System;
 
 namespace AuthenticationSdk.util
 {
@@ -15,10 +16,12 @@ namespace AuthenticationSdk.util
                 if (!string.IsNullOrEmpty(exceptionMessage))
                 {
                     logger.Error(exceptionMessage);
+                    Console.WriteLine(exceptionMessage);
 
                     if (!string.IsNullOrEmpty(stackTrace))
                     {
                         logger.Trace(stackTrace);
+                        Console.WriteLine(stackTrace);
                     }
                 }
 
