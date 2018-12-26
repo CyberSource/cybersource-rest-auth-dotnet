@@ -239,7 +239,7 @@ namespace AuthenticationSdkTests.core
 
             var merchConfigObj = new MerchantConfig(configurationDictionary) { RequestType = requestType };
 
-            using (var r = new StreamReader(_resourceFolderPath + $"{Path.DirectorySeparatorChar}request_payments.json"))
+            using (var r = new StreamReader($"{_resourceFolderPath}{Path.DirectorySeparatorChar}request_payments.json"))
             {
                 merchConfigObj.RequestJsonData = r.ReadToEnd();
             }
