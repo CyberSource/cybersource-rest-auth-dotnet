@@ -65,8 +65,7 @@ namespace AuthenticationSdk.core
             }
             catch (Exception e)
             {
-                ExceptionUtility.Exception(e.Message, e.StackTrace);
-                return null;
+                throw e;
             }
         }
 
@@ -105,8 +104,7 @@ namespace AuthenticationSdk.core
             }
             catch (Exception e)
             {
-                ExceptionUtility.Exception(e.Message, e.StackTrace);
-                return null;
+                throw e;
             }
         }
 
