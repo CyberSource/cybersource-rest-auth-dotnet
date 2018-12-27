@@ -62,9 +62,15 @@ namespace AuthenticationSdk.authentication.jwt
 
             var x5Cert = _jwtToken.Certificate;
 
+            Console.WriteLine($"Certificate.Subject (string): {x5Cert.Subject}");
+            Console.WriteLine($"Certificate.HasPrivateKey (bool): {x5Cert.HasPrivateKey}");
+
             var publicKey = Convert.ToBase64String(x5Cert.RawData);
 
             var privateKey = x5Cert.GetRSAPrivateKey();
+
+            Console.WriteLine($"privateKey.KeySize (int): {privateKey.KeySize}");
+            Console.WriteLine($"privateKey.KeyExchangeAlgorithm (string): {privateKey.KeyExchangeAlgorithm}");
 
             var x5CList = new List<string>()
             {
