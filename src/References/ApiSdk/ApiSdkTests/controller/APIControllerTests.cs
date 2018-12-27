@@ -299,6 +299,27 @@ namespace ApiSdkTests.controller
             Assert.AreEqual(201, responseObj.StatusCode);
         }
 
+        [Test]
+        public void PostPayment_Test_jwt_patchCall()
+        {
+            string requestJsonData;
+
+            using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}request_paymentinstruments.json"))
+            {
+                requestJsonData = r.ReadToEnd();
+            }
+
+            var merchantConfig = MerchantConfigObj("http_signature", "PATCH");
+
+            merchantConfig.RequestTarget = "/tms/v1/paymentinstruments/7DFB37D8E4FAFD1CE05341588E0A6B93";
+            merchantConfig.RequestJsonData = requestJsonData;
+
+            var apiControllerObj = new APIController(merchantConfig);
+            var responseObj = apiControllerObj.PutPayment();
+
+            Assert.AreEqual(201, responseObj.StatusCode);
+        }
+
 
         [Test]
         public void PostPayment_Test_jwt_timeoutException()
