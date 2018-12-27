@@ -64,13 +64,20 @@ namespace AuthenticationSdk.authentication.jwt
 
             Console.WriteLine($"Certificate.Subject (string): {x5Cert.Subject}");
             Console.WriteLine($"Certificate.HasPrivateKey (bool): {x5Cert.HasPrivateKey}");
+            Console.WriteLine($"Certificate..RawData.ToString() (string): {x5Cert.RawData.ToString()}");
 
             var publicKey = Convert.ToBase64String(x5Cert.RawData);
 
             var privateKey = x5Cert.GetRSAPrivateKey();
-
-            Console.WriteLine($"privateKey.KeySize (int): {privateKey.KeySize}");
-            Console.WriteLine($"privateKey.KeyExchangeAlgorithm (string): {privateKey.KeyExchangeAlgorithm}");
+            if(privateKey != null)
+            {
+                Console.WriteLine($"privateKey.KeySize (int): {privateKey.KeySize}");
+                Console.WriteLine($"privateKey.KeyExchangeAlgorithm (string): {privateKey.KeyExchangeAlgorithm}");
+            }
+            else
+            {
+                Console.WriteLine($"privateKey is NULL");
+            }
 
             var x5CList = new List<string>()
             {
