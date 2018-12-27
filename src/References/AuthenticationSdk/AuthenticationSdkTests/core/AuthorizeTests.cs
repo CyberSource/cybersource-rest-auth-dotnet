@@ -4,6 +4,7 @@ using AuthenticationSdk.authentication.http;
 using AuthenticationSdk.authentication.jwt;
 using AuthenticationSdk.core;
 using NUnit.Framework;
+using System;
 
 namespace AuthenticationSdkTests.core
 {
@@ -149,9 +150,8 @@ namespace AuthenticationSdkTests.core
 
             var obj = new MerchantConfig(configurationDictionary);
             obj.RequestType = "GET";
-            var authObj = new Authorize(obj);            
 
-            Assert.AreEqual(null, authObj.GetToken());
+            Assert.Throws<ArgumentNullException>(() => new Authorize(obj).GetToken());
         }
         
         [Test]
