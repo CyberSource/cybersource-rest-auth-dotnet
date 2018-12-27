@@ -11,8 +11,8 @@ namespace ApiSdkTests.controller
     [TestFixture]
     public class APIControllerTests
     {
-        private string resourceFolderPath =
-            "C:\\CYBS\\CyberSource_Authentication_SDK_dotNet\\src\\References\\ApiSdk\\ApiSdkTests\\Resource";
+        //private string resourceFolderPath = $"..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}Resource";
+        private string resourceFolderPath = $"..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}References{Path.DirectorySeparatorChar}ApiSdk{Path.DirectorySeparatorChar}ApiSdkTests{Path.DirectorySeparatorChar}Resource";
 
         //Supporting Functions
 
@@ -132,7 +132,7 @@ namespace ApiSdkTests.controller
         {
             string requestJsonData;
 
-            using (var r = new StreamReader(resourceFolderPath + "\\TRRReport_csv.json"))
+            using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}TRRReport_csv.json"))
             {
                 requestJsonData = r.ReadToEnd();
             }
@@ -147,7 +147,7 @@ namespace ApiSdkTests.controller
 
             if (responseObj.StatusCode == 400)
             {
-                using (var r = new StreamReader(resourceFolderPath + "\\TRRReport_xml.json"))
+                using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}TRRReport_xml.json"))
                 {
                     requestJsonData = r.ReadToEnd();
                 }
@@ -196,7 +196,7 @@ namespace ApiSdkTests.controller
         {
             string requestJsonData;
 
-            using (var r = new StreamReader(resourceFolderPath + "\\TRRReport_csv.json"))
+            using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}TRRReport_csv.json"))
             {
                 requestJsonData = r.ReadToEnd();
             }
@@ -211,7 +211,7 @@ namespace ApiSdkTests.controller
 
             if (responseObj.StatusCode == 400)
             {
-                using (var r = new StreamReader(resourceFolderPath+"\\TRRReport_xml.json"))
+                using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}TRRReport_xml.json"))
                 {
                     requestJsonData = r.ReadToEnd();
                 }
@@ -283,7 +283,7 @@ namespace ApiSdkTests.controller
         {
             string requestJsonData;
 
-            using (var r = new StreamReader(resourceFolderPath+"\\request_payments.json"))
+            using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}request_payments.json"))
             {
                 requestJsonData = r.ReadToEnd();
             }
@@ -305,7 +305,7 @@ namespace ApiSdkTests.controller
         {
             string requestJsonData;
 
-            using (var r = new StreamReader(resourceFolderPath + "\\request_payments.json"))
+            using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}request_payments.json"))
             {
                 requestJsonData = r.ReadToEnd();
             }
@@ -326,7 +326,7 @@ namespace ApiSdkTests.controller
         {
             string requestJsonData;
 
-            using (var r = new StreamReader(resourceFolderPath+"\\TRRReport_csv.json"))
+            using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}TRRReport_csv.json"))
             {
                 requestJsonData = r.ReadToEnd();
             }
@@ -341,7 +341,7 @@ namespace ApiSdkTests.controller
 
             if (responseObj.StatusCode == 400)
             {
-                using (var r = new StreamReader(resourceFolderPath+"\\TRRReport_xml.json"))
+                using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}TRRReport_xml.json"))
                 {
                     requestJsonData = r.ReadToEnd();
                 }
@@ -364,7 +364,7 @@ namespace ApiSdkTests.controller
         {
             string requestJsonData;
 
-            using (var r = new StreamReader(resourceFolderPath + "\\TRRReport_csv.json"))
+            using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}TRRReport_csv.json"))
             {
                 requestJsonData = r.ReadToEnd();
             }
