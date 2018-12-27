@@ -166,7 +166,7 @@ namespace ApiSdkTests.controller
         {
             var merchantConfig = MerchantConfigObj("http_signature", "GET");
 
-            merchantConfig.RequestTarget = "/pts/v2/captures/5289697403596987704107";            
+            merchantConfig.RequestTarget = "/pts/v2/captures/5459115187056202304001";            
 
             var apiControllerObj = new APIController(merchantConfig);
 
@@ -256,7 +256,7 @@ namespace ApiSdkTests.controller
         {
             var merchantConfig = MerchantConfigObj("jwt", "GET");
 
-            merchantConfig.RequestTarget = "/pts/v2/captures/5289697403596987704107";
+            merchantConfig.RequestTarget = "/pts/v2/captures/5459115187056202304001";
 
             var apiControllerObj = new APIController(merchantConfig);
 
