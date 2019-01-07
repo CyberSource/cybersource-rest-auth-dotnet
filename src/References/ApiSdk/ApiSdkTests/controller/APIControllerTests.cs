@@ -249,6 +249,27 @@ namespace ApiSdkTests.controller
         }
 
 
+        [Test]
+        public void PatchPayment_Test_httpSign()
+        {
+            string requestJsonData;
+
+            using (var r = new StreamReader(resourceFolderPath + "\\request_reversals.json"))
+            {
+                requestJsonData = r.ReadToEnd();
+            }
+
+            var merchantConfig = MerchantConfigObj("http_signature", "PATCH");
+
+            merchantConfig.RequestTarget = "/tms/v1/paymentinstruments/7DFB37D8E4FAFD1CE05341588E0A6B93";
+            merchantConfig.RequestJsonData = requestJsonData;
+
+            var apiControllerObj = new APIController(merchantConfig);
+            var responseObj = apiControllerObj.PatchPayment();
+
+            Assert.AreEqual(200, responseObj.StatusCode);
+        }
+
         //Tests for JWT token Authentication Type
 
         [Test]
@@ -304,20 +325,20 @@ namespace ApiSdkTests.controller
         {
             string requestJsonData;
 
-            using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}request_paymentinstruments.json"))
+            using (var r = new StreamReader($"{resourceFolderPath}{Path.DirectorySeparatorChar}request_reversals.json"))
             {
                 requestJsonData = r.ReadToEnd();
             }
 
-            var merchantConfig = MerchantConfigObj("http_signature", "PATCH");
+            var merchantConfig = MerchantConfigObj("JWT", "PATCH");
 
             merchantConfig.RequestTarget = "/tms/v1/paymentinstruments/7DFB37D8E4FAFD1CE05341588E0A6B93";
             merchantConfig.RequestJsonData = requestJsonData;
 
             var apiControllerObj = new APIController(merchantConfig);
-            var responseObj = apiControllerObj.PutPayment();
+            var responseObj = apiControllerObj.PatchPayment();
 
-            Assert.AreEqual(201, responseObj.StatusCode);
+            Assert.AreEqual(200, responseObj.StatusCode);
         }
 
 
