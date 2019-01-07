@@ -331,3 +331,4 @@ ASALocalRun/
 /src/.vs
 /src/References/ApiSdk/.vs
 /src/References/ApiSdk/ApiSdkTests/.sonarqube
+/src/References/ApiSdk/ApiSdk/ApiSdk.ruleset
