@@ -85,6 +85,7 @@
     <Compile Include="service\PaymentRequestService.cs" />
     <Compile Include="util\AuthenticationHelper.cs" />
     <Compile Include="util\Constants.cs" />
+    <Compile Include="util\HttpClientExtensions.cs" />
     <Compile Include="util\HttpConnUtility.cs" />
     <Compile Include="model\Response.cs" />
   </ItemGroup>
