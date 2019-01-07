@@ -87,6 +87,27 @@ namespace ApiSdk.controller
         }
 
         /**
+         * @return a Response object (HTTP Response) for the HTTP PATCH Request
+         * based on the Merchant Configuration passed to the Constructor of ApiController Class
+         */
+        public Response PatchPayment()
+        {
+            try
+            {
+                // Call the Service to Get the Response Object
+                var response = _paymentRequestService.PatchResponse();
+                LogResponseDetails(response);
+
+                return response;
+            }
+            catch (Exception e)
+            {
+                ExceptionUtility.Exception(e.Message, e.StackTrace);
+                return null;
+            }
+        }
+
+        /**
          * @return a Response object (HTTP Response) for the HTTP DELETE Request
          * based on the Merchant Configuration passed to the Constructor of ApiController Class
          */

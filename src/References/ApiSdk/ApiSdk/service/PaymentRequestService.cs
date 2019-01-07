@@ -9,8 +9,8 @@ using ApiSdk.model;
 using ApiSdk.util;
 using AuthenticationSdk.core;
 using NLog;
-using ExceptionUtil = AuthenticationSdk.util.ExceptionUtility;
 using static AuthenticationSdk.util.Enumerations;
+using ExceptionUtil = AuthenticationSdk.util.ExceptionUtility;
 
 namespace ApiSdk.service
 {
@@ -75,6 +75,18 @@ namespace ApiSdk.service
 
             var client = _conn.GetConnectionForPut(_merchantConfig);
             RunAsyncPut(client, _merchantConfig.RequestTarget, _hostName, _requestJsonData).Wait();
+            return _response;
+        }
+
+        public Response PatchResponse()
+        {
+            if (string.IsNullOrEmpty(_requestJsonData))
+            {
+                throw new Exception($"{Constants.ErrorPrefix} No Request JSON Data passed to the Service for the Patch Call");
+            }
+
+            var client = _conn.GetConnectionForPatch(_merchantConfig);
+            RunAsyncPatch(client, _merchantConfig.RequestTarget, _hostName, _requestJsonData).Wait();
             return _response;
         }
 
@@ -226,6 +238,50 @@ namespace ApiSdk.service
                 try
                 {
                     using (var response = await client.DeleteAsync(new Uri(uriString)))
+                    {
+                        _statusCode = (int)(TaskStatus)response.StatusCode;
+                        var data = await response.Content.ReadAsStringAsync();
+                        var dataMasked = _masking.MaskMessage(data);
+                        var headers = response.Headers.ToString();
+
+                        _response = new Response(_statusCode, headers, dataMasked);
+                    }
+                }
+                catch (TaskCanceledException e)
+                {
+                    ExceptionUtil.Exception(
+                        $"{Constants.ErrorPrefix} Network Error: Connection could not be established.",
+                        e.StackTrace);
+                }
+                catch (Exception e)
+                {
+                    ExceptionUtil.Exception(e.Message, e.StackTrace);
+                }
+            }
+        }
+
+        // End point of the PATCH Call to the API server
+        public async Task RunAsyncPatch(HttpClient client, string putUrlSuffix, string hostName, string requestJsonData)
+        {
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+            using (client)
+            {
+                var request = requestJsonData;
+
+                _logger.Trace("{0} {1}", "REQUEST BODY ->", _masking.MaskMessage(request));
+
+                var content = new StringContent(request);
+                content.Headers.ContentType = new MediaTypeHeaderValue(Constants.MediaTypeJson);
+
+                var uriString = Constants.HttpsUriPrefix + hostName + putUrlSuffix;
+
+                _logger.Trace("{0} {1}", "URL ->", uriString);
+
+                try
+                {
+                    using (var response = await client.PatchAsync(new Uri(uriString), content))
                     {
                         _statusCode = (int)(TaskStatus)response.StatusCode;
                         var data = await response.Content.ReadAsStringAsync();

@@ -11,6 +11,8 @@ namespace ApiSdk.connection
 
         HttpClient GetConnectionForPut(MerchantConfig merchantConfig);
 
+        HttpClient GetConnectionForPatch(MerchantConfig merchantConfig);
+
         HttpClient GetConnectionForDelete(MerchantConfig merchantConfig);
     }
 }
