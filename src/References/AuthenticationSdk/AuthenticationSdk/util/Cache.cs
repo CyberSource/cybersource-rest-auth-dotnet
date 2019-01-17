@@ -31,6 +31,7 @@ namespace AuthenticationSdk.util
                     policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
 
                     var certi = new X509Certificate2(p12FilePath, keyPassword);
+                    Console.WriteLine(   "inside cache" + certi.HasPrivateKey);
                     cache.Set("certiFromP12File", certi, policy);
                     return certi;
                 }
