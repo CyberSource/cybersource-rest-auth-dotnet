@@ -1,9 +1,6 @@
 language: csharp
 mono:
-  - 4.0.2
-  - 3.10.0
-  - 3.8.0
-  - 2.10.8
+  - latest
 solution: src/References/AuthenticationSdk/AuthenticationSdk.sln
 script:
   - /bin/sh ./mono_nunit_test.sh

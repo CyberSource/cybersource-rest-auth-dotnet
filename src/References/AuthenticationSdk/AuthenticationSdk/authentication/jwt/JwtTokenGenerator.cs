@@ -68,8 +68,10 @@ namespace AuthenticationSdk.authentication.jwt
 
             var publicKey = Convert.ToBase64String(x5Cert.RawData);
 
-            var privateKey = x5Cert.GetRSAPrivateKey();
-            if(privateKey != null)
+            //var privateKey = x5Cert.GetRSAPrivateKey();
+            var privateKey = (RSACryptoServiceProvider)x5Cert.PrivateKey;
+
+            if (privateKey != null)
             {
                 Console.WriteLine($"privateKey.KeySize (int): {privateKey.KeySize}");
                 Console.WriteLine($"privateKey.KeyExchangeAlgorithm (string): {privateKey.KeyExchangeAlgorithm}");
