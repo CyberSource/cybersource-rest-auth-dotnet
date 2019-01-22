@@ -13,8 +13,6 @@ namespace AuthenticationSdk.util
         {
             try
             {
-                Console.WriteLine("Starting to read P12 certificate file from cache");
-
                 ObjectCache cache = MemoryCache.Default;
 
                 var cachedCertificateFromP12File = cache["certiFromP12File"] as X509Certificate2;
@@ -22,8 +20,6 @@ namespace AuthenticationSdk.util
                 // If no entry found from cache, create a cache entry and return the created object
                 if (cachedCertificateFromP12File == null)
                 {
-                    Console.WriteLine("No entry found in cache. Making a cache entry");
-
                     var policy = new CacheItemPolicy();
                     var filePaths = new List<string>();
                     var cachedFilePath = Path.GetFullPath(p12FilePath);
@@ -31,7 +27,6 @@ namespace AuthenticationSdk.util
                     policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
 
                     var certi = new X509Certificate2(p12FilePath, keyPassword);
-                    Console.WriteLine(   "inside cache" + certi.HasPrivateKey);
                     cache.Set("certiFromP12File", certi, policy);
                     return certi;
                 }
@@ -41,8 +36,6 @@ namespace AuthenticationSdk.util
             }
             catch (CryptographicException e)
             {
-                Console.WriteLine("Exception Caught: CryptographicException");
-
                 if (e.Message.Equals("The specified network password is not correct.\r\n"))
                 {
                     throw new Exception($"{Constants.ErrorPrefix} KeyPassword provided:{keyPassword} is incorrect");

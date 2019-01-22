@@ -49,37 +49,18 @@ namespace AuthenticationSdk.authentication.jwt
                 token = TokenForCategory2();
             }
 
-            Console.WriteLine($"SetToken(): Token Generated = {token}");
-
             return token;
         }
 
         private string TokenForCategory1()
         {
-            Console.WriteLine("creating TokenForCategory1");
-
             var jwtBody = "{ \"iat\":\"" + DateTime.Now.ToUniversalTime().ToString("r") + "\"}";
 
             var x5Cert = _jwtToken.Certificate;
 
-            Console.WriteLine($"Certificate.Subject (string): {x5Cert.Subject}");
-            Console.WriteLine($"Certificate.HasPrivateKey (bool): {x5Cert.HasPrivateKey}");
-            Console.WriteLine($"Certificate..RawData.ToString() (string): {x5Cert.RawData.ToString()}");
-
             var publicKey = Convert.ToBase64String(x5Cert.RawData);
 
-            //var privateKey = x5Cert.GetRSAPrivateKey();
-            var privateKey = (RSACryptoServiceProvider)x5Cert.PrivateKey;
-
-            if (privateKey != null)
-            {
-                Console.WriteLine($"privateKey.KeySize (int): {privateKey.KeySize}");
-                Console.WriteLine($"privateKey.KeyExchangeAlgorithm (string): {privateKey.KeyExchangeAlgorithm}");
-            }
-            else
-            {
-                Console.WriteLine($"privateKey is NULL");
-            }
+            var privateKey = x5Cert.GetRSAPrivateKey();
 
             var x5CList = new List<string>()
             {
@@ -99,8 +80,6 @@ namespace AuthenticationSdk.authentication.jwt
 
         private string TokenForCategory2()
         {
-            Console.WriteLine("creating TokenForCategory2");
-
             var digest = GenerateDigest(_jwtToken.RequestJsonData);
 
             var jwtBody = "{\n            \"digest\":\"" + digest + "\", \"digestAlgorithm\":\"SHA-256\", \"iat\":\"" + DateTime.Now.ToUniversalTime().ToString("r") + "\"}";
