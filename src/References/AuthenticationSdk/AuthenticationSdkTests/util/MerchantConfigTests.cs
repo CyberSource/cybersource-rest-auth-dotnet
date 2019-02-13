@@ -8,10 +8,6 @@ namespace AuthenticationSdkTests.util
     [TestFixture]
     public class MerchantConfigTests
     {
-        private string resourceFolderPath =
-            "C:\\CYBS\\CyberSource_Authentication_SDK_dotNet\\src\\References\\AuthenticationSdk\\AuthenticationSdkTests\\Resource";
-
-
         [Test]        
         public void NullMerchantId()
         {
@@ -21,7 +17,7 @@ namespace AuthenticationSdkTests.util
                 {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
                 {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
                 {"authenticationType", "jwt"},
-                {"keysDirectory", resourceFolderPath},
+                {"keysDirectory", ""},
                 {"keyFilename", ""},
                 {"runEnvironment", "cybersource.environment.sandbox"},
                 {"keyAlias", ""},
@@ -47,7 +43,7 @@ namespace AuthenticationSdkTests.util
                 {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
                 {"merchantKeyId", ""},
                 {"authenticationType", "http_signature"},
-                {"keysDirectory", resourceFolderPath},
+                {"keysDirectory", ""},
                 {"keyFilename", ""},
                 {"runEnvironment", "cybersource.environment.sandbox"},
                 {"keyAlias", ""},
@@ -69,7 +65,7 @@ namespace AuthenticationSdkTests.util
             var configurationDictionary = new Dictionary<string, string>
             {
                 {"merchantID", "testrest"},
-                {"keysDirectory", resourceFolderPath},
+                {"keysDirectory", ""},
                 {"merchantsecretKey", ""},
                 {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
                 {"authenticationType", "http_signature"},
@@ -108,7 +104,7 @@ namespace AuthenticationSdkTests.util
                 {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
                 {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
                 {"authenticationType", "Invalid"},
-                {"keysDirectory", resourceFolderPath},
+                {"keysDirectory", ""},
                 {"keyFilename", ""},
                 {"runEnvironment", ""},
                 {"keyAlias", ""},
@@ -133,7 +129,7 @@ namespace AuthenticationSdkTests.util
                 {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
                 {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
                 {"authenticationType", ""},
-                {"keysDirectory", resourceFolderPath},
+                {"keysDirectory", ""},
                 {"keyFilename", ""},
                 {"runEnvironment", ""},
                 {"keyAlias", ""},
