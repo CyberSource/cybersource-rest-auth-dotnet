@@ -165,34 +165,98 @@ namespace AuthenticationSdk.core
 
         private void SetValuesUsingDictObj(IReadOnlyDictionary<string, string> merchantConfigDictionary)
         {
+            var key = string.Empty;
+
             try
             {
                 if (merchantConfigDictionary != null)
                 {
                     _propertiesSetUsing = "Dictionary Object";
 
-                    MerchantId = merchantConfigDictionary["merchantID"];
-                    MerchantSecretKey = merchantConfigDictionary["merchantsecretKey"];
-                    MerchantKeyId = merchantConfigDictionary["merchantKeyId"];
-                    AuthenticationType = merchantConfigDictionary["authenticationType"];
-                    KeyDirectory = merchantConfigDictionary["keysDirectory"];
-                    KeyfileName = merchantConfigDictionary["keyFilename"];
-                    RunEnvironment = merchantConfigDictionary["runEnvironment"];
-                    KeyAlias = merchantConfigDictionary["keyAlias"];
-                    KeyPass = merchantConfigDictionary["keyPass"];
-                    EnableLog = merchantConfigDictionary["enableLog"];
-                    LogDirectory = merchantConfigDictionary["logDirectory"];
-                    LogfileMaxSize = merchantConfigDictionary["logFileMaxSize"];
-                    LogFileName = merchantConfigDictionary["logFileName"];
-                    TimeOut = merchantConfigDictionary["timeout"];
-                    ProxyAddress = merchantConfigDictionary["proxyAddress"];
-                    ProxyPort = merchantConfigDictionary["proxyPort"];
+                    // MANDATORY KEYS
+                    key = "merchantID";
+                    MerchantId = merchantConfigDictionary[key];
+                    key = "runEnvironment";
+                    RunEnvironment = merchantConfigDictionary[key];
+                    key = "authenticationType";
+                    AuthenticationType = merchantConfigDictionary[key];
+
+                    Enumerations.AuthenticationType authTypeInput;
+                    Enum.TryParse(AuthenticationType.ToUpper(), out authTypeInput);
+
+                    if (Equals(authTypeInput, Enumerations.AuthenticationType.HTTP_SIGNATURE))
+                    {
+                        key = "merchantsecretKey";
+                        MerchantSecretKey = merchantConfigDictionary[key];
+                        key = "merchantKeyId";
+                        MerchantKeyId = merchantConfigDictionary[key];
+                    }
+
+                    // OPTIONAL KEYS
+                    // only if the key is passed read the value, otherwise use default / null values
+                    if (Equals(authTypeInput, Enumerations.AuthenticationType.JWT))
+                    {
+                        if (merchantConfigDictionary.ContainsKey("keyAlias"))
+                        {
+                            KeyAlias = merchantConfigDictionary["keyAlias"];
+                        }
+
+                        if (merchantConfigDictionary.ContainsKey("keyFilename"))
+                        {
+                            KeyfileName = merchantConfigDictionary["keyFilename"];
+                        }
+
+                        if (merchantConfigDictionary.ContainsKey("keyPass"))
+                        {
+                            KeyPass = merchantConfigDictionary["keyPass"];
+                        }
+
+                        if (merchantConfigDictionary.ContainsKey("keysDirectory"))
+                        {
+                            KeyDirectory = merchantConfigDictionary["keysDirectory"];
+                        }
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("enableLog"))
+                    {
+                        EnableLog = merchantConfigDictionary["enableLog"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("logDirectory"))
+                    {
+                        LogDirectory = merchantConfigDictionary["logDirectory"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("logFileMaxSize"))
+                    {
+                        LogfileMaxSize = merchantConfigDictionary["logFileMaxSize"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("logFileName"))
+                    {
+                        LogFileName = merchantConfigDictionary["logFileName"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("timeout"))
+                    {
+                        TimeOut = merchantConfigDictionary["timeout"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("proxyAddress"))
+                    {
+                        ProxyAddress = merchantConfigDictionary["proxyAddress"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("proxyPort"))
+                    {
+                        ProxyPort = merchantConfigDictionary["proxyPort"];
+                    }
                 }
             }
             catch (KeyNotFoundException)
             {
                 throw new Exception(
-                    $"{Constants.ErrorPrefix} A Required Key Missing in the Configuration Dictionary Object Passed to the instance of MerchantConfig Object");
+                    $"{Constants.ErrorPrefix} Mandatory Key ({key}) Missing in the Configuration Dictionary Object Passed to the instance of MerchantConfig");
             }
         }
 
