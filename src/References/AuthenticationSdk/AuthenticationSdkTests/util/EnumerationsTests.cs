@@ -8,10 +8,6 @@ namespace AuthenticationSdkTests.util
     [TestFixture]
     public class EnumerationsTests
     {
-        private string resourceFolderPath =
-            "C:\\CYBS\\CyberSource_Authentication_SDK_dotNet\\src\\References\\AuthenticationSdk\\AuthenticationSdkTests\\Resource";
-
-
         private MerchantConfig MerchantConfigObj(string authType, string requestType)
         {
             var configurationDictionary = new Dictionary<string, string>
@@ -20,7 +16,7 @@ namespace AuthenticationSdkTests.util
                 {"merchantsecretKey", "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="},
                 {"merchantKeyId", "08c94330-f618-42a3-b09d-e1e43be5efda"},
                 {"authenticationType", authType},
-                {"keysDirectory", resourceFolderPath},
+                {"keysDirectory", ""},
                 {"keyFilename", ""},
                 {"runEnvironment", "apitest.cybersource.com"},
                 {"keyAlias", ""},
