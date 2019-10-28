@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
@@ -91,6 +92,10 @@ namespace AuthenticationSdk.core
 
         public string ProxyPort { get; set; }
 
+        public string ProxyUsername { get; set; }
+
+        public string ProxyPassword { get; set; }
+
         public Logger Logger { get; set; }
 
         public string HostName { get; set; }
@@ -160,6 +165,8 @@ namespace AuthenticationSdk.core
             TimeOut = merchantConfigSection["timeout"];
             ProxyAddress = merchantConfigSection["proxyAddress"];
             ProxyPort = merchantConfigSection["proxyPort"];
+            ProxyUsername = merchantConfigSection["proxyUsername"];
+            ProxyPassword = merchantConfigSection["proxyPassword"];
         }
 
         private void SetValuesUsingDictObj(IReadOnlyDictionary<string, string> merchantConfigDictionary)
@@ -249,6 +256,16 @@ namespace AuthenticationSdk.core
                     if (merchantConfigDictionary.ContainsKey("proxyPort"))
                     {
                         ProxyPort = merchantConfigDictionary["proxyPort"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("proxyUsername"))
+                    {
+                        ProxyUsername = merchantConfigDictionary["proxyUsername"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("proxyPassword"))
+                    {
+                        ProxyPassword = merchantConfigDictionary["proxyPassword"];
                     }
                 }
             }
