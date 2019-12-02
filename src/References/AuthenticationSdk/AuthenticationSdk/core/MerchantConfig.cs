@@ -87,6 +87,8 @@ namespace AuthenticationSdk.core
         public string LogFileName { get; set; } = "cybs.log";
 
         public string TimeOut { get; set; }
+		
+		public string UseProxy { get; set; }
 
         public string ProxyAddress { get; set; }
 
@@ -163,6 +165,7 @@ namespace AuthenticationSdk.core
             LogfileMaxSize = merchantConfigSection["logFileMaxSize"];
             LogFileName = merchantConfigSection["logFileName"];
             TimeOut = merchantConfigSection["timeout"];
+			UseProxy = merchantConfigSection["useProxy"];
             ProxyAddress = merchantConfigSection["proxyAddress"];
             ProxyPort = merchantConfigSection["proxyPort"];
             ProxyUsername = merchantConfigSection["proxyUsername"];
@@ -246,6 +249,11 @@ namespace AuthenticationSdk.core
                     if (merchantConfigDictionary.ContainsKey("timeout"))
                     {
                         TimeOut = merchantConfigDictionary["timeout"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("useProxy"))
+                    {
+                        UseProxy = merchantConfigDictionary["useProxy"];
                     }
 
                     if (merchantConfigDictionary.ContainsKey("proxyAddress"))
