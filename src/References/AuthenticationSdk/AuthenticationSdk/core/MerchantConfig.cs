@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
@@ -87,9 +88,15 @@ namespace AuthenticationSdk.core
 
         public string TimeOut { get; set; }
 
+        public string UseProxy { get; set; }
+
         public string ProxyAddress { get; set; }
 
         public string ProxyPort { get; set; }
+
+        public string ProxyUsername { get; set; }
+
+        public string ProxyPassword { get; set; }
 
         public Logger Logger { get; set; }
 
@@ -158,8 +165,11 @@ namespace AuthenticationSdk.core
             LogfileMaxSize = merchantConfigSection["logFileMaxSize"];
             LogFileName = merchantConfigSection["logFileName"];
             TimeOut = merchantConfigSection["timeout"];
+            UseProxy = merchantConfigSection["useProxy"];
             ProxyAddress = merchantConfigSection["proxyAddress"];
             ProxyPort = merchantConfigSection["proxyPort"];
+            ProxyUsername = merchantConfigSection["proxyUsername"];
+            ProxyPassword = merchantConfigSection["proxyPassword"];
         }
 
         private void SetValuesUsingDictObj(IReadOnlyDictionary<string, string> merchantConfigDictionary)
@@ -241,6 +251,11 @@ namespace AuthenticationSdk.core
                         TimeOut = merchantConfigDictionary["timeout"];
                     }
 
+                    if (merchantConfigDictionary.ContainsKey("useProxy"))
+                    {
+                        UseProxy = merchantConfigDictionary["useProxy"];
+                    }
+
                     if (merchantConfigDictionary.ContainsKey("proxyAddress"))
                     {
                         ProxyAddress = merchantConfigDictionary["proxyAddress"];
@@ -249,6 +264,16 @@ namespace AuthenticationSdk.core
                     if (merchantConfigDictionary.ContainsKey("proxyPort"))
                     {
                         ProxyPort = merchantConfigDictionary["proxyPort"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("proxyUsername"))
+                    {
+                        ProxyUsername = merchantConfigDictionary["proxyUsername"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("proxyPassword"))
+                    {
+                        ProxyPassword = merchantConfigDictionary["proxyPassword"];
                     }
                 }
             }
