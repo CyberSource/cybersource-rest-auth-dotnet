@@ -18,9 +18,17 @@
 
         public static readonly string CybsProdHostName = "api.cybersource.com";
 
+        public static readonly string BoASandboxHostName = "apitest.merchant-services.bankofamerica.com";
+
+        public static readonly string BoAProdHostName = "api.merchant-services.bankofamerica.com";
+
         public static readonly string CybsSandboxRunEnv = "cybersource.environment.sandbox";
 
         public static readonly string CybsProdRunEnv = "cybersource.environment.production";
+
+        public static readonly string BoASandboxRunEnv = "bankofamerica.environment.sandbox";
+
+        public static readonly string BoAProdRunEnv = "bankofamerica.environment.production";
 
         public static readonly string AuthMechanismHttp = "http_signature";
 
