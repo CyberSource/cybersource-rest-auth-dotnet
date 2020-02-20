@@ -315,13 +315,23 @@ namespace AuthenticationSdk.core
                 throw new Exception($"{Constants.ErrorPrefix} Merchant Config field - RunEnvironment is Mandatory");
             }
 
-            if (RunEnvironment.ToUpper().Equals(Constants.CybsSandboxRunEnv.ToUpper()))
+            var RunEnvironmentTester = RunEnvironment.ToUpper();
+
+            if (RunEnvironmentTester.Equals(Constants.CybsSandboxRunEnv.ToUpper()))
             {
                 HostName = Constants.CybsSandboxHostName;
             }
-            else if (RunEnvironment.ToUpper().Equals(Constants.CybsProdRunEnv.ToUpper()))
+            else if (RunEnvironmentTester.Equals(Constants.CybsProdRunEnv.ToUpper()))
             {
                 HostName = Constants.CybsProdHostName;
+            }
+            else if (RunEnvironmentTester.Equals(Constants.BoASandboxRunEnv.ToUpper()))
+            {
+                HostName = Constants.BoASandboxHostName;
+            }
+            else if (RunEnvironmentTester.Equals(Constants.BoAProdRunEnv.ToUpper()))
+            {
+                HostName = Constants.BoAProdHostName;
             }
             else
             {
