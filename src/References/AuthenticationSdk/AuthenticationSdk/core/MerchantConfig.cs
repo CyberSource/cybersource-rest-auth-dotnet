@@ -333,6 +333,14 @@ namespace AuthenticationSdk.core
             {
                 HostName = Constants.BoAProdHostName;
             }
+            else if (RunEnvironmentTester.Equals(Constants.IDCSandboxRunEnv.ToUpper()))
+            {
+                HostName = Constants.IDCSandboxHostName;
+            }
+            else if (RunEnvironmentTester.Equals(Constants.IDCProdRunEnv.ToUpper()))
+            {
+                HostName = Constants.IDCProdHostName;
+            }
             else
             {
                 HostName = RunEnvironment.ToLower();
