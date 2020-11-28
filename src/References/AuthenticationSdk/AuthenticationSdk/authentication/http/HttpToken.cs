@@ -19,7 +19,11 @@ namespace AuthenticationSdk.authentication.http
             MerchantSecretKey = merchantConfig.MerchantSecretKey;
             MerchantKeyId = merchantConfig.MerchantKeyId;
             HttpSignRequestTarget = merchantConfig.RequestType.ToLower() + " " + merchantConfig.RequestTarget;
-            UseMetaKey = bool.Parse(merchantConfig.UseMetaKey);            
+
+            bool.TryParse(merchantConfig.UseMetaKey, out bool tempUseMetaKey);
+
+            UseMetaKey = tempUseMetaKey;
+
             if (UseMetaKey)
             {
                 PortfolioId = merchantConfig.PortfolioId;
