@@ -32,9 +32,10 @@ It works with any one of the two authentication mechanisms, which are HTTP signa
 *	MerchantSecretKey: Merchant will provide the secret Key value, which has taken from EBC portal.
 *	MerchantKeyId:  Merchant will provide the Key ID value, which has taken from EBC portal.
 *	Enable Log: To start the log entry provide true else enter false.
-*   LogDirectory :Merchant will provide directory path where logs will be created.
-*   LogMaximumSize :Merchant will provide size value for log file.
-*   LogFilename  :Merchant will provide log file name.
+* LogDirectory :Merchant will provide directory path where logs will be created.
+* LogMaximumSize :Merchant will provide size value for log file.
+* LogFilename  :Merchant will provide log file name.
+* Use Meta Key : Set to false
 
 
 ```
@@ -58,11 +59,12 @@ It works with any one of the two authentication mechanisms, which are HTTP signa
 *	keyAlias: Alias of the Merchant ID, to be used while generating the JWT token.
 *	keyPassword: Alias of the Merchant password, to be used while generating the JWT token.
 *	keyfilepath: Path of the folder where the .P12 file is placed. This file has generated from the EBC portal.
-*   Keys Directory: path of the directory,where keys are placed.
+* Keys Directory: path of the directory,where keys are placed.
 *	Enable Log: To start the log entry provide true else enter false.
-*   LogDirectory :Merchant will provide directory path where logs will be created.
-*   LogMaximumSize :Merchant will provide size value for log file.
-*   LogFilename  :Merchant will provide log file name.
+* LogDirectory :Merchant will provide directory path where logs will be created.
+* LogMaximumSize :Merchant will provide size value for log file.
+* LogFilename  :Merchant will provide log file name.
+* Use Meta Key : Set to false
 
 ```
    authenticationType  = Jwt
@@ -79,12 +81,10 @@ It works with any one of the two authentication mechanisms, which are HTTP signa
    useMetaKey          = false
 ```
 
-  ### For using MetaKey
+  #### For using MetaKey
 
   MetaKey can be used for HTTP Signature and JWT authentication
-  Configure the following information in App.config file
-
-* Use Meta Key : Set it to true to use Meta Key.
+  Configure the following information in App.config file  
 
   For HTTP Signature Authentication - 
 *	Authentication Type:  Merchant should enter "HTTP".
@@ -92,6 +92,7 @@ It works with any one of the two authentication mechanisms, which are HTTP signa
 *	MerchantSecretKey: Merchant will provide the secret Meta Key value, which has taken from EBC portal.
 *	MerchantKeyId:  Merchant will provide the Meta Key ID value, which has taken from EBC portal.
 * PortfolioId - Merchant will provide the Portfolio ID, taken from EBC portal.
+* Use Meta Key : Set it to true to use Meta Key.
 
 ```
    authenticationType  = http_Signature
@@ -108,6 +109,7 @@ It works with any one of the two authentication mechanisms, which are HTTP signa
 *	keyAlias: Alias of the Merchant ID, to be used while generating the JWT token.
 *	keyPassword: Alias of the Portfolio ID password, to be used while generating the JWT token.
 *	keyfilepath: Path of the folder where the .P12 file is placed. This file has generated from the EBC portal.
+* Use Meta Key : Set it to true to use Meta Key.
 
 ```
    authenticationType  = Jwt
