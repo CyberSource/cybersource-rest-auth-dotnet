@@ -494,6 +494,14 @@ namespace AuthenticationSdk.core
             {
                 HostName = Constants.CybsMutualAuthSandboxHostName;
             }
+            else if (RunEnvironmentTester.Equals(Constants.SitRunEnv.ToUpper()))
+            {
+                HostName = Constants.SitHostName;
+            }
+            else if (RunEnvironmentTester.Equals(Constants.SitMutualAuthRunEnv.ToUpper()))
+            {
+                HostName = Constants.SitMutualAuthHostName;
+            }
             else
             {
                 HostName = RunEnvironment.ToLower();
