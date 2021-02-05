@@ -30,8 +30,6 @@
 
         public static readonly string IDCProdHostName = "api.in.cybersource.com";
 
-        public static readonly string SitHostName = "pnrstage.ic3.com:7448";
-
         public static readonly string SitMutualAuthHostName = "pnrstage.ic3.com:8451";
 
         public static readonly string CybsSandboxRunEnv = "cybersource.environment.sandbox";
@@ -49,8 +47,6 @@
         public static readonly string IDCSandboxRunEnv = "cybersource.in.environment.sandbox";
 
         public static readonly string IDCProdRunEnv = "cybesource.in.environment.production";
-
-        public static readonly string SitRunEnv = "cybesource.environment.sit";
 
         public static readonly string SitMutualAuthRunEnv = "cybesource.environment.mutualauth.sit";
 
