@@ -121,7 +121,6 @@ namespace AuthenticationSdk.core
             {
                 if (_merchantConfig != null)
                 {
-
                     LogMerchantDetails();
 
                     Enumerations.ValidateRequestType(_merchantConfig.RequestType);
