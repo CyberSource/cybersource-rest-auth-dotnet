@@ -9,11 +9,11 @@ _Note: Support for building the SDK with Nuget has been made. Please see the res
  All initial jars and docs were built with Nuget, however._
  
  ## Dependencies
-* jose-jwt 2.4.0              	: Generating Json Web Token
-* NLog 4.0.0.0			: Logging
-* nunit-framework 3.10.1.0	: Unit Testing
-* Newtonsoft.Json 11.0.0.0	: JSON Framework
-* OpenCover 4.6.519		: Code Coverage under Unit testing
+* jose-jwt 2.4.0               : Generating Json Web Token
+* NLog 4.0.0.0                 : Logging
+* nunit-framework 3.10.1.0     : Unit Testing
+* Newtonsoft.Json 11.0.0.0     : JSON Framework
+* OpenCover 4.6.519            : Code Coverage under Unit testing
 
 
 ## To run Aunthentication SDK
@@ -27,20 +27,20 @@ It works with any one of the two authentication mechanisms, which are HTTP signa
   
   Configure the following information in App.Config file
   
-*	Authentication Type:  Merchant should enter “HTTP_Signature” for HTTP authentication mechanism.
-*	Merchant ID: Merchant will provide the merchant ID, which has taken from EBC portal.
-*	MerchantSecretKey: Merchant will provide the secret Key value, which has taken from EBC portal.
-*	MerchantKeyId:  Merchant will provide the Key ID value, which has taken from EBC portal.
-*	Enable Log: To start the log entry provide true else enter false.
-*	LogDirectory: Merchant will provide directory path where logs will be created.
-*	LogMaximumSize: Merchant will provide size value for log file.
-*	LogFilename: Merchant will provide log file name.
-*	Use Meta Key: Set to false
+* Authentication Type:  Merchant should enter "HTTP_Signature" for HTTP authentication mechanism.
+* Merchant ID: Merchant will provide the merchant ID, which has taken from EBC portal.
+* MerchantSecretKey: Merchant will provide the secret Key value, which has taken from EBC portal.
+* MerchantKeyId:  Merchant will provide the Key ID value, which has taken from EBC portal.
+* Enable Log: To start the log entry provide true else enter false.
+* LogDirectory: Merchant will provide directory path where logs will be created.
+* LogMaximumSize: Merchant will provide size value for log file.
+* LogFilename: Merchant will provide log file name.
+* Use Meta Key: Set to false
 
 
 ```
    authenticationType  = http_Signature
-   merchantID 	       = <merchantID>
+   merchantID          = <merchantID>
    runEnvironment      = CyberSource.Environment.SANDBOX
    merchantKeyId       = <merchantKeyId>
    merchantsecretKey   = <merchantsecretKey>
@@ -54,24 +54,24 @@ It works with any one of the two authentication mechanisms, which are HTTP signa
 
   Configure the following information in the App.Config file
   
-*	Authentication Type:  Merchant should enter “JWT” for JWT authentication mechanism.
-*	Merchant ID: Merchant will provide the merchant ID, which has taken from EBC portal.
-*	keyAlias: Alias of the Merchant ID, to be used while generating the JWT token.
-*	keyPassword: Alias of the Merchant password, to be used while generating the JWT token.
-*	keyfilepath: Path of the folder where the .P12 file is placed. This file has generated from the EBC portal.
-*	Keys Directory: path of the directory,where keys are placed.
-*	Enable Log: To start the log entry provide true else enter false.
-*	LogDirectory: Merchant will provide directory path where logs will be created.
-*	LogMaximumSize: Merchant will provide size value for log file.
-*	LogFilename: Merchant will provide log file name.
-*	Use Meta Key: Set to false
+* Authentication Type:  Merchant should enter "JWT" for JWT authentication mechanism.
+* Merchant ID: Merchant will provide the merchant ID, which has taken from EBC portal.
+* keyAlias: Alias of the Merchant ID, to be used while generating the JWT token.
+* keyPassword: Alias of the Merchant password, to be used while generating the JWT token.
+* keyfilepath: Path of the folder where the .P12 file is placed. This file has generated from the EBC portal.
+* Keys Directory: path of the directory,where keys are placed.
+* Enable Log: To start the log entry provide true else enter false.
+* LogDirectory: Merchant will provide directory path where logs will be created.
+* LogMaximumSize: Merchant will provide size value for log file.
+* LogFilename: Merchant will provide log file name.
+* Use Meta Key: Set to false
 
 ```
    authenticationType  = Jwt
-   merchantID 	       = <merchantID>
+   merchantID          = <merchantID>
    runEnvironment      = CyberSource.Environment.SANDBOX
-   keyAlias		       = <keyAlias>
-   keyPassword	       = <keyPassword>
+   keyAlias            = <keyAlias>
+   keyPassword         = <keyPassword>
    keyFileName         = <keyFileName>
    keysDirectory       = <keysDirectory>
    enableLog           = true
@@ -84,19 +84,19 @@ It works with any one of the two authentication mechanisms, which are HTTP signa
   #### For using MetaKey
 
   MetaKey can be used for HTTP Signature and JWT authentication
-  Configure the following information in App.config file  
+  Configure the following information in App.config file
 
   For HTTP Signature Authentication - 
-*	Authentication Type:  Merchant should enter "HTTP".
-*	Merchant ID: Merchant will provide the child merchant ID under the Portfolio ID, which has taken from EBC portal.
-*	MerchantSecretKey: Merchant will provide the secret Meta Key value, which has taken from EBC portal.
-*	MerchantKeyId:  Merchant will provide the Meta Key ID value, which has taken from EBC portal.
-*	PortfolioId: Merchant will provide the Portfolio ID, taken from EBC portal.
-*	Use Meta Key: Set it to true to use Meta Key.
+* Authentication Type:  Merchant should enter "HTTP".
+* Merchant ID: Merchant will provide the child merchant ID under the Portfolio ID, which has taken from EBC portal.
+* MerchantSecretKey: Merchant will provide the secret Meta Key value, which has taken from EBC portal.
+* MerchantKeyId:  Merchant will provide the Meta Key ID value, which has taken from EBC portal.
+* PortfolioId: Merchant will provide the Portfolio ID, taken from EBC portal.
+* Use Meta Key: Set it to true to use Meta Key.
 
 ```
    authenticationType  = http_Signature
-   merchantID 	       = <child merchantID>  
+   merchantID          = <child merchantID>
    merchantKeyId       = <MetaKey merchantKeyId>
    merchantsecretKey   = <Metakey merchantsecretKey>
    useMetaKey          = true
@@ -104,18 +104,18 @@ It works with any one of the two authentication mechanisms, which are HTTP signa
 ```
 
   For JWT Authentication - 
-*	Authentication Type:  Merchant should enter "JWT".
-*	Merchant ID: Merchant will provide the child merchant ID under the Portfolio ID, which has taken from EBC portal.
-*	keyAlias: Alias of the Merchant ID, to be used while generating the JWT token.
-*	keyPassword: Alias of the Portfolio ID password, to be used while generating the JWT token.
-*	keyfilepath: Path of the folder where the .P12 file is placed. This file has generated from the EBC portal.
-*	Use Meta Key: Set it to true to use Meta Key.
+* Authentication Type:  Merchant should enter "JWT".
+* Merchant ID: Merchant will provide the child merchant ID under the Portfolio ID, which has taken from EBC portal.
+* keyAlias: Alias of the Merchant ID, to be used while generating the JWT token.
+* keyPassword: Alias of the Portfolio ID password, to be used while generating the JWT token.
+* keyfilepath: Path of the folder where the .P12 file is placed. This file has generated from the EBC portal.
+* Use Meta Key: Set it to true to use Meta Key.
 
 ```
    authenticationType  = Jwt
-   merchantID 	       = <child merchantID>   
-   keyAlias		       = <keyAlias>
-   keyPassword	       = <keyPassword>
+   merchantID          = <child merchantID>
+   keyAlias            = <keyAlias>
+   keyPassword         = <keyPassword>
    keyFileName         = <keyFileName>
    keysDirectory       = <keysDirectory>
    useMetaKey          = true
