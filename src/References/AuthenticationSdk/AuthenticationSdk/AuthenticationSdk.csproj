@@ -70,6 +70,8 @@
     <Compile Include="authentication\http\HttpTokenGenerator.cs" />
     <Compile Include="authentication\jwt\JwtToken.cs" />
     <Compile Include="authentication\jwt\JwtTokenGenerator.cs" />
+    <Compile Include="authentication\oauth\OAuthToken.cs" />
+    <Compile Include="authentication\oauth\OAuthTokenGenerator.cs" />
     <Compile Include="core\Authorize.cs" />
     <Compile Include="core\ITokenGenerator.cs" />
     <Compile Include="core\MerchantConfig.cs" />
