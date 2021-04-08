@@ -12,7 +12,7 @@
 
         public static readonly string HostName = "apitest.cybersource.com";
 
-        public static readonly string HideMerchantConfigProps = "MerchantId,MerchantSecretKey,MerchantKeyId,KeyAlias,KeyPassword,RequestJsonData";
+        public static readonly string HideMerchantConfigProps = "MerchantSecretKey, MerchantKeyId, KeyAlias, KeyPassword, RequestJsonData, ";
 
         public static readonly string CybsSandboxHostName = "apitest.cybersource.com";
 

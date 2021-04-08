@@ -1,62 +1,57 @@
-﻿using System;
-using NLog;
-using NLog.Targets;
+﻿using NLog;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace AuthenticationSdk.util
 {
     public class LogUtility
     {
-        private static LogUtility _singletonLogUtility;
+        private static Dictionary<string, string> sensitiveTags = new Dictionary<string, string>();
 
-        private LogUtility(string enableLog, string logDirectory, string logFileName, string logFileMaxSize)
+        private static void LoadSensitiveDataConfiguration()
         {
-            // If user does not want logging the EnableLog property can be set to FALSE
-            if (string.Equals(enableLog, "FALSE", StringComparison.OrdinalIgnoreCase))
-            {
-                LogManager.DisableLogging();
-            }
+            sensitiveTags.Clear();
 
-            try
-            {
-                var target = LogManager.Configuration.FindTargetByName("file") as FileTarget;
+            int sensitiveTagsCount = SensitiveDataConfigurationType.sensitiveTags.Length;
 
-                if (target != null)
+            for (int i = 0; i < sensitiveTagsCount; i++)
+            {
+                string tagName = SensitiveDataConfigurationType.sensitiveTags[i].tagName;
+                string pattern = SensitiveDataConfigurationType.sensitiveTags[i].pattern;
+                string replacement = SensitiveDataConfigurationType.sensitiveTags[i].replacement;
+
+                if (!string.IsNullOrEmpty(pattern))
                 {
-                    // using the log path set by the merchant, if not set, using default value set in NLog.config
-                    if (!string.IsNullOrEmpty(logDirectory))
-                    {
-                        target.FileName = logDirectory + @"\" + logFileName;
-                    }
-
-                    // set the maximum allowed size of the log file
-                    if (!string.IsNullOrEmpty(logFileMaxSize))
-                    {
-                        target.ArchiveAboveSize = long.Parse(logFileMaxSize);
-                    }
+                    pattern = $"\\\"{tagName}\\\":\\\"{pattern}\\\"";
                 }
                 else
                 {
-                    throw new Exception($"{Constants.ErrorPrefix} No Target with the name 'file' found in NLog.config");
+                    pattern = $"\\\"{tagName}\\\":\\\".+\\\"";
                 }
-            }
-            catch (NullReferenceException)
-            {
-                // If no nlog configuration  (NLog.config file) found
-                LogManager.DisableLogging();
+
+                replacement = $"\"{tagName}\":\"{replacement}\"";
+
+                sensitiveTags.Add(pattern, replacement);
             }
         }
 
-        public static void InitLogConfig(string enableLog, string logDirectory, string logFileName, string logFileMaxSize)
+        public static string MaskSensitiveData(string str)
         {
-            if (!string.Equals(enableLog, "true", StringComparison.OrdinalIgnoreCase))
+            LoadSensitiveDataConfiguration();
+
+            foreach (KeyValuePair<string, string> tag in sensitiveTags)
             {
-                enableLog = "FALSE";
+                str = Regex.Replace(str, tag.Key, tag.Value);
             }
 
-            if (_singletonLogUtility == null)
-            {
-                _singletonLogUtility = new LogUtility(enableLog, logDirectory, logFileName, logFileMaxSize);
-            }
+            return str;
+        }
+
+        public static bool IsMaskingEnabled(Logger logger)
+        {
+            return logger.Factory.Configuration.Variables["enableMasking"].ToString().ToLower().Contains("true");
         }
     }
 }
