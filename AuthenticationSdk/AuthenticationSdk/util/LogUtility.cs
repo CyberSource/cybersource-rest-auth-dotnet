@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AuthenticationSdk.util
@@ -52,6 +53,18 @@ namespace AuthenticationSdk.util
         public static bool IsMaskingEnabled(Logger logger)
         {
             return logger.Factory.Configuration.Variables["enableMasking"].ToString().ToLower().Contains("true");
+        }
+
+        public static string ConvertDictionaryToString(Dictionary<string, string> dict)
+        {
+            var stringBuilder = new StringBuilder();
+
+            foreach (KeyValuePair<string, string> kvp in dict)
+            {
+                stringBuilder.Append($"{kvp.Key} = {kvp.Value}\n");
+            }
+
+            return stringBuilder.ToString();
         }
     }
 }
