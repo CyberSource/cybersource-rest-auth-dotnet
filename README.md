@@ -129,7 +129,7 @@ constant in cybs.properties file.  For example:
 
 ```dotnet
 // For PRODUCTION use
-  runEnvironment      = CyberSource.Environment.PRODUCTION
+  runEnvironment      = api.cybersource.com
 ```
 
 ## SDK Usage Examples and Sample Code
