@@ -10,10 +10,12 @@ namespace AuthenticationSdk.util
     public class LogUtility
     {
         private static Dictionary<string, string> sensitiveTags = new Dictionary<string, string>();
+        private static Dictionary<string, string> authenticationTags = new Dictionary<string, string>();
 
         private static void LoadSensitiveDataConfiguration()
         {
             sensitiveTags.Clear();
+            authenticationTags.Clear();
 
             int sensitiveTagsCount = SensitiveDataConfigurationType.sensitiveTags.Length;
 
@@ -36,6 +38,24 @@ namespace AuthenticationSdk.util
 
                 sensitiveTags.Add(pattern, replacement);
             }
+
+            int authenticationTagsCount = SensitiveDataConfigurationType.authenticationTags.Length;
+
+            for (int i = 0; i < authenticationTagsCount; i++)
+            {
+                string tagName = SensitiveDataConfigurationType.authenticationTags[i].tagName;
+                string pattern = SensitiveDataConfigurationType.authenticationTags[i].pattern;
+                string replacement = SensitiveDataConfigurationType.authenticationTags[i].replacement;
+
+                if (!string.IsNullOrEmpty(pattern))
+                {
+                    pattern = $"{tagName} : {pattern}";
+                }
+
+                replacement = $"{replacement}";
+
+                authenticationTags.Add(pattern, replacement);
+            }
         }
 
         public static string MaskSensitiveData(string str)
@@ -43,6 +63,11 @@ namespace AuthenticationSdk.util
             LoadSensitiveDataConfiguration();
 
             foreach (KeyValuePair<string, string> tag in sensitiveTags)
+            {
+                str = Regex.Replace(str, tag.Key, tag.Value);
+            }
+
+            foreach (KeyValuePair<string, string> tag in authenticationTags)
             {
                 str = Regex.Replace(str, tag.Key, tag.Value);
             }
