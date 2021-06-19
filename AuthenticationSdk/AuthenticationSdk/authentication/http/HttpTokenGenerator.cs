@@ -50,10 +50,16 @@ namespace AuthenticationSdk.authentication.http
                            .Append($"\ndate: {_httpToken.GmtDateTime}")
                            .Append($"\n(request-target): {_httpToken.HttpSignRequestTarget}")
                            .Append($"\nv-c-merchant-id: ");
-            if(_httpToken.UseMetaKey == true)
+
+            if (_httpToken.UseMetaKey == true)
+            {
                 signatureString.Append(_httpToken.PortfolioId);
+            }
             else
+            {
                 signatureString.Append(_httpToken.MerchantId);
+            }
+
             signatureString.Remove(0, 1);
 
             var signatureByteString = Encoding.UTF8.GetBytes(signatureString.ToString());
@@ -82,10 +88,16 @@ namespace AuthenticationSdk.authentication.http
                            .Append($"\n(request-target): {_httpToken.HttpSignRequestTarget}")
                            .Append($"\ndigest: {_httpToken.Digest}")
                            .Append($"\nv-c-merchant-id: ");
+
             if (_httpToken.UseMetaKey == true)
+            {
                 signatureString.Append(_httpToken.PortfolioId);
+            }
             else
+            {
                 signatureString.Append(_httpToken.MerchantId);
+            }
+
             signatureString.Remove(0, 1);
 
             var signatureByteString = Encoding.UTF8.GetBytes(signatureString.ToString());

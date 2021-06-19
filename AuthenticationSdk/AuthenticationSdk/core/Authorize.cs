@@ -20,6 +20,7 @@ namespace AuthenticationSdk.core
             _merchantConfig = merchantConfig;
             Enumerations.ValidateRequestType(_merchantConfig.RequestType);
             Enumerations.SetRequestType(_merchantConfig);
+
             if (_logger == null)
             {
                 _logger = LogManager.GetCurrentClassLogger();
@@ -39,6 +40,11 @@ namespace AuthenticationSdk.core
                     LogMerchantDetails();
 
                     Enumerations.ValidateRequestType(_merchantConfig.RequestType);
+
+                    if (String.IsNullOrEmpty(_merchantConfig.MerchantId) || String.IsNullOrEmpty(_merchantConfig.MerchantKeyId) || String.IsNullOrEmpty(_merchantConfig.MerchantSecretKey))
+                    {
+                        throw new Exception("Missing or Empty Credentials : MerchantID or MerchantKeyID or MerchantSecretKey");
+                    }
 
                     var signatureObj = (HttpToken)new HttpTokenGenerator(_merchantConfig).GetToken();
 
@@ -71,7 +77,7 @@ namespace AuthenticationSdk.core
             {
                 _logger.Error(e.Message);
                 _logger.Error(e.StackTrace);
-                return null;
+                throw e;
             }
         }
 
@@ -88,6 +94,11 @@ namespace AuthenticationSdk.core
                     LogMerchantDetails();
 
                     Enumerations.ValidateRequestType(_merchantConfig.RequestType);
+
+                    if (String.IsNullOrEmpty(_merchantConfig.MerchantId) || String.IsNullOrEmpty(_merchantConfig.KeyAlias) || String.IsNullOrEmpty(_merchantConfig.KeyPass))
+                    {
+                        throw new Exception("Missing or Empty Credentials : MerchantID or KeyAlias or KeyPassphrase");
+                    }
 
                     var tokenObj = (JwtToken)new JwtTokenGenerator(_merchantConfig).GetToken();
 
@@ -111,7 +122,7 @@ namespace AuthenticationSdk.core
             {
                 _logger.Error(e.Message);
                 _logger.Error(e.StackTrace);
-                return null;
+                throw e;
             }
         }
 
@@ -128,6 +139,11 @@ namespace AuthenticationSdk.core
                     LogMerchantDetails();
 
                     Enumerations.ValidateRequestType(_merchantConfig.RequestType);
+
+                    if (String.IsNullOrEmpty(_merchantConfig.AccessToken) || String.IsNullOrEmpty(_merchantConfig.RefreshToken))
+                    {
+                        throw new Exception("Missing or Empty Credentials : AccessToken or RefreshToken");
+                    }
 
                     var tokenObj = (OAuthToken)new OAuthTokenGenerator(_merchantConfig).GetToken();
 
@@ -151,7 +167,7 @@ namespace AuthenticationSdk.core
             {
                 _logger.Error(e.Message);
                 _logger.Error(e.StackTrace);
-                return null;
+                throw e;
             }
         }
 
@@ -175,6 +191,7 @@ namespace AuthenticationSdk.core
             {
                 _logger.Error(e.Message);
                 _logger.Error(e.StackTrace);
+                throw e;
             }
         }
     }

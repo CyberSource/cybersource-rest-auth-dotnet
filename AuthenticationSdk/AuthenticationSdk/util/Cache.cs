@@ -39,7 +39,7 @@ namespace AuthenticationSdk.util
                     throw new Exception($"{Constants.ErrorPrefix} KeyPassword provided:{keyPassword} is incorrect");
                 }
 
-                return null;
+                throw e;
             }
         }
     }
