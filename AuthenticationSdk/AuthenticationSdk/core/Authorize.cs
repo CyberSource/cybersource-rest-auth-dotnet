@@ -76,7 +76,6 @@ namespace AuthenticationSdk.core
             catch (Exception e)
             {
                 _logger.Error(e.Message);
-                _logger.Error(e.StackTrace);
                 throw e;
             }
         }
@@ -121,7 +120,6 @@ namespace AuthenticationSdk.core
             catch (Exception e)
             {
                 _logger.Error(e.Message);
-                _logger.Error(e.StackTrace);
                 throw e;
             }
         }
@@ -166,7 +164,6 @@ namespace AuthenticationSdk.core
             catch (Exception e)
             {
                 _logger.Error(e.Message);
-                _logger.Error(e.StackTrace);
                 throw e;
             }
         }
@@ -190,7 +187,6 @@ namespace AuthenticationSdk.core
             catch (Exception e)
             {
                 _logger.Error(e.Message);
-                _logger.Error(e.StackTrace);
                 throw e;
             }
         }
