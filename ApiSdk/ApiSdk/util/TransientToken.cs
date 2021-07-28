@@ -16,7 +16,7 @@ namespace ApiSdk.util
         // split the jwt token into two parts 
         // bearer and token part
         string splitContents[] = jwt.Split(" ");
-        if(splitContents.length > 1)
+        if(splitContents.length > 1)    
         {
             // decode the base 64 encoded string
             String encodedString  = splitContents[1];
