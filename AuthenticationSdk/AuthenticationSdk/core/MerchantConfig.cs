@@ -23,7 +23,7 @@ namespace AuthenticationSdk.core
 
             if (Logger == null)
             {
-                Logger = LogManager.GetCurrentClassLogger(); 
+                Logger = LogManager.GetCurrentClassLogger();
             }
 
             /*
