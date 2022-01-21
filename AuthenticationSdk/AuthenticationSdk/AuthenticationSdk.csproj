@@ -72,11 +72,13 @@
     <Compile Include="core\MerchantConfig.cs" />
     <Compile Include="core\Token.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="util\AuthenticationTags.cs" />
     <Compile Include="util\Cache.cs" />
     <Compile Include="util\Enumerations.cs" />
     <Compile Include="util\Constants.cs" />
     <Compile Include="util\LogUtility.cs" />
     <Compile Include="util\SensitiveDataConfigurationType.cs" />
+    <Compile Include="util\SensitiveTags.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
