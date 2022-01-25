@@ -44,7 +44,7 @@ namespace AuthenticationSdk.authentication.http
         {
             var signatureString = new StringBuilder();
             var signatureHeaderValue = new StringBuilder();
-            const string getOrDeleteHeaders = "host date (request-target) v-c-merchant-id";            
+            const string getOrDeleteHeaders = "host date (request-target) v-c-merchant-id";
 
             signatureString.Append($"\nhost: {_httpToken.HostName}")
                            .Append($"\ndate: {_httpToken.GmtDateTime}")
