@@ -17,6 +17,7 @@ namespace AuthenticationSdk.util
 
         public static X509Certificate2 FetchCachedCertificate(string p12FilePath, string keyPassword)
         {
+            try
             {
                 lock(mutex)
                 {
