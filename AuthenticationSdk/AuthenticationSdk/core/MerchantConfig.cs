@@ -218,6 +218,7 @@ namespace AuthenticationSdk.core
             ProxyPort = merchantConfigSection["proxyPort"];
             ProxyUsername = merchantConfigSection["proxyUsername"];
             ProxyPassword = merchantConfigSection["proxyPassword"];
+            PemFileDirectory = merchantConfigSection["pemFileDirectory"];
         }
 
         private void SetValuesUsingDictObj(IReadOnlyDictionary<string, string> merchantConfigDictionary)
