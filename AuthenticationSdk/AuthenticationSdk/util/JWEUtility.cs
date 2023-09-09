@@ -1,9 +1,4 @@
 using Jose;
-using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.OpenSsl;
-using Org.BouncyCastle.Security;
-using System.IO;
 using System.Security.Cryptography;
 using AuthenticationSdk.core;
 
