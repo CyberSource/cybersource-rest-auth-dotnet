@@ -157,6 +157,8 @@ namespace AuthenticationSdk.core
 
         public bool IsOAuthTokenAuthType { get; set; }
 
+        public string PemFileDirectory { get; set; }
+
         #endregion
 
         public void LogMerchantConfigurationProperties()
@@ -216,6 +218,7 @@ namespace AuthenticationSdk.core
             ProxyPort = merchantConfigSection["proxyPort"];
             ProxyUsername = merchantConfigSection["proxyUsername"];
             ProxyPassword = merchantConfigSection["proxyPassword"];
+            PemFileDirectory = merchantConfigSection["pemFileDirectory"];
         }
 
         private void SetValuesUsingDictObj(IReadOnlyDictionary<string, string> merchantConfigDictionary)
@@ -416,6 +419,11 @@ namespace AuthenticationSdk.core
                     if (merchantConfigDictionary.ContainsKey("proxyPassword"))
                     {
                         ProxyPassword = merchantConfigDictionary["proxyPassword"];
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("pemFileDirectory"))
+                    {
+                        PemFileDirectory = merchantConfigDictionary["pemFileDirectory"];
                     }
                 }
             }
