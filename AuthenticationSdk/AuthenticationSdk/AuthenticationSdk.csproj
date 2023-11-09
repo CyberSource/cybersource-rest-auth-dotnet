@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto, Version=1.9.0.0, Culture=neutral, PublicKeyToken=0e99375e54769942, processorArchitecture=MSIL">
+      <HintPath>..\packages\Portable.BouncyCastle.1.9.0\lib\net40\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
     <Reference Include="jose-jwt, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\jose-jwt.2.4.0\lib\net461\jose-jwt.dll</HintPath>
       <Private>True</Private>
@@ -76,6 +79,7 @@
     <Compile Include="util\Cache.cs" />
     <Compile Include="util\Enumerations.cs" />
     <Compile Include="util\Constants.cs" />
+    <Compile Include="util\JWEUtility.cs" />
     <Compile Include="util\LogUtility.cs" />
     <Compile Include="util\SensitiveDataConfigurationType.cs" />
     <Compile Include="util\SensitiveTags.cs" />
