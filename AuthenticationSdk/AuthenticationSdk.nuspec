@@ -11,7 +11,7 @@
     <description>Use this SDK to generate Authentication Headers to be sent for the Cybersource REST API Calls</description>
     <releaseNotes>Authentication SDK for CyberSource REST APIs</releaseNotes>
 	  <dependencies>
-	    <dependency id="jose-jwt" version="2.4.0" />
+	    <dependency id="jose-jwt" version="4.1.0" />
 	    <dependency id="NLog" version="5.0.0" />
 	    <dependency id="NUnit" version="3.10.1" />
       <dependency id="Portable.BouncyCastle" version="1.9.0" />

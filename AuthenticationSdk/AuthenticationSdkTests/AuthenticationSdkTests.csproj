@@ -36,7 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="jose-jwt">
-      <HintPath>..\packages\jose-jwt.2.4.0\lib\net461\jose-jwt.dll</HintPath>
+      <HintPath>..\packages\jose-jwt.4.1.0\lib\net461\jose-jwt.dll</HintPath>
     </Reference>
     <Reference Include="NLog">
       <HintPath>..\packages\NLog.5.0.0\lib\net46\NLog.dll</HintPath>
