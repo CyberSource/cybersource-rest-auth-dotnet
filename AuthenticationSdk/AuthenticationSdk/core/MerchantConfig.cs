@@ -451,9 +451,13 @@ namespace AuthenticationSdk.core
                         PemFileDirectory = merchantConfigDictionary["pemFileDirectory"];
                     }
 
-                    if (merchantConfigDictionary.ContainsKey("useMLEGlobally"))
+                    if (merchantConfigDictionary.ContainsKey("useMLEGlobally") && "true".Equals(merchantConfigDictionary["useMLEGlobally"],StringComparison.OrdinalIgnoreCase))
                     {
                         UseMLEGlobally = bool.Parse(merchantConfigDictionary["useMLEGlobally"]);
+                    }
+                    else
+                    {
+                        UseMLEGlobally = false;
                     }
 
                     if (mapToControlMLEonAPI != null)
