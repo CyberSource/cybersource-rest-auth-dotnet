@@ -22,7 +22,7 @@ namespace AuthenticationSdk.authentication.jwt
             KeyAlias = merchantConfig.KeyAlias;
             KeyPass = merchantConfig.KeyPass;
             X509Certificate2Collection certs = Cache.FetchCachedCertificate(P12FilePath, KeyPass);
-            Certificate = Cache.getCertBasedOnKeyAllias(certs, merchantConfig.KeyAlias);
+            Certificate = Cache.GetCertBasedOnKeyAllias(certs, merchantConfig.KeyAlias);
         }
 
         public string BearerToken { get; set; }

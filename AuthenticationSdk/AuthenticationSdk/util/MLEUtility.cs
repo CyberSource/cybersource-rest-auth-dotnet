@@ -77,7 +77,7 @@ namespace AuthenticationSdk.util
         private static X509Certificate2 GetMLECertificate(MerchantConfig merchantConfig)
         {
             X509Certificate2Collection certs = Cache.FetchCachedCertificate(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass);
-            X509Certificate2 mleCertificate = Cache.getCertBasedOnKeyAllias(certs, merchantConfig.MleKeyAlias);
+            X509Certificate2 mleCertificate = Cache.GetCertBasedOnKeyAllias(certs, merchantConfig.MleKeyAlias);
             ValidateCertificateExpiry(mleCertificate, merchantConfig.MleKeyAlias);
             return mleCertificate;
         }

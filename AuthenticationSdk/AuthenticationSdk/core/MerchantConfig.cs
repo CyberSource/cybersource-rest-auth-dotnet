@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using AuthenticationSdk.util;
 using NLog;
@@ -230,9 +231,22 @@ namespace AuthenticationSdk.core
             ProxyUsername = merchantConfigSection["proxyUsername"];
             ProxyPassword = merchantConfigSection["proxyPassword"];
             PemFileDirectory = merchantConfigSection["pemFileDirectory"];
-            UseMLEGlobally= bool.Parse(merchantConfigSection["useMLEGlobally"]);
+
+            if (merchantConfigSection["useMLEGlobally"] != null && "true".Equals(merchantConfigSection["useMLEGlobally"], StringComparison.OrdinalIgnoreCase))
+            {
+                UseMLEGlobally = bool.Parse(merchantConfigSection["useMLEGlobally"]);
+            }
+            else
+            {
+                UseMLEGlobally = false;
+            }
+            
             MapToControlMLEonAPI = mapToControlMLEonAPI;
-            MleKeyAlias = merchantConfigSection["mleKeyAlias"];
+
+            if (merchantConfigSection["mleKeyAlias"] != null)
+            {
+                MleKeyAlias = merchantConfigSection["mleKeyAlias"]?.Trim();
+            }
 
             if (string.IsNullOrWhiteSpace(MleKeyAlias?.Trim()))
             {
@@ -467,7 +481,7 @@ namespace AuthenticationSdk.core
 
                     if (merchantConfigDictionary.ContainsKey("mleKeyAlias"))
                     {
-                        MleKeyAlias = merchantConfigDictionary["mleKeyAlias"];
+                        MleKeyAlias = merchantConfigDictionary["mleKeyAlias"]?.Trim();
                     }
 
                     //if MleKeyAlias is null or empty or contains only whitespace then set default value
@@ -583,7 +597,9 @@ namespace AuthenticationSdk.core
                     throw new Exception($"{Constants.WarningPrefix} KeyfileName not provided. Assigning the value of: [MerchantId]");
                 }
 
-                P12Keyfilepath = KeyDirectory + "\\" + KeyfileName + ".p12";
+                var pathDirectorySeparator = Path.DirectorySeparatorChar;
+
+                P12Keyfilepath = $"{KeyDirectory}{pathDirectorySeparator}{KeyfileName}.p12";
             }
         }
         

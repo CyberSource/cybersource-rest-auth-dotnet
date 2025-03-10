@@ -2,6 +2,7 @@ using AuthenticationSdk.core;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Security;
+using Org.BouncyCastle.OpenSsl;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +10,6 @@ using System.Runtime.Caching;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
-using Org.BouncyCastle.OpenSsl;
 
 namespace AuthenticationSdk.util
 {
@@ -24,6 +24,12 @@ namespace AuthenticationSdk.util
 
         private static readonly string regexForFileNameFromDirectory = "(^([a-z]|[A-Z]):(?=\\\\(?![\\0-\\37<>:\"/\\\\|?*])|\\/(?![\\0-\\37<>:\"/\\\\|?*])|$)|^\\\\(?=[\\\\\\/][^\\0-\\37<>:\"/\\\\|?*]+)|^(?=(\\\\|\\/)$)|^\\.(?=(\\\\|\\/)$)|^\\.\\.(?=(\\\\|\\/)$)|^(?=(\\\\|\\/)[^\\0-\\37<>:\"/\\\\|?*]+)|^\\.(?=(\\\\|\\/)[^\\0-\\37<>:\"/\\\\|?*]+)|^\\.\\.(?=(\\\\|\\/)[^\\0-\\37<>:\"/\\\\|?*]+))((\\\\|\\/)([^\\0-\\37<>:\"/\\\\|?*]+|(\\\\|\\/)$))*()$";
 
+        private class CertInfo
+        {
+            public X509Certificate2Collection Certificates { get; set; }
+            public DateTime Timestamp { get; set; }
+        }
+
         public static X509Certificate2Collection FetchCachedCertificate(string p12FilePath, string keyPassword)
         {
             try
@@ -34,8 +40,7 @@ namespace AuthenticationSdk.util
 
                     var matches = Regex.Match(p12FilePath, regexForFileNameFromDirectory);
                     var certFile = matches.Groups[11].ToString();
-
-                    if (!cache.Contains(certFile) || ((dynamic)cache[certFile]).Timestamp != File.GetLastWriteTime(p12FilePath))
+                    if (!cache.Contains(certFile) || ((CertInfo)cache[certFile]).Timestamp != File.GetLastWriteTime(p12FilePath))
                     {
                         var policy = new CacheItemPolicy();
                         var filePaths = new List<string>();
@@ -46,19 +51,17 @@ namespace AuthenticationSdk.util
                         var certificates = new X509Certificate2Collection();
                         certificates.Import(p12FilePath, keyPassword, X509KeyStorageFlags.PersistKeySet);
 
-                        var certInfo = new
-                        {
-                            Certificates = certificates,
-                            Timestamp = File.GetLastWriteTime(p12FilePath)
-                        };
+                        CertInfo certInfo = new CertInfo();
+                        certInfo.Certificates = certificates;
+                        certInfo.Timestamp = File.GetLastWriteTime(p12FilePath);
 
                         cache.Set(certFile, certInfo, policy);
                     }
                     //return all certs in p12
-                    return ((dynamic)cache[certFile]).Certificates;
+                    return ((CertInfo)cache[certFile]).Certificates;
                 }
             }
-            catch (CryptographicException e)
+            catch (Exception e)
             {
                 if (e.Message.Equals("The specified network password is not correct.\r\n"))
                 {
@@ -97,8 +100,8 @@ namespace AuthenticationSdk.util
                 return (RSAParameters)cache[certFile];
             }
         }
-        
-        public static X509Certificate2 getCertBasedOnKeyAllias(X509Certificate2Collection certs, String keyAlias)
+
+        public static X509Certificate2 GetCertBasedOnKeyAllias(X509Certificate2Collection certs, String keyAlias)
         {
             foreach (var cert in certs)
             {
