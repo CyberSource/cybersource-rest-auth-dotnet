@@ -51,7 +51,7 @@ namespace AuthenticationSdk.util
                 return null;
             }
             string payload = requestBody.ToString();
-            logUtility.LogDebugMessage(logger, "LOG_REQUEST_BEFORE_MLE: " + payload);
+            logUtility.LogDebugMessage(logger, Constants.LOG_REQUEST_BEFORE_MLE + payload);
 
             X509Certificate2 mleCertificate = GetMLECertificate(merchantConfig);
             string serialNumber = GetSerialNumberFromCertificate(mleCertificate, merchantConfig);
@@ -69,7 +69,7 @@ namespace AuthenticationSdk.util
                 });
 
             object mleRequest = CreateJsonObject(jweToken);
-            logUtility.LogDebugMessage(logger, "LOG_REQUEST_AFTER_MLE: " + mleRequest.ToString());
+            logUtility.LogDebugMessage(logger, Constants.LOG_REQUEST_AFTER_MLE + mleRequest.ToString());
 
             return mleRequest;
         }
