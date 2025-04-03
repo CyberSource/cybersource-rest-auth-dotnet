@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>CyberSource.Authentication</id>
-    <version>0.0.0.22</version>
+    <version>0.0.0.23</version>
     <title>CyberSource.Authentication</title>
     <authors>CyberSource Corporation</authors>
     <owners>CyberSource</owners>
@@ -15,6 +15,7 @@
 	    <dependency id="NLog" version="5.0.0" />
 	    <dependency id="NUnit" version="3.10.1" />
       <dependency id="Portable.BouncyCastle" version="1.9.0" />
+      <dependency id="Newtonsoft.Json" version="13.0.3" />
 	  </dependencies>
   </metadata>
   <files>
