@@ -87,6 +87,7 @@
     <Compile Include="util\LogUtility.cs" />
     <Compile Include="util\SensitiveDataConfigurationType.cs" />
     <Compile Include="util\SensitiveTags.cs" />
+    <Compile Include="util\MLEUtility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
