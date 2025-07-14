@@ -142,7 +142,7 @@ namespace AuthenticationSdk.util
 
         private static string GetCertificateAbsolutePath(string certificateName)
         {
-            string resourcePath = Path.Combine(Constants.DefaultMleCertPath, certificateName);
+            string resourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.DefaultMleCertPath, certificateName);
             if (File.Exists(resourcePath))
             {
                 return Path.GetFullPath(resourcePath);

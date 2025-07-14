@@ -124,25 +124,22 @@ namespace AuthenticationSdk.util
 
         private static X509Certificate2 GetMLECertBasedOnCacheKey(MerchantConfig merchantConfig, string cacheKey, string certificateFilePath)
         {
-            lock(mutex)
-            {
-                ObjectCache cache = MemoryCache.Default;
+            ObjectCache cache = MemoryCache.Default;
 
-                if (!cache.Contains(cacheKey))
+            if (!cache.Contains(cacheKey))
+            {
+                SetupCache(merchantConfig, cacheKey, certificateFilePath);
+            }
+            else
+            {
+                CertInfo certInfo = (CertInfo) cache.Get(cacheKey);
+                if (certInfo != null || certInfo.Timestamp != File.GetLastWriteTime(certificateFilePath))
                 {
                     SetupCache(merchantConfig, cacheKey, certificateFilePath);
                 }
-                else
-                {
-                    CertInfo certInfo = (CertInfo) cache.Get(cacheKey);
-                    if (certInfo != null || certInfo.Timestamp != File.GetLastWriteTime(certificateFilePath))
-                    {
-                        SetupCache(merchantConfig, cacheKey, certificateFilePath);
-                    }
-                }
-
-                return ((CertInfo)cache.Get(cacheKey)).Certificates[0];
             }
+
+            return ((CertInfo)cache.Get(cacheKey)).Certificates[0];
         }
 
         private static void SetupCache(MerchantConfig merchantConfig, string cacheKey, string certificateFilePath)
