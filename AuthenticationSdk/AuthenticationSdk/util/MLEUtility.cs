@@ -78,7 +78,7 @@ namespace AuthenticationSdk.util
         private static X509Certificate2 GetMLECertificate(MerchantConfig merchantConfig)
         {
             X509Certificate2Collection certs = Cache.FetchCachedCertificate(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass);
-            X509Certificate2 mleCertificate = Cache.GetCertBasedOnKeyAllias(certs, merchantConfig.MleKeyAlias);
+            X509Certificate2 mleCertificate = Cache.GetCertBasedOnKeyAlias(certs, merchantConfig.MleKeyAlias);
             ValidateCertificateExpiry(mleCertificate, merchantConfig.MleKeyAlias);
             return mleCertificate;
         }
@@ -139,5 +139,9 @@ namespace AuthenticationSdk.util
             return JsonConvert.SerializeObject(jsonObject);
         }
 
+        internal static string GetDefaultMLECertPath(string runEnvironment)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
