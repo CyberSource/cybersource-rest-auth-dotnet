@@ -611,6 +611,9 @@ namespace AuthenticationSdk.core
 
                 var pathDirectorySeparator = Path.DirectorySeparatorChar;
 
+                // Check the p12 file and set the keyFile to get the mleCert in case of JWT auth type
+                CheckKeyFile();
+
                 P12Keyfilepath = $"{KeyDirectory}{pathDirectorySeparator}{KeyfileName}.p12";
             }
         }
@@ -652,12 +655,6 @@ namespace AuthenticationSdk.core
                     Logger.Error(err.Message);
                     throw new Exception(err.Message);
                 }
-            }
-
-            // Check the p12 file and set the keyFile to get the mleCert in case of JWT auth type
-            if (Constants.AuthMechanismJwt.Equals(AuthenticationType, StringComparison.OrdinalIgnoreCase))
-            {
-                CheckKeyFile();
             }
         }
 

@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 
 namespace AuthenticationSdk.util
@@ -77,33 +78,8 @@ namespace AuthenticationSdk.util
 
         private static X509Certificate2 GetMLECertificate(MerchantConfig merchantConfig)
         {
-            X509Certificate2Collection certs = Cache.FetchCachedCertificate(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass);
-            X509Certificate2 mleCertificate = Cache.GetCertBasedOnKeyAlias(certs, merchantConfig.MleKeyAlias);
-            ValidateCertificateExpiry(mleCertificate, merchantConfig.MleKeyAlias);
+            X509Certificate2 mleCertificate = Cache.GetRequestMLECertFromCache(merchantConfig);
             return mleCertificate;
-        }
-        
-        private static void ValidateCertificateExpiry(X509Certificate2 certificate, string keyAlias)
-        {
-            if (certificate.NotAfter == DateTime.MinValue)
-            {
-                // Certificate does not have an expiry date
-                logger.Warn("Certificate for MLE does not have an expiry date.");
-            }
-            else if (certificate.NotAfter < DateTime.Now)
-            {
-                // Certificate is already expired
-                logger.Warn($"Certificate with MLE alias {keyAlias} is expired as of {certificate.NotAfter}. Please update the p12 file.");
-                //throw new Exception($"Certificate required for MLE has expired on: {certificate.NotAfter}");
-            }
-            else
-            {
-                TimeSpan timeToExpire = certificate.NotAfter - DateTime.Now;
-                if (timeToExpire.TotalDays < Constants.CertificateExpiryDateWarningDays)
-                {
-                    logger.Warn($"Certificate for MLE with alias {keyAlias} is going to expire on {certificate.NotAfter}. Please update the p12 file before that.");
-                }
-            }
         }
 
         private static string GetSerialNumberFromCertificate(X509Certificate2 certificate, MerchantConfig merchantConfig)
@@ -139,9 +115,40 @@ namespace AuthenticationSdk.util
             return JsonConvert.SerializeObject(jsonObject);
         }
 
-        internal static string GetDefaultMLECertPath(string runEnvironment)
+        public static string GetDefaultMLECertPath(string runEnvironment)
         {
-            throw new NotImplementedException();
+            if (!string.IsNullOrEmpty(runEnvironment))
+            {
+                logger.Warn("Run Environment is null or empty.");
+                return null;
+            }
+
+            if (runEnvironment.Equals("apitest.cybersource.com", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.Debug("Using Default CAS MLE Request certificate path from SDK.");
+                return GetCertificateAbsolutePath("apitest.cybersource.com.crt");
+            }
+            else if (runEnvironment.Equals("api.cybersource.com", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.Debug("Using Default Prod MLE Request certificate path from SDK.");
+                return GetCertificateAbsolutePath("api.cybersource.com.crt");
+            }
+            else
+            {
+                logger.Error("Default Cert required for MLE Request does not exist in SDK for runEnvironment: " + runEnvironment);
+                throw new ArgumentException("Default Cert required for MLE Request does not exist in SDK for runEnvironment: " + runEnvironment);
+            }
+        }
+
+        private static string GetCertificateAbsolutePath(string certificateName)
+        {
+            string resourcePath = Path.Combine(Constants.DefaultMleCertPath, certificateName);
+            if (File.Exists(resourcePath))
+            {
+                return Path.GetFullPath(resourcePath);
+            }
+
+            throw new FileNotFoundException("Certificate file " + certificateName + " not found in resources");
         }
     }
 }

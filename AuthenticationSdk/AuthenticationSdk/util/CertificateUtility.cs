@@ -74,40 +74,27 @@ namespace AuthenticationSdk.util
             return collection;
         }
 
-        public static X509Certificate2 SearchCertificateByAlias(X509Certificate2Collection certificates, string mleKeyAlias)
+        public static void ValidateCertificateExpiry(X509Certificate2 certificate, string keyAlias)
         {
-            if (certificates == null || string.IsNullOrEmpty(mleKeyAlias))
+            if (certificate.NotAfter == DateTime.MinValue)
             {
-                return null;
+                // Certificate does not have an expiry date
+                logger.Warn("Certificate for MLE does not have an expiry date.");
             }
-
-            foreach (var cert in certificates)
+            else if (certificate.NotAfter < DateTime.Now)
             {
-                try
+                // Certificate is already expired
+                logger.Warn($"Certificate with MLE alias {keyAlias} is expired as of {certificate.NotAfter}. Please update the p12 file.");
+                //throw new Exception($"Certificate required for MLE has expired on: {certificate.NotAfter}");
+            }
+            else
+            {
+                TimeSpan timeToExpire = certificate.NotAfter - DateTime.Now;
+                if (timeToExpire.TotalDays < Constants.CertificateExpiryDateWarningDays)
                 {
-                    string subjectDN = cert.Subject;
-
-                    string[] dnParts = subjectDN.Split(',');
-                    foreach (var part in dnParts)
-                    {
-                        var trimmedPart = part.Trim();
-                        if (trimmedPart.StartsWith("CN=", StringComparison.OrdinalIgnoreCase))
-                        {
-                            string commonName = trimmedPart.Substring(3); // Remove "CN="
-                            if (string.Equals(mleKeyAlias, commonName, StringComparison.OrdinalIgnoreCase))
-                            {
-                                return cert;
-                            }
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    logger.Warn("Error parsing certificate subject DN: " + e.Message);
+                    logger.Warn($"Certificate for MLE with alias {keyAlias} is going to expire on {certificate.NotAfter}. Please update the p12 file before that.");
                 }
             }
-
-            return null;
         }
     }
 }

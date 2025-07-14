@@ -35,32 +35,7 @@ namespace AuthenticationSdk.util
         {
             try
             {
-                lock(mutex)
-                {
-                    ObjectCache cache = MemoryCache.Default;
-
-                    var matches = Regex.Match(p12FilePath, regexForFileNameFromDirectory);
-                    var certFile = matches.Groups[11].ToString();
-                    if (!cache.Contains(certFile) || ((CertInfo)cache[certFile]).Timestamp != File.GetLastWriteTime(p12FilePath))
-                    {
-                        var policy = new CacheItemPolicy();
-                        var filePaths = new List<string>();
-                        var cachedFilePath = Path.GetFullPath(p12FilePath);
-                        filePaths.Add(cachedFilePath);
-                        policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
-
-                        var certificates = new X509Certificate2Collection();
-                        certificates.Import(p12FilePath, keyPassword, X509KeyStorageFlags.PersistKeySet);
-
-                        CertInfo certInfo = new CertInfo();
-                        certInfo.Certificates = certificates;
-                        certInfo.Timestamp = File.GetLastWriteTime(p12FilePath);
-
-                        cache.Set(certFile, certInfo, policy);
-                    }
-                    //return all certs in p12
-                    return ((CertInfo)cache[certFile]).Certificates;
-                }
+                return InitializeMLECertificate(p12FilePath, keyPassword);
             }
             catch (Exception e)
             {
@@ -113,7 +88,6 @@ namespace AuthenticationSdk.util
                 }
             }
             throw new Exception($"{Constants.ErrorPrefix} Certificate with alias {keyAlias} not found.");
-            
         }
 
         public static X509Certificate2 GetRequestMLECertFromCache(MerchantConfig merchantConfig)
@@ -142,7 +116,10 @@ namespace AuthenticationSdk.util
             }
 
             string cacheKey = $"{merchantId}_{certificateIdentifier}";
-            return GetMLECertBasedOnCacheKey(merchantConfig, cacheKey, certificateFilePath);
+            X509Certificate2 mleCertificate = GetMLECertBasedOnCacheKey(merchantConfig, cacheKey, certificateFilePath);
+
+            CertificateUtility.ValidateCertificateExpiry(mleCertificate, merchantConfig.KeyAlias);
+            return mleCertificate;
         }
 
         private static X509Certificate2 GetMLECertBasedOnCacheKey(MerchantConfig merchantConfig, string cacheKey, string certificateFilePath)
@@ -176,7 +153,7 @@ namespace AuthenticationSdk.util
             {
                 X509Certificate2Collection certificates = CertificateUtility.LoadCertificatesFromPemFile(certificateFilePath);
 
-                mleCertificate = CertificateUtility.SearchCertificateByAlias(certificates, merchantConfig.MleKeyAlias);
+                mleCertificate = GetCertBasedOnKeyAlias(certificates, merchantConfig.MleKeyAlias);
 
                 if (mleCertificate == null)
                 {
@@ -187,14 +164,14 @@ namespace AuthenticationSdk.util
 
             if (cacheKey.EndsWith("mleCertFromP12"))
             {
-                mleCertificate = InitializeMLECertificate(merchantConfig);
+                mleCertificate = GetCertBasedOnKeyAlias(InitializeMLECertificate(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass), merchantConfig.KeyAlias);
             }
 
             if (cacheKey.EndsWith("mleCertFromDefaultInSDK"))
             {
                 X509Certificate2Collection certificates = CertificateUtility.LoadCertificatesFromPemFile(certificateFilePath);
 
-                mleCertificate = CertificateUtility.SearchCertificateByAlias(certificates, Constants.DefaultMleAliasForCert);
+                mleCertificate = GetCertBasedOnKeyAlias(certificates, Constants.DefaultMleAliasForCert);
 
                 if (mleCertificate == null)
                 {
@@ -220,50 +197,35 @@ namespace AuthenticationSdk.util
             }
         }
 
-        private static X509Certificate2 InitializeMLECertificate(MerchantConfig merchantConfig)
+        private static X509Certificate2Collection InitializeMLECertificate(string p12FilePath, string keyPassword)
         {
-            if (merchantConfig == null || string.IsNullOrEmpty(merchantConfig.MleKeyAlias) || string.IsNullOrEmpty(merchantConfig.P12Keyfilepath))
+            ObjectCache cache = MemoryCache.Default;
+            var matches = Regex.Match(p12FilePath, regexForFileNameFromDirectory);
+            var certFile = matches.Groups[11].ToString();
+            if (!cache.Contains(certFile) || ((CertInfo)cache[certFile]).Timestamp != File.GetLastWriteTime(p12FilePath))
             {
-                return null;
-            }
+                var policy = new CacheItemPolicy();
+                var filePaths = new List<string>();
+                var cachedFilePath = Path.GetFullPath(p12FilePath);
+                filePaths.Add(cachedFilePath);
+                policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
 
-            // Load all certificates from the PKCS#12 file
-            var certCollection = new X509Certificate2Collection();
-            certCollection.Import(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass, X509KeyStorageFlags.Exportable);
+                var certificates = new X509Certificate2Collection();
+                certificates.Import(p12FilePath, keyPassword, X509KeyStorageFlags.PersistKeySet);
 
-            // Collect all 'aliases' (use FriendlyName if set, else Subject)
-            var aliasList = new List<string>();
-            foreach (var cert in certCollection)
-            {
-                aliasList.Add(!string.IsNullOrEmpty(cert.FriendlyName) ? cert.FriendlyName : cert.Subject);
-            }
-
-            // Validate/select the key alias
-            string selectedAlias = ValidateKeyAlias(aliasList, merchantConfig.MleKeyAlias);
-
-            // Find the matching certificate
-            foreach (var cert in certCollection)
-            {
-                string certAlias = !string.IsNullOrEmpty(cert.FriendlyName) ? cert.FriendlyName : cert.Subject;
-                if (string.Equals(certAlias, selectedAlias, StringComparison.OrdinalIgnoreCase))
+                CertInfo certInfo = new CertInfo
                 {
-                    return cert;
+                    Certificates = certificates,
+                    Timestamp = File.GetLastWriteTime(p12FilePath)
+                };
+
+                lock(mutex)
+                {
+                    cache.Set(certFile, certInfo, policy);
                 }
             }
-
-            throw new KeyNotFoundException($"No certificate found for Request MLE for given mleKeyAlias {merchantConfig.MleKeyAlias} in p12 file {merchantConfig.KeyfileName}.p12");
-        }
-
-        private static string ValidateKeyAlias(List<string> aliasList, string mleKeyAlias)
-        {
-            foreach (var alias in aliasList)
-            {
-                if (string.Equals(alias, mleKeyAlias, StringComparison.OrdinalIgnoreCase))
-                {
-                    return alias;
-                }
-            }
-            return null;
+            //return all certs in p12
+            return ((CertInfo)cache[certFile]).Certificates;
         }
     }
 }
