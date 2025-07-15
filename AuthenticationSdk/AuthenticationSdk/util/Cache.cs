@@ -1,8 +1,10 @@
 using AuthenticationSdk.core;
-using Org.BouncyCastle.Crypto.Parameters;
+using NLog;
+using NLog.Fluent;
 using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,6 +25,8 @@ namespace AuthenticationSdk.util
         private static readonly object mutexForPrivateKeyFromPEM = new object();
 
         private static readonly string regexForFileNameFromDirectory = "(^([a-z]|[A-Z]):(?=\\\\(?![\\0-\\37<>:\"/\\\\|?*])|\\/(?![\\0-\\37<>:\"/\\\\|?*])|$)|^\\\\(?=[\\\\\\/][^\\0-\\37<>:\"/\\\\|?*]+)|^(?=(\\\\|\\/)$)|^\\.(?=(\\\\|\\/)$)|^\\.\\.(?=(\\\\|\\/)$)|^(?=(\\\\|\\/)[^\\0-\\37<>:\"/\\\\|?*]+)|^\\.(?=(\\\\|\\/)[^\\0-\\37<>:\"/\\\\|?*]+)|^\\.\\.(?=(\\\\|\\/)[^\\0-\\37<>:\"/\\\\|?*]+))((\\\\|\\/)([^\\0-\\37<>:\"/\\\\|?*]+|(\\\\|\\/)$))*()$";
+
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         private class CertInfo
         {
@@ -155,6 +159,7 @@ namespace AuthenticationSdk.util
                 if (mleCertificate == null)
                 {
                     // If no certificate found for the specified alias, fall back to first certificate
+                    logger.Warn($"No certificate found for the specified mleKeyAlias '{merchantConfig.KeyAlias}'. Using the first certificate from file {certificateFilePath} as the MLE request certificate.");
                     mleCertificate = certificates[0];
                 }
             }
