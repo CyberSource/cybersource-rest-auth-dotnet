@@ -39,7 +39,7 @@ namespace AuthenticationSdk.util
         {
             try
             {
-                return InitializeMLECertificate(p12FilePath, keyPassword);
+                return FetchCertificateCollectionFromP12File(p12FilePath, keyPassword);
             }
             catch (Exception e)
             {
@@ -166,7 +166,7 @@ namespace AuthenticationSdk.util
 
             if (cacheKey.EndsWith("mleCertFromP12"))
             {
-                mleCertificate = GetCertBasedOnKeyAlias(InitializeMLECertificate(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass), merchantConfig.KeyAlias);
+                mleCertificate = GetCertBasedOnKeyAlias(FetchCertificateCollectionFromP12File(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass), merchantConfig.KeyAlias);
             }
 
             if (cacheKey.EndsWith("mleCertFromDefaultInSDK"))
@@ -199,7 +199,7 @@ namespace AuthenticationSdk.util
             }
         }
 
-        private static X509Certificate2Collection InitializeMLECertificate(string p12FilePath, string keyPassword)
+        private static X509Certificate2Collection FetchCertificateCollectionFromP12File(string p12FilePath, string keyPassword)
         {
             ObjectCache cache = MemoryCache.Default;
             var matches = Regex.Match(p12FilePath, regexForFileNameFromDirectory);
