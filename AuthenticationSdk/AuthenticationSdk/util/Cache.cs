@@ -39,7 +39,32 @@ namespace AuthenticationSdk.util
         {
             try
             {
-                return FetchCertificateCollectionFromP12File(p12FilePath, keyPassword);
+                X509Certificate2Collection certificateCollection = FetchCertificateCollectionFromP12File(p12FilePath, keyPassword);
+
+                ObjectCache cache = MemoryCache.Default;
+                var matches = Regex.Match(p12FilePath, regexForFileNameFromDirectory);
+                var certFile = matches.Groups[11].ToString();
+                if (!cache.Contains(certFile) || ((CertInfo)cache[certFile]).Timestamp != File.GetLastWriteTime(p12FilePath))
+                {
+                    var policy = new CacheItemPolicy();
+                    var filePaths = new List<string>();
+                    var cachedFilePath = Path.GetFullPath(p12FilePath);
+                    filePaths.Add(cachedFilePath);
+                    policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
+
+                    CertInfo certInfo = new CertInfo
+                    {
+                        Certificates = certificateCollection,
+                        Timestamp = File.GetLastWriteTime(p12FilePath)
+                    };
+
+                    lock (mutex)
+                    {
+                        cache.Set(certFile, certInfo, policy);
+                    }
+                }
+
+                return certificateCollection;
             }
             catch (Exception e)
             {
@@ -201,33 +226,11 @@ namespace AuthenticationSdk.util
 
         private static X509Certificate2Collection FetchCertificateCollectionFromP12File(string p12FilePath, string keyPassword)
         {
-            ObjectCache cache = MemoryCache.Default;
-            var matches = Regex.Match(p12FilePath, regexForFileNameFromDirectory);
-            var certFile = matches.Groups[11].ToString();
-            if (!cache.Contains(certFile) || ((CertInfo)cache[certFile]).Timestamp != File.GetLastWriteTime(p12FilePath))
-            {
-                var policy = new CacheItemPolicy();
-                var filePaths = new List<string>();
-                var cachedFilePath = Path.GetFullPath(p12FilePath);
-                filePaths.Add(cachedFilePath);
-                policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
+            var certificates = new X509Certificate2Collection();
+            certificates.Import(p12FilePath, keyPassword, X509KeyStorageFlags.PersistKeySet);
 
-                var certificates = new X509Certificate2Collection();
-                certificates.Import(p12FilePath, keyPassword, X509KeyStorageFlags.PersistKeySet);
-
-                CertInfo certInfo = new CertInfo
-                {
-                    Certificates = certificates,
-                    Timestamp = File.GetLastWriteTime(p12FilePath)
-                };
-
-                lock(mutex)
-                {
-                    cache.Set(certFile, certInfo, policy);
-                }
-            }
             //return all certs in p12
-            return ((CertInfo)cache[certFile]).Certificates;
+            return certificates;
         }
     }
 }
