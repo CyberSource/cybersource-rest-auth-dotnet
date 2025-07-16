@@ -128,13 +128,13 @@ namespace AuthenticationSdk.util
             // Priority #1: Get cert from merchantConfig.mleForRequestPublicCertPath if certPath is provided
             if (!string.IsNullOrEmpty(merchantConfig.MleForRequestPublicCertPath))
             {
-                certificateIdentifier = "mleCertFromMerchantConfig";
+                certificateIdentifier = Constants.MLE_CACHE_IDENTIFIER_FOR_CONFIG_CERT;
                 certificateFilePath = merchantConfig.MleForRequestPublicCertPath;
             }
             // Priority #2: If merchantConfig.mleForRequestPublicCertPath not provided by merchant then get mlecert from merchant p12 if provided and jwt auth type
             else if (Constants.AuthMechanismJwt.Equals(merchantConfig.AuthenticationType, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(merchantConfig.P12Keyfilepath))
             {
-                certificateIdentifier = "mleCertFromP12";
+                certificateIdentifier = Constants.MLE_CACHE_IDENTIFIER_FOR_P12_CERT;
                 certificateFilePath = merchantConfig.P12Keyfilepath;
             }
             // Priority #3: Get mlecert from default mle cert in SDK as per CAS or PROD env.
@@ -147,7 +147,7 @@ namespace AuthenticationSdk.util
             string cacheKey = $"{merchantId}_{certificateIdentifier}";
             X509Certificate2 mleCertificate = GetMLECertBasedOnCacheKey(merchantConfig, cacheKey, certificateFilePath);
 
-            CertificateUtility.ValidateCertificateExpiry(mleCertificate, merchantConfig.KeyAlias);
+            CertificateUtility.ValidateCertificateExpiry(mleCertificate, merchantConfig.KeyAlias, certificateIdentifier);
             return mleCertificate;
         }
 
@@ -175,41 +175,45 @@ namespace AuthenticationSdk.util
         {
             X509Certificate2 mleCertificate = null;
 
-            if (cacheKey.EndsWith("mleCertFromMerchantConfig"))
+            if (cacheKey.EndsWith(Constants.MLE_CACHE_IDENTIFIER_FOR_CONFIG_CERT))
             {
                 X509Certificate2Collection certificates = CertificateUtility.LoadCertificatesFromPemFile(certificateFilePath);
 
-                mleCertificate = GetCertBasedOnKeyAlias(certificates, merchantConfig.MleKeyAlias);
-
-                if (mleCertificate == null)
+                try
                 {
-                    // If no certificate found for the specified alias, fall back to first certificate
-                    logger.Warn($"No certificate found for the specified mleKeyAlias '{merchantConfig.KeyAlias}'. Using the first certificate from file {certificateFilePath} as the MLE request certificate.");
-                    mleCertificate = certificates[0];
+                    mleCertificate = GetCertBasedOnKeyAlias(certificates, merchantConfig.MleKeyAlias);
+                }
+                catch (Exception)
+                {
+                    if (mleCertificate == null)
+                    {
+                        // If no certificate found for the specified alias, fall back to first certificate
+                        string fileName = Path.GetFileName(certificateFilePath);
+                        logger.Warn($"No certificate found for the specified mleKeyAlias '{merchantConfig.MleKeyAlias}'. Using the first certificate from file {fileName} as the MLE request certificate.");
+                        mleCertificate = certificates[0];
+                    }
                 }
             }
 
-            if (cacheKey.EndsWith("mleCertFromP12"))
+            if (cacheKey.EndsWith(Constants.MLE_CACHE_IDENTIFIER_FOR_P12_CERT))
             {
-                mleCertificate = GetCertBasedOnKeyAlias(FetchCertificateCollectionFromP12File(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass), merchantConfig.MleKeyAlias);
-            }
-
-            if (cacheKey.EndsWith("mleCertFromDefaultInSDK"))
-            {
-                X509Certificate2Collection certificates = CertificateUtility.LoadCertificatesFromPemFile(certificateFilePath);
-
-                mleCertificate = GetCertBasedOnKeyAlias(certificates, Constants.DefaultMleAliasForCert);
-
-                if (mleCertificate == null)
+                try
                 {
-                    // If no certificate found for the specified alias, fall back to first certificate
-                    mleCertificate = certificates[0];
+                    mleCertificate = GetCertBasedOnKeyAlias(FetchCertificateCollectionFromP12File(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass), merchantConfig.MleKeyAlias);
+                }
+                catch (Exception)
+                {
+                    string fileName = Path.GetFileName(merchantConfig.P12Keyfilepath);
+                    logger.Error($"No certificate found for the specified mleKeyAlias '{merchantConfig.MleKeyAlias}' in file {fileName}.");
+                    throw new ArgumentException($"No certificate found for the specified mleKeyAlias '{merchantConfig.MleKeyAlias}' in file {fileName}.");
                 }
             }
 
-            CertInfo certInfo = new CertInfo();
-            certInfo.MLECertificate = mleCertificate;
-            certInfo.Timestamp = File.GetLastWriteTime(certificateFilePath);
+            CertInfo certInfo = new CertInfo
+            {
+                MLECertificate = mleCertificate,
+                Timestamp = File.GetLastWriteTime(certificateFilePath)
+            };
 
             var policy = new CacheItemPolicy();
             var filePaths = new List<string>();

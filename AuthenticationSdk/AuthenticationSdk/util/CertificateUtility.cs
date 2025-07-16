@@ -74,25 +74,42 @@ namespace AuthenticationSdk.util
             return collection;
         }
 
-        public static void ValidateCertificateExpiry(X509Certificate2 certificate, string keyAlias)
+        public static void ValidateCertificateExpiry(X509Certificate2 certificate, string keyAlias, string mleCacheKeyIdentifier)
         {
+            string warningMessageForNoExpiryDate = "Certificate does not have expiry date";
+            string warningMessageForCertificateExpiringSoon = "Certificate with alias {} is going to expire on {}. Please update the certificate before then.";
+            string warningMessageForExpiredCertificate = "Certificate with alias {} is expired as of {}. Please update the certificate.";
+
+            if (Constants.MLE_CACHE_IDENTIFIER_FOR_CONFIG_CERT.Equals(mleCacheKeyIdentifier))
+            {
+                warningMessageForNoExpiryDate = "Certificate for MLE Requests does not have expiry date from mleForRequestPublicCertPath in merchant configuration.";
+                warningMessageForCertificateExpiringSoon = "Certificate for MLE Requests with alias {} is going to expire on {}. Please update the certificate provided in mleForRequestPublicCertPath in merchant configuration before then.";
+                warningMessageForExpiredCertificate = "Certificate for MLE Requests with alias {} is expired as of {}. Please update the certificate provided in mleForRequestPublicCertPath in merchant configuration.";
+            }
+
+            if (Constants.MLE_CACHE_IDENTIFIER_FOR_P12_CERT.Equals(mleCacheKeyIdentifier))
+            {
+                warningMessageForNoExpiryDate = "Certificate for MLE Requests does not have expiry date in the P12 file.";
+                warningMessageForCertificateExpiringSoon = "Certificate for MLE Requests with alias {} is going to expire on {}. Please update the P12 file before then.";
+                warningMessageForExpiredCertificate = "Certificate for MLE Requests with alias {} is expired as of {}. Please update the P12 file.";
+            }
+
             if (certificate.NotAfter == DateTime.MinValue)
             {
                 // Certificate does not have an expiry date
-                logger.Warn("Certificate for MLE does not have an expiry date.");
+                logger.Warn(warningMessageForNoExpiryDate);
             }
             else if (certificate.NotAfter < DateTime.Now)
             {
                 // Certificate is already expired
-                logger.Warn($"Certificate with MLE alias {keyAlias} is expired as of {certificate.NotAfter}. Please update the p12 file.");
-                //throw new Exception($"Certificate required for MLE has expired on: {certificate.NotAfter}");
+                logger.Warn(warningMessageForExpiredCertificate, keyAlias, certificate.NotAfter);
             }
             else
             {
                 TimeSpan timeToExpire = certificate.NotAfter - DateTime.Now;
                 if (timeToExpire.TotalDays < Constants.CertificateExpiryDateWarningDays)
                 {
-                    logger.Warn($"Certificate for MLE with alias {keyAlias} is going to expire on {certificate.NotAfter}. Please update the p12 file before that.");
+                    logger.Warn(warningMessageForCertificateExpiringSoon, keyAlias, certificate.NotAfter);
                 }
             }
         }
