@@ -612,7 +612,10 @@ namespace AuthenticationSdk.core
                 var pathDirectorySeparator = Path.DirectorySeparatorChar;
 
                 // Check the p12 file and set the keyFile to get the mleCert in case of JWT auth type
-                CheckKeyFile();
+                if (CheckKeyFile())
+                {
+                    throw new Exception($"{Constants.ErrorPrefix} Error finding or accessing the Key Directory or Key File. Please review the values in the merchant configuration.");
+                }
 
                 P12Keyfilepath = $"{KeyDirectory}{pathDirectorySeparator}{KeyfileName}.p12";
             }
