@@ -39,8 +39,6 @@ namespace AuthenticationSdk.util
         {
             try
             {
-                X509Certificate2Collection certificateCollection = FetchCertificateCollectionFromP12File(p12FilePath, keyPassword);
-
                 ObjectCache cache = MemoryCache.Default;
                 var matches = Regex.Match(p12FilePath, regexForFileNameFromDirectory);
                 var certFile = matches.Groups[11].ToString();
@@ -51,6 +49,8 @@ namespace AuthenticationSdk.util
                     var cachedFilePath = Path.GetFullPath(p12FilePath);
                     filePaths.Add(cachedFilePath);
                     policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
+
+                    X509Certificate2Collection certificateCollection = FetchCertificateCollectionFromP12File(p12FilePath, keyPassword);
 
                     CertInfo certInfo = new CertInfo
                     {
@@ -64,7 +64,7 @@ namespace AuthenticationSdk.util
                     }
                 }
 
-                return certificateCollection;
+                return ((CertInfo)cache[certFile]).Certificates;
             }
             catch (Exception e)
             {
@@ -168,7 +168,7 @@ namespace AuthenticationSdk.util
                 }
             }
 
-            return ((CertInfo)cache.Get(cacheKey)).Certificates[0];
+            return ((CertInfo)cache.Get(cacheKey)).MLECertificate;
         }
 
         private static void SetupCache(MerchantConfig merchantConfig, string cacheKey, string certificateFilePath)
@@ -191,7 +191,7 @@ namespace AuthenticationSdk.util
 
             if (cacheKey.EndsWith("mleCertFromP12"))
             {
-                mleCertificate = GetCertBasedOnKeyAlias(FetchCertificateCollectionFromP12File(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass), merchantConfig.KeyAlias);
+                mleCertificate = GetCertBasedOnKeyAlias(FetchCertificateCollectionFromP12File(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass), merchantConfig.MleKeyAlias);
             }
 
             if (cacheKey.EndsWith("mleCertFromDefaultInSDK"))
