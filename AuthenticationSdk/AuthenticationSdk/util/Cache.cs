@@ -140,8 +140,8 @@ namespace AuthenticationSdk.util
             // Priority #3: Get mlecert from default mle cert in SDK as per CAS or PROD env.
             else
             {
-                certificateIdentifier = "mleCertFromDefaultInSDK";
-                certificateFilePath = MLEUtility.GetDefaultMLECertPath(merchantConfig.RunEnvironment);
+                logger.Debug("The certificate to use for MLE for requests is not provided in the merchant configuration. Please ensure that the certificate path is provided.");
+                return null;
             }
 
             string cacheKey = $"{merchantId}_{certificateIdentifier}";
@@ -162,7 +162,7 @@ namespace AuthenticationSdk.util
             else
             {
                 CertInfo certInfo = (CertInfo) cache.Get(cacheKey);
-                if (certInfo != null || certInfo.Timestamp != File.GetLastWriteTime(certificateFilePath))
+                if (certInfo == null || certInfo.Timestamp != File.GetLastWriteTime(certificateFilePath))
                 {
                     SetupCache(merchantConfig, cacheKey, certificateFilePath);
                 }

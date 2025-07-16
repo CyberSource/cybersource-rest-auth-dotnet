@@ -56,6 +56,15 @@ namespace AuthenticationSdk.util
             logUtility.LogDebugMessage(logger, Constants.LOG_REQUEST_BEFORE_MLE + payload);
 
             X509Certificate2 mleCertificate = GetMLECertificate(merchantConfig);
+
+            // Handling special case : MLE Certificate is not currently available for HTTP Signature
+            if (mleCertificate == null && Constants.AuthMechanismHttp.Equals(merchantConfig.AuthenticationType, StringComparison.OrdinalIgnoreCase))
+            {
+                logger.Debug("The certificate to use for MLE for requests is not provided in the merchant configuration. Please ensure that the certificate path is provided.");
+                logger.Debug("Currently, MLE for requests using HTTP Signature as authentication is not supported by Cybersource. By default, the SDK will fall back to non-encrypted requests.");
+                return requestBody;
+            }
+
             string serialNumber = GetSerialNumberFromCertificate(mleCertificate, merchantConfig);
             var payloadBytes = System.Text.Encoding.UTF8.GetBytes(payload);
             var rsa = mleCertificate.GetRSAPublicKey();
@@ -113,42 +122,6 @@ namespace AuthenticationSdk.util
         {
             var jsonObject = new { encryptedRequest = jweToken };
             return JsonConvert.SerializeObject(jsonObject);
-        }
-
-        public static string GetDefaultMLECertPath(string runEnvironment)
-        {
-            if (!string.IsNullOrEmpty(runEnvironment))
-            {
-                logger.Warn("Run Environment is null or empty.");
-                return null;
-            }
-
-            if (runEnvironment.Equals("apitest.cybersource.com", StringComparison.OrdinalIgnoreCase))
-            {
-                logger.Debug("Using Default CAS MLE Request certificate path from SDK.");
-                return GetCertificateAbsolutePath("apitest.cybersource.com.crt");
-            }
-            else if (runEnvironment.Equals("api.cybersource.com", StringComparison.OrdinalIgnoreCase))
-            {
-                logger.Debug("Using Default Prod MLE Request certificate path from SDK.");
-                return GetCertificateAbsolutePath("api.cybersource.com.crt");
-            }
-            else
-            {
-                logger.Error("Default Cert required for MLE Request does not exist in SDK for runEnvironment: " + runEnvironment);
-                throw new ArgumentException("Default Cert required for MLE Request does not exist in SDK for runEnvironment: " + runEnvironment);
-            }
-        }
-
-        private static string GetCertificateAbsolutePath(string certificateName)
-        {
-            string resourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.DefaultMleCertPath, certificateName);
-            if (File.Exists(resourcePath))
-            {
-                return Path.GetFullPath(resourcePath);
-            }
-
-            throw new FileNotFoundException("Certificate file " + certificateName + " not found in resources");
         }
     }
 }
