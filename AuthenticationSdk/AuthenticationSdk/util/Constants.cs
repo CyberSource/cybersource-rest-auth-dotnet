@@ -36,8 +36,6 @@ namespace AuthenticationSdk.util
 
         public static readonly string DefaultMleAliasForCert = "CyberSource_SJC_US";
 
-        public static readonly string DefaultMleCertPath = "resources";
-
         public static readonly int CertificateExpiryDateWarningDays = 90;
 
         public static readonly string LOG_REQUEST_BEFORE_MLE = "LOG_REQUEST_BEFORE_MLE: ";
