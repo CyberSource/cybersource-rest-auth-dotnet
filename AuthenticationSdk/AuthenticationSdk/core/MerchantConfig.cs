@@ -170,6 +170,10 @@ namespace AuthenticationSdk.core
 
         public string MleKeyAlias { get; set; }
 
+        public string MaxConnectionPoolSize { get; set; }
+
+        public string KeepAliveTime { get; set; }
+
         #endregion
 
         public void LogMerchantConfigurationProperties()
@@ -247,10 +251,27 @@ namespace AuthenticationSdk.core
             {
                 MleKeyAlias = merchantConfigSection["mleKeyAlias"]?.Trim();
             }
-
-            if (string.IsNullOrWhiteSpace(MleKeyAlias?.Trim()))
+            else
             {
                 MleKeyAlias = Constants.DefaultMleAliasForCert;
+            }
+
+            if (merchantConfigSection["maxConnectionPoolSize"] != null)
+            {
+                MaxConnectionPoolSize = merchantConfigSection["maxConnectionPoolSize"];
+            }
+            else
+            {
+                MaxConnectionPoolSize = Constants.DefaultMaxConnectionPoolSize;
+            }
+
+            if (merchantConfigSection["keepAliveTime"] != null)
+            {
+                KeepAliveTime = merchantConfigSection["keepAliveTime"];
+            }
+            else
+            {
+                KeepAliveTime = Constants.DefaultKeepAliveTime;
             }
         }
 
@@ -488,6 +509,24 @@ namespace AuthenticationSdk.core
                     if (string.IsNullOrWhiteSpace(MleKeyAlias?.Trim()))
                     {
                         MleKeyAlias = Constants.DefaultMleAliasForCert;
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("maxConnectionPoolSize"))
+                    {
+                        MaxConnectionPoolSize = merchantConfigDictionary["maxConnectionPoolSize"];
+                    }
+                    else
+                    {
+                        MaxConnectionPoolSize = Constants.DefaultMaxConnectionPoolSize;
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("keepAliveTime"))
+                    {
+                        KeepAliveTime = merchantConfigDictionary["keepAliveTime"];
+                    }
+                    else
+                    {
+                        KeepAliveTime = Constants.DefaultKeepAliveTime;
                     }
                 }
             }
