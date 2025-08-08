@@ -251,7 +251,8 @@ namespace AuthenticationSdk.core
             {
                 MleKeyAlias = merchantConfigSection["mleKeyAlias"]?.Trim();
             }
-            else
+
+            if (string.IsNullOrWhiteSpace(MleKeyAlias?.Trim()))
             {
                 MleKeyAlias = Constants.DefaultMleAliasForCert;
             }
