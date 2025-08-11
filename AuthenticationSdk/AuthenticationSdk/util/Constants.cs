@@ -45,6 +45,6 @@ namespace AuthenticationSdk.util
         public static readonly string DefaultMaxConnectionPoolSize = "50";
 
         // https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=net-9.0
-        public static readonly string DefaultKeepAliveTime = "100000"; // Time in milliseconds
+        public static readonly string DefaultKeepAliveTime = "300000"; // Time in milliseconds
     }
 }
