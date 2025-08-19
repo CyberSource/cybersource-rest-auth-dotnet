@@ -85,6 +85,7 @@
     <Compile Include="util\Constants.cs" />
     <Compile Include="util\JWEUtility.cs" />
     <Compile Include="util\LogUtility.cs" />
+    <Compile Include="util\CertificateUtility.cs" />
     <Compile Include="util\SensitiveDataConfigurationType.cs" />
     <Compile Include="util\SensitiveTags.cs" />
     <Compile Include="util\MLEUtility.cs" />
@@ -94,6 +95,9 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="resources\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
