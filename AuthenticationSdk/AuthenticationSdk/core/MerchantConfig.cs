@@ -20,7 +20,7 @@ namespace AuthenticationSdk.core
     *============================================================================================*/
     public class MerchantConfig
     {
-        public MerchantConfig(IReadOnlyDictionary<string, string> merchantConfigDictionary = null, Dictionary<string,bool> mapToControlMLEonAPI=null)
+        public MerchantConfig(IReadOnlyDictionary<string, string> merchantConfigDictionary = null, Dictionary<string, string> mapToControlMLEonAPI = null, AsymmetricAlgorithm responseMlePrivateKey = null)
         {
             var _propertiesSetUsing = string.Empty;
 
@@ -57,6 +57,11 @@ namespace AuthenticationSdk.core
                     Logger.Error($"Merchant Configuration Missing in App.Config File");
                     throw new Exception($"{Constants.ErrorPrefix} Merchant Configuration Missing in App.Config File");
                 }
+            }
+
+            if (responseMlePrivateKey != null)
+            {
+                ResponseMlePrivateKey = responseMlePrivateKey;
             }
 
             Logger.Debug("APPLICATION LOGGING START:\n");
