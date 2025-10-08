@@ -6,6 +6,8 @@ using System.Collections.Specialized;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Security;
 
 namespace AuthenticationSdk.core
 {
@@ -171,9 +173,100 @@ namespace AuthenticationSdk.core
         public bool IsUseMLEGloballySet { get; private set; }
         public bool IsEnableRequestMLEForOptionalApisGloballySet { get; private set; }
 
-        public Dictionary<string, bool> MapToControlMLEonAPI { get; set; }
 
+        private Dictionary<string, string> _mapToControlMLEonAPI { get; set; }
+        public Dictionary<string, string> MapToControlMLEonAPI
+        {
+            get => _mapToControlMLEonAPI;
+            set
+            {
+                // Validate the map values of MLE Config if not null
+                if (value != null)
+                {
+                    ValidateMapToControlMLEonAPIValues(value);
+                    // Populate the internal Maps for MLE control
+                    var internalMapToControlRequestMLEonAPI = new Dictionary<string, bool>();
+                    var internalMapToControlResponseMLEonAPI = new Dictionary<string, bool>();
+
+                    foreach (var entry in value)
+                    {
+                        var apiName = entry.Key;
+                        var configValue = entry.Value;
+
+
+                        if (string.IsNullOrEmpty(configValue))
+                        {
+                            // Throw exception if configValue is empty for the given apiName
+                            throw new Exception($"Invalid MLE control map value for key '{apiName}'. Value cannot be null or empty.");
+                        }
+                        else if (configValue.Contains("::"))
+                        {
+                            // Format: "requestMLE::responseMLE"
+                            var parts = configValue.Split(new[] { "::" }, StringSplitOptions.None);
+                            var requestMLE = parts.Length > 0 ? parts[0] : string.Empty;
+                            var responseMLE = parts.Length > 1 ? parts[1] : string.Empty;
+
+                            // Set request MLE value
+                            if (!string.IsNullOrEmpty(requestMLE))
+                            {
+                                internalMapToControlRequestMLEonAPI[apiName] = bool.Parse(requestMLE);
+                            }
+
+                            // Set response MLE value
+                            if (!string.IsNullOrEmpty(responseMLE))
+                            {
+                                internalMapToControlResponseMLEonAPI[apiName] = bool.Parse(responseMLE);
+                            }
+                        }
+                        else
+                        {
+                            // Format: "true" or "false" - applies to request MLE only
+                            internalMapToControlRequestMLEonAPI[apiName] = bool.Parse(configValue);
+                        }
+                    }
+
+                    this.InternalMapToControlRequestMLEonAPI = internalMapToControlRequestMLEonAPI;
+                    this.InternalMapToControlResponseMLEonAPI = internalMapToControlResponseMLEonAPI;
+                    _mapToControlMLEonAPI = value;
+                }
+            }
+        }
+        public Dictionary<string, bool> InternalMapToControlRequestMLEonAPI { get; set; }
+        public Dictionary<string, bool> InternalMapToControlResponseMLEonAPI { get; set; }
+
+        /**
+         * Optional parameter. User can pass a custom requestMleKeyAlias to fetch from the certificate.
+         * Older flag "mleKeyAlias" is deprecated and will be used as alias/another name for requestMleKeyAlias.
+         */
         public string RequestMleKeyAlias { get; set; }
+
+        /// <summary>
+        /// Flag to enable MLE (Message Level Encryption) for response body for all APIs in SDK to get MLE Response (encrypted response) if supported by API.
+        /// </summary>
+        public bool EnableResponseMleGlobally { get; set; }
+
+        /// <summary>
+        /// Parameter to pass the KID value for the MLE response public certificate. This value will be provided in the merchant portal when retrieving the MLE response certificate.
+        /// </summary>
+        public string ResponseMleKID { get; set; }
+
+        /// <summary>
+        /// Path to the private key file used for Response MLE decryption by the SDK.
+        /// Supported formats: .p12, .key, .pem, etc.
+        /// </summary>
+        public string ResponseMlePrivateKeyFilePath { get; set; }
+
+        /// <summary>
+        /// Password for the private key file used in Response MLE decryption by the SDK.
+        /// Required for .p12 files or encrypted private keys.
+        /// </summary>
+        public SecureString ResponseMlePrivateKeyFilePassword { get; set; }
+
+        /// <summary>
+        /// AsymmetricAlgorithm instance used for Response MLE decryption by the SDK.
+        /// Optional — either provide this object directly or specify the private key file path via configuration.
+        /// </summary>
+        public AsymmetricAlgorithm ResponseMlePrivateKey { get; set; }
 
         public string MaxConnectionPoolSize { get; set; }
 
