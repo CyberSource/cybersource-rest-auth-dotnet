@@ -312,7 +312,7 @@ namespace AuthenticationSdk.core
             Logger.Debug($"Merchant Configuration :\n{merchCfgLogString}");
         }
 
-        private void SetValuesFromAppConfig(NameValueCollection merchantConfigSection, Dictionary<string, bool> mapToControlMLEonAPI)
+        private void SetValuesFromAppConfig(NameValueCollection merchantConfigSection, Dictionary<string, string> mapToControlMLEonAPI)
         {
             MerchantId = merchantConfigSection["merchantID"];
             PortfolioId = merchantConfigSection["portfolioID"];
@@ -394,6 +394,31 @@ namespace AuthenticationSdk.core
                 RequestMleKeyAlias = Constants.DefaultMleAliasForCert;
             }
 
+            // Adding Response MLE Related Params
+            if (merchantConfigSection["enableResponseMleGlobally"] != null)
+            {
+                EnableResponseMleGlobally = bool.Parse(merchantConfigSection["enableResponseMleGlobally"]);
+            }
+            else
+            {
+                EnableResponseMleGlobally = false;
+            }
+
+            if (merchantConfigSection["responseMleKID"] != null && !string.IsNullOrEmpty(merchantConfigSection["responseMleKID"]?.Trim()))
+            {
+                ResponseMleKID = merchantConfigSection["responseMleKID"].Trim();
+            }
+
+            if (merchantConfigSection["responseMlePrivateKeyFilePath"] != null && !string.IsNullOrWhiteSpace(merchantConfigSection["responseMlePrivateKeyFilePath"]))
+            {
+                ResponseMlePrivateKeyFilePath = merchantConfigSection["responseMlePrivateKeyFilePath"].Trim();
+            }
+
+            if (merchantConfigSection["responseMlePrivateKeyFilePassword"] != null && !string.IsNullOrEmpty(merchantConfigSection["responseMlePrivateKeyFilePassword"]))
+            {
+                ResponseMlePrivateKeyFilePassword = Utility.ConvertStringToSecureString(merchantConfigSection["responseMlePrivateKeyFilePassword"]);
+            }
+
             if (merchantConfigSection["maxConnectionPoolSize"] != null)
             {
                 MaxConnectionPoolSize = merchantConfigSection["maxConnectionPoolSize"];
@@ -413,7 +438,7 @@ namespace AuthenticationSdk.core
             }
         }
 
-        private void SetValuesUsingDictObj(IReadOnlyDictionary<string, string> merchantConfigDictionary, Dictionary<string,bool> mapToControlMLEonAPI)
+        private void SetValuesUsingDictObj(IReadOnlyDictionary<string, string> merchantConfigDictionary, Dictionary<string,string> mapToControlMLEonAPI)
         {
             var key = string.Empty;
 
@@ -695,6 +720,31 @@ namespace AuthenticationSdk.core
                     {
                         MleForRequestPublicCertPath = merchantConfigDictionary["mleForRequestPublicCertPath"].Trim();
                     }
+
+                    // Adding Response MLE Related Params
+                    if (merchantConfigDictionary.ContainsKey("enableResponseMleGlobally"))
+                    {
+                        EnableResponseMleGlobally = bool.Parse(merchantConfigDictionary["enableResponseMleGlobally"]);
+                    }
+                    else
+                    {
+                        EnableResponseMleGlobally = false;
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("responseMleKID") && !string.IsNullOrEmpty(merchantConfigDictionary["responseMleKID"]?.Trim()))
+                    {
+                        ResponseMleKID = merchantConfigDictionary["responseMleKID"].Trim();
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("responseMlePrivateKeyFilePath") && !string.IsNullOrWhiteSpace(merchantConfigDictionary["responseMlePrivateKeyFilePath"]))
+                    {
+                        ResponseMlePrivateKeyFilePath = merchantConfigDictionary["responseMlePrivateKeyFilePath"].Trim();
+                    }
+
+                    if (merchantConfigDictionary.ContainsKey("responseMlePrivateKeyFilePassword") && !string.IsNullOrEmpty(merchantConfigDictionary["responseMlePrivateKeyFilePassword"]))
+                    {
+                        ResponseMlePrivateKeyFilePassword = Utility.ConvertStringToSecureString(merchantConfigDictionary["responseMlePrivateKeyFilePassword"]);
+                    }
                 }
             }
             catch (KeyNotFoundException err)
@@ -703,6 +753,65 @@ namespace AuthenticationSdk.core
                 throw new Exception($"{Constants.ErrorPrefix} {err.Message}");
             }
         }
+
+        private void ValidateMapToControlMLEonAPIValues(Dictionary<string, string> mapToControlMLEonAPI)
+        {
+            if (mapToControlMLEonAPI == null)
+            {
+                return;
+            }
+
+            foreach (var entry in mapToControlMLEonAPI)
+            {
+                var key = entry.Key;
+                var value = entry.Value;
+
+                if (string.IsNullOrEmpty(value))
+                {
+                    Logger.Error($"ConfigException : Invalid MLE control map value for key '{key}'. Value cannot be null or empty.");
+                    throw new Exception($"Invalid MLE control map value for key '{key}'. Value cannot be null or empty.");
+                }
+
+                // Check if value contains "::" separator
+                if (value.Contains("::"))
+                {
+                    var parts = value.Split(new[] { "::" }, StringSplitOptions.None);
+
+                    if (parts.Length != 2)
+                    {
+                        Logger.Error($"ConfigException : Invalid MLE control map value format for key '{key}'. Expected format: true/false for 'requestMLE::responseMLE' but got: '{value}'");
+                        throw new Exception($"Invalid MLE control map value format for key '{key}'. Expected format: true/false for 'requestMLE::responseMLE' but got: '{value}'");
+                    }
+
+                    var requestMLE = parts[0];
+                    var responseMLE = parts[1];
+
+                    // Validate first part (request MLE) - can be empty, "true", or "false"
+                    if (!string.IsNullOrEmpty(requestMLE) && !Utility.IsValidBooleanString(requestMLE))
+                    {
+                        Logger.Error($"ConfigException : Invalid request MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{requestMLE}'");
+                        throw new Exception($"Invalid request MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{requestMLE}'");
+                    }
+
+                    // Validate second part (response MLE) - can be empty, "true", or "false"
+                    if (!string.IsNullOrEmpty(responseMLE) && !Utility.IsValidBooleanString(responseMLE))
+                    {
+                        Logger.Error($"ConfigException : Invalid response MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{responseMLE}'");
+                        throw new Exception($"Invalid response MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{responseMLE}'");
+                    }
+                }
+                else
+                {
+                    // Value without "::" separator - should be "true" or "false"
+                    if (!Utility.IsValidBooleanString(value))
+                    {
+                        Logger.Error($"ConfigException : Invalid MLE control map value for key '{key}'. Expected 'true' or 'false' for requestMLE but got: '{value}'");
+                        throw new Exception($"Invalid MLE control map value for key '{key}'. Expected 'true' or 'false' for requestMLE but got: '{value}'");
+                    }
+                }
+            }
+        }
+
 
         private void ValidateProperties()
         {
@@ -820,9 +929,9 @@ namespace AuthenticationSdk.core
             
             bool requestMleConfigured = EnableRequestMLEForOptionalApisGlobally;
 
-            if (MapToControlMLEonAPI != null && MapToControlMLEonAPI.Count > 0)
+            if (InternalMapToControlRequestMLEonAPI != null && InternalMapToControlRequestMLEonAPI.Count > 0)
             {
-                foreach (bool value in MapToControlMLEonAPI.Values)
+                foreach (bool value in InternalMapToControlRequestMLEonAPI.Values)
                 {
                     if (value)
                     {
@@ -851,6 +960,64 @@ namespace AuthenticationSdk.core
                 {
                     Logger.Error(err.Message);
                     throw new Exception(err.Message);
+                }
+            }
+
+            // Validation for MLE Response Configuration
+
+            bool responseMleConfigured = EnableResponseMleGlobally;
+            if (InternalMapToControlResponseMLEonAPI != null && InternalMapToControlResponseMLEonAPI.Count > 0)
+            {
+                foreach (bool value in InternalMapToControlResponseMLEonAPI.Values)
+                {
+                    if (value)
+                    {
+                        responseMleConfigured = true;
+                        break;
+                    }
+                }
+            }
+            if (responseMleConfigured)
+            {
+                // Validate for Auth type - Currently responseMLE feature will be enabled for JWT auth type only
+                if (!Enumerations.AuthenticationType.JWT.ToString().Equals(AuthenticationType, StringComparison.OrdinalIgnoreCase))
+                {
+                    Logger.Error("Response MLE is only supported for JWT auth type");
+                    throw new Exception("Response MLE is only supported for JWT auth type");
+                }
+
+                // Check if either private key object or private key file path is provided
+                if (ResponseMlePrivateKey == null && string.IsNullOrEmpty(ResponseMlePrivateKeyFilePath))
+                {
+                    Logger.Error("Response MLE is enabled but no private key provided. Either set ResponseMlePrivateKey object or provide ResponseMlePrivateKeyFilePath.");
+                    throw new Exception("Response MLE is enabled but no private key provided. Either set ResponseMlePrivateKey object or provide ResponseMlePrivateKeyFilePath.");
+                }
+
+                // Check if both private key object and private key file path are provided
+                if (ResponseMlePrivateKey != null && !string.IsNullOrEmpty(ResponseMlePrivateKeyFilePath))
+                {
+                    Logger.Error("ConfigException : Both responseMlePrivateKey object and responseMlePrivateKeyFilePath are provided. Please provide only one of them for response mle private key.");
+                    throw new Exception("Both responseMlePrivateKey object and responseMlePrivateKeyFilePath are provided. Please provide only one of them for response mle private key.");
+                }
+
+                // If private key file path is provided, validate the file exists
+                if (!string.IsNullOrEmpty(ResponseMlePrivateKeyFilePath))
+                {
+                    try
+                    {
+                        CertificateUtility.ValidatePathAndFile(ResponseMlePrivateKeyFilePath, "responseMlePrivateKeyFilePath");
+                    }
+                    catch (IOException err)
+                    {
+                        Logger.Error("Invalid responseMlePrivateKeyFilePath - " + err.Message);
+                        throw new Exception("Invalid responseMlePrivateKeyFilePath - " + err.Message);
+                    }
+                }
+                // Validate responseMleKID is provided when response MLE is enabled
+                if (string.IsNullOrEmpty(ResponseMleKID))
+                {
+                    Logger.Error("ConfigException : Response MLE is enabled but responseMleKID is not provided.");
+                    throw new Exception("Response MLE is enabled but responseMleKID is not provided.");
                 }
             }
         }
