@@ -76,21 +76,23 @@ namespace AuthenticationSdk.util
         {
             try
             {
-                using var stringReader = new StringReader(pemContent);
-                var pemReader = new PemReader(stringReader, new PasswordFinder(password));
-
-                var keyObject = pemReader.ReadObject();
-
-                if (keyObject is AsymmetricCipherKeyPair keyPair)
+                using (var stringReader = new StringReader(pemContent))
                 {
-                    return keyPair.Private;
-                }
-                else if (keyObject is AsymmetricKeyParameter keyParam && keyParam.IsPrivate)
-                {
-                    return keyParam;
-                }
+                    var pemReader = new PemReader(stringReader, new PasswordFinder(password));
 
-                return null;
+                    var keyObject = pemReader.ReadObject();
+
+                    if (keyObject is AsymmetricCipherKeyPair keyPair)
+                    {
+                        return keyPair.Private;
+                    }
+                    else if (keyObject is AsymmetricKeyParameter keyParam && keyParam.IsPrivate)
+                    {
+                        return keyParam;
+                    }
+
+                    return null;
+                }
             }
             catch
             {
@@ -311,16 +313,24 @@ namespace AuthenticationSdk.util
         /// <returns>KeyInfo object with details</returns>
         public static KeyInfo GetKeyInfo(string pemContent, SecureString password = null)
         {
-            using var rsa = ExtractPrivateKey(pemContent, password);
-            var parameters = rsa.ExportParameters(false); // Export public parameters only for info
-
-            return new KeyInfo
+            RSA rsa = null;
+            try
             {
-                KeySize = rsa.KeySize,
-                KeyFormat = DetermineKeyFormat(pemContent),
-                IsEncrypted = DetermineIfEncrypted(pemContent),
-                ModulusSize = parameters.Modulus?.Length * 8 ?? 0
-            };
+                rsa = ExtractPrivateKey(pemContent, password);
+                var parameters = rsa.ExportParameters(false); // Export public parameters only for info
+
+                return new KeyInfo
+                {
+                    KeySize = rsa.KeySize,
+                    KeyFormat = DetermineKeyFormat(pemContent),
+                    IsEncrypted = DetermineIfEncrypted(pemContent),
+                    ModulusSize = parameters.Modulus?.Length * 8 ?? 0
+                };
+            }
+            finally
+            {
+                rsa?.Dispose();
+            }
         }
 
         /// <summary>
