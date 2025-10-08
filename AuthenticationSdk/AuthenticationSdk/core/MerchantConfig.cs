@@ -173,7 +173,7 @@ namespace AuthenticationSdk.core
 
         public Dictionary<string, bool> MapToControlMLEonAPI { get; set; }
 
-        public string MleKeyAlias { get; set; }
+        public string RequestMleKeyAlias { get; set; }
 
         public string MaxConnectionPoolSize { get; set; }
 
@@ -282,14 +282,18 @@ namespace AuthenticationSdk.core
 
             MapToControlMLEonAPI = mapToControlMLEonAPI;
 
-            if (merchantConfigSection["mleKeyAlias"] != null)
+            if (!string.IsNullOrWhiteSpace(merchantConfigSection["requestMleKeyAlias"]))
             {
-                MleKeyAlias = merchantConfigSection["mleKeyAlias"]?.Trim();
+                RequestMleKeyAlias = merchantConfigSection["requestMleKeyAlias"]?.Trim();
+            }
+            else if (!string.IsNullOrWhiteSpace(merchantConfigSection["mleKeyAlias"]))
+            {
+                RequestMleKeyAlias = merchantConfigSection["mleKeyAlias"]?.Trim();
             }
 
-            if (string.IsNullOrWhiteSpace(MleKeyAlias?.Trim()))
+            if (string.IsNullOrWhiteSpace(RequestMleKeyAlias?.Trim()))
             {
-                MleKeyAlias = Constants.DefaultMleAliasForCert;
+                RequestMleKeyAlias = Constants.DefaultMleAliasForCert;
             }
 
             if (merchantConfigSection["maxConnectionPoolSize"] != null)
@@ -556,15 +560,19 @@ namespace AuthenticationSdk.core
                         MapToControlMLEonAPI = mapToControlMLEonAPI;
                     }
 
-                    if (merchantConfigDictionary.ContainsKey("mleKeyAlias"))
+                    if (merchantConfigDictionary.ContainsKey("requestMleKeyAlias"))
                     {
-                        MleKeyAlias = merchantConfigDictionary["mleKeyAlias"]?.Trim();
+                        RequestMleKeyAlias = merchantConfigDictionary["requestMleKeyAlias"]?.Trim();
+                    }
+                    else if (merchantConfigDictionary.ContainsKey("mleKeyAlias"))
+                    {
+                        RequestMleKeyAlias = merchantConfigDictionary["mleKeyAlias"]?.Trim();
                     }
 
                     //if MleKeyAlias is null or empty or contains only whitespace then set default value
-                    if (string.IsNullOrWhiteSpace(MleKeyAlias?.Trim()))
+                    if (string.IsNullOrWhiteSpace(RequestMleKeyAlias?.Trim()))
                     {
-                        MleKeyAlias = Constants.DefaultMleAliasForCert;
+                        RequestMleKeyAlias = Constants.DefaultMleAliasForCert;
                     }
 
                     if (merchantConfigDictionary.ContainsKey("maxConnectionPoolSize"))
