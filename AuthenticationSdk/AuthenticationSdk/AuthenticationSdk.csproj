@@ -86,9 +86,11 @@
     <Compile Include="util\JWEUtility.cs" />
     <Compile Include="util\LogUtility.cs" />
     <Compile Include="util\CertificateUtility.cs" />
+    <Compile Include="util\PEMUtility.cs" />
     <Compile Include="util\SensitiveDataConfigurationType.cs" />
     <Compile Include="util\SensitiveTags.cs" />
     <Compile Include="util\MLEUtility.cs" />
+    <Compile Include="util\Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

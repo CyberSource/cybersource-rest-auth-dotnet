@@ -44,7 +44,21 @@ namespace AuthenticationSdk.core
             else
             {
                 // MerchantConfig section inside App.Config File
-                var merchantConfigSection = (NameValueCollection)ConfigurationManager.GetSection("MerchantConfig");
+                NameValueCollection merchantConfigSection = null;
+                try
+                {
+                    merchantConfigSection = (NameValueCollection)ConfigurationManager.GetSection("MerchantConfig");
+                }
+                catch (ConfigurationErrorsException ex)
+                {
+                    Logger.Error($"Error accessing MerchantConfig section in App.Config: {ex.Message}");
+                    throw new Exception($"{Constants.ErrorPrefix} Error accessing MerchantConfig section in App.Config: {ex.Message}", ex);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Unexpected error accessing MerchantConfig section in App.Config: {ex.Message}");
+                    throw new Exception($"{Constants.ErrorPrefix} Unexpected error accessing MerchantConfig section in App.Config: {ex.Message}", ex);
+                }
 
                 if (merchantConfigSection != null)
                 {
@@ -238,6 +252,11 @@ namespace AuthenticationSdk.core
         }
         public Dictionary<string, bool> InternalMapToControlRequestMLEonAPI { get; set; }
         public Dictionary<string, bool> InternalMapToControlResponseMLEonAPI { get; set; }
+        public string MaxConnectionPoolSize { get; set; }
+
+        public string KeepAliveTime { get; set; }
+
+        public string MleForRequestPublicCertPath { get; set; }
 
         /**
          * Optional parameter. User can pass a custom requestMleKeyAlias to fetch from the certificate.
@@ -273,11 +292,6 @@ namespace AuthenticationSdk.core
         /// </summary>
         public AsymmetricAlgorithm ResponseMlePrivateKey { get; set; }
 
-        public string MaxConnectionPoolSize { get; set; }
-
-        public string KeepAliveTime { get; set; }
-
-        public string MleForRequestPublicCertPath { get; set; }
 
         #endregion
 
