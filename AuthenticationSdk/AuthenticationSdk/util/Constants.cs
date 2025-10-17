@@ -42,6 +42,13 @@ namespace AuthenticationSdk.util
 
         public static readonly string LOG_REQUEST_AFTER_MLE = "LOG_REQUEST_AFTER_MLE: ";
 
+        public static readonly string DEFAULT_TIME_OUT = "100000"; // Time in milliseconds
+
+        public static readonly string DefaultMaxConnectionPoolSize = "100";
+
+        // https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient.timeout?view=net-9.0
+        public static readonly string DefaultKeepAliveTime = "300000"; // Time in milliseconds
+
         public static readonly string MLE_CACHE_IDENTIFIER_FOR_CONFIG_CERT = "mleCertFromMerchantConfig";
 
         public static readonly string MLE_CACHE_IDENTIFIER_FOR_P12_CERT = "mleCertFromP12";
