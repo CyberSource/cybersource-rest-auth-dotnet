@@ -91,9 +91,10 @@ namespace AuthenticationSdk.util
                 }
 
                 string algStr = alg as string;
-                if (algStr != "RS256" && algStr != "RS384" && algStr != "RS512")
+                var supportedRsaAlgorithms = new[] { "RS256", "RS384", "RS512" };
+                if (Array.IndexOf(supportedRsaAlgorithms, algStr) < 0)
                 {
-                    throw new ArgumentException("The algorithm in the JWT token is not RSA. Only RS256, RS384, or RS512 are supported.");
+                    throw new ArgumentException($"The algorithm in the JWT token is not RSA. Only {string.Join(", ", supportedRsaAlgorithms)} are supported.");
                 }
 
                 // Parse the string algorithm into the JwsAlgorithm enum.
