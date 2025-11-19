@@ -22,7 +22,7 @@ namespace AuthenticationSdk.util
         {
             if (string.IsNullOrWhiteSpace(jwtToken))
             {
-                throw new ArgumentException("JWT token cannot be null, empty, or whitespace.", nameof(jwtToken));
+                throw new InvalidJwtException("JWT token cannot be null, empty, or whitespace.");
             }
 
             try
@@ -39,7 +39,7 @@ namespace AuthenticationSdk.util
                 }
                 catch (JsonException jsonEx)
                 {
-                    throw new ArgumentException("Invalid JWT: The payload is not a valid JSON object.", jsonEx);
+                    throw new JsonException("Invalid JWT: The payload is not a valid JSON object.", jsonEx);
                 }
 
                 // For completeness, we can also ensure the header is valid. JWT.Headers does this.
@@ -48,18 +48,21 @@ namespace AuthenticationSdk.util
                 // If all checks pass, return the decoded payload.
                 return payloadJson;
             }
+            catch(JsonException)
+            {
+                // Rethrow JSON exceptions as they are.
+                throw;
+            }
             catch (Exception ex)
             {
-                // If the exception is one we already threw, don't re-wrap it.
-                if (ex is ArgumentException)
-                {
-                    throw;
-                }
-
                 // Catch exceptions from JWT.Payload() or JWT.Headers() (e.g., malformed token)
-                // and wrap them in a standard ArgumentException for consistency.
-                throw new ArgumentException("The provided string is not a structurally valid JWT.", nameof(jwtToken), ex);
+                throw new InvalidJwtException("The provided string is not a structurally valid JWT.", ex);
             }
+        }
+
+        public static IDictionary<string, object> getHeader(string jwtToken)
+        {
+            return JWT.Headers(jwtToken);
         }
 
         /// <summary>
@@ -113,13 +116,21 @@ namespace AuthenticationSdk.util
                 // This will catch signature validation errors (IntegrityException)
                 // or other JWT-specific issues from the jose-jwt library.
                 // Re-throwing as a general exception to signal verification failure.
-                throw new Exception("JWT verification failed. See inner exception for details.", ex);
+                throw new JwtSignatureValidationException("JWT verification failed. See inner exception for details.", ex);
+            }
+            catch(ArgumentException)
+            {
+                throw;
+            }
+            catch (InvalidJwkException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
                 // This catches other potential errors, such as from JWK conversion
                 // or invalid algorithm parsing.
-                throw new Exception("An unexpected error occurred during JWT verification.", ex);
+                throw new JwtSignatureValidationException("An unexpected error occurred during JWT verification.", ex);
             }
         }
 
@@ -138,7 +149,7 @@ namespace AuthenticationSdk.util
 
             if (jwk == null || !jwk.ContainsKey("kty") || jwk["kty"] != "RSA" || !jwk.ContainsKey("n") || !jwk.ContainsKey("e"))
             {
-                throw new ArgumentException("Invalid JWK: Must be an RSA key with 'kty', 'n', and 'e' values.");
+                throw new InvalidJwkException("Invalid JWK: Must be an RSA key with 'kty', 'n', and 'e' values.");
             }
 
             // Use the standard library for Base64Url decoding
@@ -152,4 +163,23 @@ namespace AuthenticationSdk.util
             };
         }
     }
+}
+
+
+public class InvalidJwkException : Exception
+{
+    public InvalidJwkException(string message) : base(message) { }
+    public InvalidJwkException(string message, Exception cause) : base(message, cause) { }
+}
+
+public class InvalidJwtException : Exception
+{
+    public InvalidJwtException(string message) : base(message) { }
+    public InvalidJwtException(string message, Exception cause) : base(message, cause) { }
+}
+
+public class JwtSignatureValidationException : Exception
+{
+    public JwtSignatureValidationException(string message) : base(message) { }
+    public JwtSignatureValidationException(string message, Exception cause) : base(message, cause) { }
 }
