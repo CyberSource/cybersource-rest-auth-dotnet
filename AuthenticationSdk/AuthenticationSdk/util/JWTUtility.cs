@@ -4,6 +4,8 @@ using System.Security.Cryptography;
 using Jose;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using NUnit.Framework.Constraints;
+using AuthenticationSdk.util.jwtExceptions;
 
 namespace AuthenticationSdk.util
 {
@@ -42,9 +44,6 @@ namespace AuthenticationSdk.util
                     throw new JsonException("Invalid JWT: The payload is not a valid JSON object.", jsonEx);
                 }
 
-                // For completeness, we can also ensure the header is valid. JWT.Headers does this.
-                JWT.Headers(jwtToken);
-
                 // If all checks pass, return the decoded payload.
                 return payloadJson;
             }
@@ -55,12 +54,12 @@ namespace AuthenticationSdk.util
             }
             catch (Exception ex)
             {
-                // Catch exceptions from JWT.Payload() or JWT.Headers() (e.g., malformed token)
-                throw new InvalidJwtException("The provided string is not a structurally valid JWT.", ex);
+                // Catch exceptions from JWT.Payload() (e.g., malformed token)
+                throw new InvalidJwtException("The provided JWT is malformed.", ex);
             }
         }
 
-        public static IDictionary<string, object> getHeader(string jwtToken)
+        public static IDictionary<string, object> GetJwtHeaders(string jwtToken)
         {
             return JWT.Headers(jwtToken);
         }
@@ -75,7 +74,16 @@ namespace AuthenticationSdk.util
         /// Throws an exception if verification fails due to an invalid signature,
         /// a malformed token, a missing algorithm header, or other errors.
         /// </exception>
-        public static bool VerifyJWT(string jwtValue, string publicKey)
+        /// <exception cref="JwtSignatureValidationException">
+        /// Thrown if verification fails due to an invalid signature, malformed token, missing algorithm header, or other errors.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown if the JWT header is missing the 'alg' parameter or the algorithm is not supported.
+        /// </exception>
+        /// <exception cref="InvalidJwkException">
+        /// Thrown if the JWK is invalid, not an RSA key, or missing required fields.
+        /// </exception>
+        public static bool VerifyJwt(string jwtValue, string publicKey)
         {
             try
             {
@@ -128,8 +136,7 @@ namespace AuthenticationSdk.util
             }
             catch (Exception ex)
             {
-                // This catches other potential errors, such as from JWK conversion
-                // or invalid algorithm parsing.
+                // This catches other potential errors, such as from JWK conversion or invalid algorithm parsing.
                 throw new JwtSignatureValidationException("An unexpected error occurred during JWT verification.", ex);
             }
         }
@@ -140,12 +147,20 @@ namespace AuthenticationSdk.util
         /// </summary>
         /// <param name="jwkJson">The JWK in JSON string format.</param>
         /// <returns>An RSAParameters object containing the public key.</returns>
-        /// <exception cref="ArgumentException">
+        /// <exception cref="InvalidJwkException">
         /// Thrown if the JWK is invalid, not an RSA key, or missing required fields.
         /// </exception>
         private static RSAParameters ConvertJwkToRsaParameters(string jwkJson)
         {
-            var jwk = JsonConvert.DeserializeObject<Dictionary<string, string>>(jwkJson);
+            Dictionary<string, string> jwk;
+            try
+            {
+                jwk = JsonConvert.DeserializeObject<Dictionary<string, string>>(jwkJson);
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidJwkException("Malformed JWK: Not valid JSON format", ex);
+            }
 
             if (jwk == null || !jwk.ContainsKey("kty") || jwk["kty"] != "RSA" || !jwk.ContainsKey("n") || !jwk.ContainsKey("e"))
             {
@@ -163,23 +178,4 @@ namespace AuthenticationSdk.util
             };
         }
     }
-}
-
-
-public class InvalidJwkException : Exception
-{
-    public InvalidJwkException(string message) : base(message) { }
-    public InvalidJwkException(string message, Exception cause) : base(message, cause) { }
-}
-
-public class InvalidJwtException : Exception
-{
-    public InvalidJwtException(string message) : base(message) { }
-    public InvalidJwtException(string message, Exception cause) : base(message, cause) { }
-}
-
-public class JwtSignatureValidationException : Exception
-{
-    public JwtSignatureValidationException(string message) : base(message) { }
-    public JwtSignatureValidationException(string message, Exception cause) : base(message, cause) { }
 }

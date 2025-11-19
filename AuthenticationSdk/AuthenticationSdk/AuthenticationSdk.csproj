@@ -130,6 +130,9 @@
     <Compile Include="util\Enumerations.cs" />
     <Compile Include="util\Constants.cs" />
     <Compile Include="util\JWEUtility.cs" />
+    <Compile Include="util\jwtExceptions\InvalidJwkException.cs" />
+    <Compile Include="util\jwtExceptions\InvalidJwtException.cs" />
+    <Compile Include="util\jwtExceptions\JwtSignatureValidationException.cs" />
     <Compile Include="util\LogUtility.cs" />
     <Compile Include="util\CertificateUtility.cs" />
     <Compile Include="util\SensitiveDataConfigurationType.cs" />
