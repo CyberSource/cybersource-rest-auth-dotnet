@@ -42,7 +42,15 @@ namespace AuthenticationSdk.core
             else
             {
                 // MerchantConfig section inside App.Config File
-                var merchantConfigSection = (NameValueCollection)ConfigurationManager.GetSection("MerchantConfig");
+                var merchantConfigSection = new NameValueCollection();
+                try
+                {
+                    merchantConfigSection = (NameValueCollection)ConfigurationManager.GetSection("MerchantConfig");
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
 
                 if (merchantConfigSection != null)
                 {
