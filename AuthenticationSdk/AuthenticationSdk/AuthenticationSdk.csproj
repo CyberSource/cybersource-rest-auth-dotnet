@@ -135,9 +135,12 @@
     <Compile Include="util\jwtExceptions\JwtSignatureValidationException.cs" />
     <Compile Include="util\LogUtility.cs" />
     <Compile Include="util\CertificateUtility.cs" />
+    <Compile Include="util\PEMUtility.cs" />
     <Compile Include="util\SensitiveDataConfigurationType.cs" />
     <Compile Include="util\SensitiveTags.cs" />
     <Compile Include="util\MLEUtility.cs" />
+    <Compile Include="util\Utility.cs" />
+    <Compile Include="util\CachedMLEKID.cs" />
     <Compile Include="util\JWTUtility.cs" />
   </ItemGroup>
   <ItemGroup>
