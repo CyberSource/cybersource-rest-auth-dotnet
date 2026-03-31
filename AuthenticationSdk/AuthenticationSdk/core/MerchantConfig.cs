@@ -894,11 +894,21 @@ namespace AuthenticationSdk.core
                     throw new Exception($"{Constants.WarningPrefix} KeyAlias not provided. Assigning the value of: [MerchantID]");
                 }
 
-                if (!string.Equals(KeyAlias, MerchantId))
+                // Only enforce KeyAlias = MerchantId when UseMetaKey is false
+                bool useMetaKeyFlag = false;
+                bool.TryParse(UseMetaKey, out useMetaKeyFlag);
+                if (!useMetaKeyFlag && !string.Equals(KeyAlias, MerchantId))
                 {
                     KeyAlias = MerchantId;
                     Logger.Warn("Key Alias value provided is incorrect. Assigning the value of Merchant ID");
                     throw new Exception($"{Constants.WarningPrefix} Incorrect value of KeyAlias provided. Assigning the value of: [MerchantID]");
+                }
+                
+                if (useMetaKeyFlag && !string.Equals(KeyAlias, PortfolioId))
+                {
+                    KeyAlias = PortfolioId;
+                    Logger.Warn("Key Alias value provided is incorrect for MetaKey enabled. Assigning the value of Portfolio ID");
+                    throw new Exception($"{Constants.WarningPrefix} Incorrect value of KeyAlias provided for MetaKey enabled. Assigning the value of: [PortfolioID]");
                 }
 
                 if (string.IsNullOrEmpty(KeyPass))
