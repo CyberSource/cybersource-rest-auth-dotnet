@@ -177,11 +177,29 @@ namespace AuthenticationSdk.core
 
         public bool IsPatchRequest { get; set; }
 
+        /// <summary>
+        /// Defaults to false. Set to true only when the input is boolean true or the string "true" (trimmed, case-insensitive).
+        /// </summary>
+        public bool IsSDK { get; set; }
+
         public bool IsHttpSignAuthType { get; set; }
 
         public bool IsJwtTokenAuthType { get; set; }
 
         public bool IsOAuthTokenAuthType { get; set; }
+
+        /// <summary>
+        /// Key type for JWT authentication.
+        /// Determines which credentials are used for JWT signing:
+        /// - P12 (default): asymmetric signing (RS256) using a .p12 certificate file.
+        /// - SHARED_SECRET: symmetric signing (HS256) using a shared secret key.
+        /// </summary>
+        public string JwtKeyType { get; set; } = Constants.JwtKeyTypeP12;
+
+        /// <summary>
+        /// Returns true when JwtKeyType is set to SHARED_SECRET (case-insensitive).
+        /// </summary>
+        public bool IsSharedSecretKeyType => string.Equals(JwtKeyType, Constants.JwtKeyTypeSharedSecret, StringComparison.OrdinalIgnoreCase);
 
         public string PemFileDirectory { get; set; }
 
@@ -308,7 +326,7 @@ namespace AuthenticationSdk.core
                 {
                     var propertyValue = property.GetValue(this);
                     if (propertyValue != null && !string.IsNullOrEmpty(propertyValue.ToString()) &&
-                        !property.Name.StartsWith("Is", StringComparison.OrdinalIgnoreCase))
+                        (!property.Name.StartsWith("Is", StringComparison.OrdinalIgnoreCase) || property.Name.Equals("IsSDK", StringComparison.OrdinalIgnoreCase)))
                     {
                         merchCfgLogString += property.Name;
                         merchCfgLogString += " = ";
@@ -350,6 +368,16 @@ namespace AuthenticationSdk.core
             ProxyPassword = merchantConfigSection["proxyPassword"];
             PemFileDirectory = merchantConfigSection["pemFileDirectory"];
 
+            // Read jwtKeyType for JWT authentication, default to P12
+            if (!string.IsNullOrEmpty(merchantConfigSection["jwtKeyType"]))
+            {
+                JwtKeyType = merchantConfigSection["jwtKeyType"].Trim();
+            }
+            else
+            {
+                JwtKeyType = Constants.JwtKeyTypeP12;
+            }
+
             if (!string.IsNullOrEmpty(merchantConfigSection["mleForRequestPublicCertPath"].Trim()))
             {
                 MleForRequestPublicCertPath = merchantConfigSection["mleForRequestPublicCertPath"].Trim();
@@ -385,6 +413,11 @@ namespace AuthenticationSdk.core
             else
                 DisableRequestMLEForMandatoryApisGlobally = false;
 
+            // isSDK flag: true only when the value is the literal string "true" (trimmed, case-insensitive), otherwise false
+            if (merchantConfigSection["isSDK"] != null)
+            {
+                IsSDK = string.Equals(merchantConfigSection["isSDK"]?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
+            }
 
             MapToControlMLEonAPI = mapToControlMLEonAPI;
 
@@ -511,24 +544,54 @@ namespace AuthenticationSdk.core
                     {
                         key = "merchantID";
                         MerchantId = merchantConfigDictionary[key];
-                        if (merchantConfigDictionary.ContainsKey("keyAlias"))
+
+                        // Read jwtKeyType, default to P12
+                        if (merchantConfigDictionary.ContainsKey("jwtKeyType") && !string.IsNullOrEmpty(merchantConfigDictionary["jwtKeyType"]))
                         {
-                            KeyAlias = merchantConfigDictionary["keyAlias"];
+                            JwtKeyType = merchantConfigDictionary["jwtKeyType"].Trim();
+                        }
+                        else
+                        {
+                            JwtKeyType = Constants.JwtKeyTypeP12;
                         }
 
-                        if (merchantConfigDictionary.ContainsKey("keyFilename"))
+                        if (IsSharedSecretKeyType)
                         {
-                            KeyfileName = merchantConfigDictionary["keyFilename"];
-                        }
+                            // JWT with SHARED_SECRET: read merchantKeyId and merchantsecretKey (same keys as HTTP_SIGNATURE)
+                            key = "merchantsecretKey";
+                            if (merchantConfigDictionary.ContainsKey(key))
+                            {
+                                MerchantSecretKey = merchantConfigDictionary[key];
+                            }
 
-                        if (merchantConfigDictionary.ContainsKey("keyPass"))
-                        {
-                            KeyPass = merchantConfigDictionary["keyPass"];
+                            key = "merchantKeyId";
+                            if (merchantConfigDictionary.ContainsKey(key))
+                            {
+                                MerchantKeyId = merchantConfigDictionary[key];
+                            }
                         }
-
-                        if (merchantConfigDictionary.ContainsKey("keysDirectory"))
+                        else
                         {
-                            KeyDirectory = merchantConfigDictionary["keysDirectory"];
+                            // JWT with P12 (default): read P12 certificate fields
+                            if (merchantConfigDictionary.ContainsKey("keyAlias"))
+                            {
+                                KeyAlias = merchantConfigDictionary["keyAlias"];
+                            }
+
+                            if (merchantConfigDictionary.ContainsKey("keyFilename"))
+                            {
+                                KeyfileName = merchantConfigDictionary["keyFilename"];
+                            }
+
+                            if (merchantConfigDictionary.ContainsKey("keyPass"))
+                            {
+                                KeyPass = merchantConfigDictionary["keyPass"];
+                            }
+
+                            if (merchantConfigDictionary.ContainsKey("keysDirectory"))
+                            {
+                                KeyDirectory = merchantConfigDictionary["keysDirectory"];
+                            }
                         }
                     }
 
@@ -687,6 +750,11 @@ namespace AuthenticationSdk.core
                     else
                         DisableRequestMLEForMandatoryApisGlobally = false;
 
+                    // isSDK flag: true only when the value is the literal string "true" (trimmed, case-insensitive), otherwise false
+                    if (merchantConfigDictionary.ContainsKey("isSDK"))
+                    {
+                        IsSDK = string.Equals(merchantConfigDictionary["isSDK"]?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
+                    }
 
                     if (mapToControlMLEonAPI != null)
                     {
@@ -881,12 +949,33 @@ namespace AuthenticationSdk.core
             // 2. FOR JWT TOKEN
             else if (IsJwtTokenAuthType)
             {
+                // Validate jwtKeyType
+                CheckJwtKeyType();
+
                 if (string.IsNullOrEmpty(MerchantId))
                 {
                     Logger.Error("Merchant ID cannot be null or empty");
                     throw new Exception($"{Constants.ErrorPrefix} Merchant Config field - MerchantID is Mandatory");
                 }
 
+                if (IsSharedSecretKeyType)
+                {
+                    // JWT with SHARED_SECRET: validate merchantKeyId and merchantSecretKey (same as HTTP Signature)
+                    if (string.IsNullOrEmpty(MerchantKeyId))
+                    {
+                        Logger.Error("Merchant Key ID cannot be null or empty");
+                        throw new Exception($"{Constants.ErrorPrefix} Merchant Config field - MerchantKeyId is Mandatory");
+                    }
+
+                    if (string.IsNullOrEmpty(MerchantSecretKey))
+                    {
+                        Logger.Error("Merchant Secret Key cannot be null or empty");
+                        throw new Exception($"{Constants.ErrorPrefix} Merchant Config field - MerchantSecretKey is Mandatory");
+                    }
+                }
+                else
+                {
+                    // JWT with P12 (default): validate P12 certificate fields
                 if (string.IsNullOrEmpty(KeyAlias))
                 {
                     KeyAlias = MerchantId;
@@ -941,6 +1030,7 @@ namespace AuthenticationSdk.core
                 }
 
                 P12Keyfilepath = $"{KeyDirectory}{pathDirectorySeparator}{KeyfileName}.p12";
+                }
             }
         }
         
@@ -967,7 +1057,6 @@ namespace AuthenticationSdk.core
                 Logger.Error("Request MLE is only supported in JWT auth type");
                 throw new Exception("Request MLE is only supported in JWT auth type");
             }
-            
 
             // Verify that the input path for MLE certificate is valid, else throw error in both cases (MLE=true/false)
             if (!string.IsNullOrEmpty(MleForRequestPublicCertPath))
@@ -1055,6 +1144,19 @@ namespace AuthenticationSdk.core
                     Logger.Error("ConfigException : Response MLE is enabled but responseMleKID is not provided.");
                     throw new Exception("Response MLE is enabled but responseMleKID is not provided.");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Validates that JwtKeyType is a recognized value (P12 or SHARED_SECRET).
+        /// </summary>
+        private void CheckJwtKeyType()
+        {
+            if (!string.Equals(JwtKeyType, Constants.JwtKeyTypeP12, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(JwtKeyType, Constants.JwtKeyTypeSharedSecret, StringComparison.OrdinalIgnoreCase))
+            {
+                Logger.Error(Constants.InvalidJwtKeyType + JwtKeyType);
+                throw new Exception($"{Constants.ErrorPrefix} {Constants.InvalidJwtKeyType}{JwtKeyType}");
             }
         }
 

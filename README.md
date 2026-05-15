@@ -24,11 +24,13 @@ _Note: Support for building the SDK with Nuget has been made. Please see the res
 The Authentication SDK works for POST, GET, PUT and DELETE requests.
 It works with any one of the two authentication mechanisms, which are HTTP signature and JWT token.
 
+> **⚠️ HTTP Signature Deprecation Notice:** HTTP Signature authentication is being deprecated. **JWT with Shared Secret** is the recommended migration path — it uses the same `merchantKeyId` and `merchantsecretKey` credentials, requires only two property changes (`authenticationType=jwt` and `jwtKeyType=SHARED_SECRET`), and enables MLE (Message Level Encryption) support that HTTP Signature does not provide.
+
 ## Configuration
 
 To set your API credentials for an API request, configure the following information in `App.Config` file inside the `<MerchantConfig></MerchantConfig>` tags:
   
-### For Http Signature Authentication 
+### For Http Signature Authentication (⚠️ Deprecated — migrate to JWT with Shared Secret)
   
 Configure the following information in `App.Config` file
   
@@ -54,7 +56,7 @@ Configure the following information in `App.Config` file
 	logFilename         = <logFilename>
 	useMetaKey          = false
 	```
-### For Jwt Signature Authentication
+### For Jwt Signature Authentication (with P12 certificate)
 
 Configure the following information in the App.Config file
   
@@ -85,13 +87,37 @@ Configure the following information in the App.Config file
 	useMetaKey          = false
 	```
 
+### For JWT authentication with Shared Secret (Recommended migration from HTTP Signature)
+
+Uses the **same** `merchantKeyId` and `merchantsecretKey` credentials as HTTP Signature. Only two properties change:
+
+  * Authentication Type: Set to `"jwt"`.
+  * jwtKeyType: Set to `"SHARED_SECRET"` to use symmetric signing (HS256) with the shared secret key.
+  * Merchant ID: Merchant will provide the merchant ID, which has taken from EBC portal.
+  * MerchantKeyId: Same Key ID used for HTTP Signature.
+  * MerchantSecretKey: Same Secret Key used for HTTP Signature.
+
+	```
+	authenticationType  = jwt
+	jwtKeyType          = SHARED_SECRET
+	merchantID          = <merchantID>
+	runEnvironment      = apitest.cybersource.com
+	merchantKeyId       = <merchantKeyId>
+	merchantsecretKey   = <merchantsecretKey>
+	enableLog           = true
+	logDirectory        = <logDirectory>
+	logMaximumSize      = <size>
+	logFilename         = <logFilename>
+	useMetaKey          = false
+	```
+
 ### For using MetaKey
 
-MetaKey can be used for HTTP Signature and JWT authentication.
+MetaKey can be used for HTTP Signature, JWT (P12), and JWT with Shared Secret authentication.
 
 Configure the following information in App.config file
 
-#### For HTTP Signature Authentication
+#### For HTTP Signature Authentication (⚠️ Deprecated)
 
   * Authentication Type:  Merchant should enter `"HTTP"`.
   * Merchant ID: Merchant will provide the child merchant ID under the Portfolio ID, which has taken from EBC portal.
@@ -109,7 +135,7 @@ Configure the following information in App.config file
 	portfolioID         = <Portfolio ID>
 	```
 
-#### For JWT Authentication
+#### For JWT Authentication (P12)
 
   * Authentication Type:  Merchant should enter `"JWT"`.
   * Merchant ID: Merchant will provide the child merchant ID under the Portfolio ID, which has taken from EBC portal.
@@ -126,6 +152,18 @@ Configure the following information in App.config file
 	keyFileName         = <keyFileName>
 	keysDirectory       = <keysDirectory>
 	useMetaKey          = true
+	```
+
+#### For JWT Authentication with Shared Secret (Recommended)
+
+	```
+	authenticationType  = jwt
+	jwtKeyType          = SHARED_SECRET
+	merchantID          = <child merchantID>
+	merchantKeyId       = <MetaKey Portfolio KeyId>
+	merchantsecretKey   = <MetaKey Portfolio Shared Secret Key>
+	useMetaKey          = true
+	portfolioID         = <Portfolio ID>
 	```
 
 ### Switching between the sandbox environment and the production environment

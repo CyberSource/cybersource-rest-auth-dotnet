@@ -69,6 +69,12 @@ namespace AuthenticationSdk.util
                 logger.Debug("Currently, MLE for requests using HTTP Signature as authentication is not supported by Cybersource. By default, the SDK will fall back to non-encrypted requests.");
                 return requestBody;
             }
+            else if (mleCertificate == null)
+            {
+                throw new Exception("No certificate found for MLE Request. "
+                    + "Please provide the Request MLE certificate file path via 'mleForRequestPublicCertPath' in merchant configuration. "
+                    + "This is required when using jwtKeyType=SHARED_SECRET or when the P12 file does not contain the MLE certificate.");
+            }
 
             string serialNumber = GetSerialNumberFromCertificate(mleCertificate, merchantConfig);
             var payloadBytes = System.Text.Encoding.UTF8.GetBytes(payload);

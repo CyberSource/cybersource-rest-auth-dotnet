@@ -89,28 +89,46 @@ namespace AuthenticationSdk.util
         {
             lock (mutexForPrivateKeyFromPEM) 
             {
-                var pemFilePath = merchantConfig.PemFileDirectory;
-                ObjectCache cache = MemoryCache.Default;
-
-                var matches = Regex.Match(merchantConfig.PemFileDirectory, regexForFileNameFromDirectory);
-                var certFile = matches.Groups[11].ToString();
-
-                if (!cache.Contains(certFile))
+                try
                 {
-                    var policy = new CacheItemPolicy();
-                    var filePaths = new List<string>();
-                    var privateKey = File.ReadAllText(merchantConfig.PemFileDirectory);
-                    var cachedFilePath = Path.GetFullPath(pemFilePath);
-                    filePaths.Add(cachedFilePath);
-                    policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
+                    var pemFilePath = merchantConfig.PemFileDirectory;
+                    ObjectCache cache = MemoryCache.Default;
 
-                    PemReader pemReader = new PemReader(new StringReader(privateKey));
-                    AsymmetricCipherKeyPair keyPair = (AsymmetricCipherKeyPair)pemReader.ReadObject();
-                    RSAParameters rsaParams = DotNetUtilities.ToRSAParameters((RsaPrivateCrtKeyParameters)keyPair.Private);
+                    var matches = Regex.Match(merchantConfig.PemFileDirectory, regexForFileNameFromDirectory);
+                    var certFile = matches.Groups[11].ToString();
 
-                    cache.Set(certFile, rsaParams, policy);
+                    if (!cache.Contains(certFile))
+                    {
+                        var policy = new CacheItemPolicy();
+                        var filePaths = new List<string>();
+                        var privateKey = File.ReadAllText(merchantConfig.PemFileDirectory);
+                        var cachedFilePath = Path.GetFullPath(pemFilePath);
+                        filePaths.Add(cachedFilePath);
+                        policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
+
+                        PemReader pemReader = new PemReader(new StringReader(privateKey));
+                        AsymmetricCipherKeyPair keyPair = (AsymmetricCipherKeyPair)pemReader.ReadObject();
+                        RSAParameters rsaParams = DotNetUtilities.ToRSAParameters((RsaPrivateCrtKeyParameters)keyPair.Private);
+
+                        cache.Set(certFile, rsaParams, policy);
+                    }
+                    return (RSAParameters)cache[certFile];
                 }
-                return (RSAParameters)cache[certFile];
+                catch (FileNotFoundException ex)
+                {
+                    logger.Error($"PEM file not found: {merchantConfig.PemFileDirectory}. Error: {ex.Message}");
+                    throw new Exception($"{Constants.ErrorPrefix} PEM file not found at path: {merchantConfig.PemFileDirectory}", ex);
+                }
+                catch (IOException ex)
+                {
+                    logger.Error($"Error reading PEM file: {merchantConfig.PemFileDirectory}. Error: {ex.Message}");
+                    throw new Exception($"{Constants.ErrorPrefix} Error reading PEM file at path: {merchantConfig.PemFileDirectory}", ex);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"Error loading RSA parameters from PEM file: {merchantConfig.PemFileDirectory}. Error: {ex.Message}");
+                    throw new Exception($"{Constants.ErrorPrefix} Failed to load RSA parameters from PEM file: {merchantConfig.PemFileDirectory}", ex);
+                }
             }
         }
 
@@ -139,7 +157,8 @@ namespace AuthenticationSdk.util
                 certificateFilePath = merchantConfig.MleForRequestPublicCertPath;
             }
             // Priority #2: If merchantConfig.mleForRequestPublicCertPath not provided by merchant then get mlecert from merchant p12 if provided and jwt auth type
-            else if (Constants.AuthMechanismJwt.Equals(merchantConfig.AuthenticationType, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(merchantConfig.P12Keyfilepath))
+            // Shared secret does not use a P12 file, so this path is skipped for shared secret key type
+            else if (Constants.AuthMechanismJwt.Equals(merchantConfig.AuthenticationType, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(merchantConfig.P12Keyfilepath) && !merchantConfig.IsSharedSecretKeyType)
             {
                 certificateIdentifier = Constants.MLE_CACHE_IDENTIFIER_FOR_P12_CERT;
                 certificateFilePath = merchantConfig.P12Keyfilepath;
@@ -370,22 +389,25 @@ namespace AuthenticationSdk.util
                 string extractedKid = null;
                 bool isCyberSourceP12 = false;
 
+                SecureString p12Password = merchantConfig.ResponseMlePrivateKeyFilePassword;
+
+                // Determine the alias to look up: portfolioId when useMetaKey is true, otherwise merchantId
+                bool useMetaKeyFlag = false;
+                bool.TryParse(merchantConfig.UseMetaKey, out useMetaKeyFlag);
+                string responseMleKeyAlias = useMetaKeyFlag ? merchantConfig.PortfolioId : merchantConfig.MerchantId;
+
                 // Check if this is a CyberSource-generated P12
-                isCyberSourceP12 = CertificateUtility.IsP12GeneratedByCyberSource(filePath, merchantConfig.ResponseMlePrivateKeyFilePassword == null
-                    ? string.Empty
-                    : new System.Net.NetworkCredential(string.Empty, merchantConfig.ResponseMlePrivateKeyFilePassword).Password);
+                isCyberSourceP12 = CertificateUtility.IsP12GeneratedByCyberSource(filePath, p12Password);
 
                 if (isCyberSourceP12)
                 {
                     logger.Debug("Detected CyberSource-generated P12 file, attempting to extract KID");
 
-                    // Try to extract KID from certificate with CN matching merchantId
+                    // Try to extract KID from certificate with CN matching the alias
                     extractedKid = CertificateUtility.ExtractResponseMleKidFromP12(
                         filePath,
-                        merchantConfig.ResponseMlePrivateKeyFilePassword == null
-                    ? string.Empty
-                    : new System.Net.NetworkCredential(string.Empty, merchantConfig.ResponseMlePrivateKeyFilePassword).Password,
-                        merchantConfig.MerchantId
+                        p12Password,
+                        responseMleKeyAlias
                     );
 
                     if (!string.IsNullOrEmpty(extractedKid))
