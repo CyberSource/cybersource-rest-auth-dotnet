@@ -68,5 +68,10 @@ namespace AuthenticationSdk.util
         public static readonly string RESPONSE_MLE_P12_PFX_CACHE_IDENTIFIER = "responseMleP12Pfx";
 
         public static readonly string PUBLIC_KEY_CACHE_IDENTIFIER = "FlexV2PublicKeys";
+
+        /* JWT Key Type constants — determines which credentials JWT uses for signing */
+        public static readonly string JwtKeyTypeP12 = "P12";
+        public static readonly string JwtKeyTypeSharedSecret = "SHARED_SECRET";
+        public static readonly string InvalidJwtKeyType = "Invalid value for jwtKeyType in merchant configuration. Value must be 'P12' or 'SHARED_SECRET'. ";
     }
 }

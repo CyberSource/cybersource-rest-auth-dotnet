@@ -96,9 +96,19 @@ namespace AuthenticationSdk.core
 
                     Enumerations.ValidateRequestType(_merchantConfig.RequestType);
 
-                    if (string.IsNullOrEmpty(_merchantConfig.MerchantId) || string.IsNullOrEmpty(_merchantConfig.KeyAlias) || string.IsNullOrEmpty(_merchantConfig.KeyPass))
+                    if (_merchantConfig.IsSharedSecretKeyType)
                     {
-                        throw new Exception("Missing or Empty Credentials : MerchantID or KeyAlias or KeyPassphrase");
+                        if (string.IsNullOrEmpty(_merchantConfig.MerchantId) || string.IsNullOrEmpty(_merchantConfig.MerchantKeyId) || string.IsNullOrEmpty(_merchantConfig.MerchantSecretKey))
+                        {
+                            throw new Exception("Missing or Empty Credentials : MerchantID or MerchantKeyID or MerchantSecretKey");
+                        }
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(_merchantConfig.MerchantId) || string.IsNullOrEmpty(_merchantConfig.KeyAlias) || string.IsNullOrEmpty(_merchantConfig.KeyPass))
+                        {
+                            throw new Exception("Missing or Empty Credentials : MerchantID or KeyAlias or KeyPassphrase");
+                        }
                     }
 
                     var tokenObj = (JwtToken)new JwtTokenGenerator(_merchantConfig, isResponseMLEForApi).GetToken();

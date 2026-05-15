@@ -18,7 +18,9 @@ namespace AuthenticationSdk.authentication.jwt
         public JwtTokenGenerator(MerchantConfig merchantConfig, bool isResponseMLEForApi)
         {
             _merchantConfig = merchantConfig;
-            _jwtToken = new JwtToken(_merchantConfig);
+            _jwtToken = merchantConfig.IsSharedSecretKeyType
+                ? new JwtToken(_merchantConfig, true)
+                : new JwtToken(_merchantConfig);
             _isResponseMLEForApi = isResponseMLEForApi;
         }
 
@@ -42,12 +44,23 @@ namespace AuthenticationSdk.authentication.jwt
         {
             var payloadClaimSet = GetPayloadClaimSet();
             var headerClaimSet = GetHeaderClaimSet();
-
-            var x5Cert = _jwtToken.Certificate;
-            var privateKey = x5Cert.GetRSAPrivateKey();
-
             var jwtBody = payloadClaimSet.ToString(Newtonsoft.Json.Formatting.None);
-            var token = Jose.JWT.Encode(jwtBody, privateKey, Jose.JwsAlgorithm.RS256, headerClaimSet);
+
+            string token;
+            if (_merchantConfig.IsSharedSecretKeyType)
+            {
+                /* JWT with SHARED_SECRET — sign with HMAC-SHA256 (symmetric) */
+                byte[] secretKeyBytes = Convert.FromBase64String(_jwtToken.MerchantSecretKey);
+                token = Jose.JWT.Encode(jwtBody, secretKeyBytes, Jose.JwsAlgorithm.HS256, headerClaimSet);
+            }
+            else
+            {
+                /* JWT with P12 (default) — sign with RS256 (asymmetric) */
+                var x5Cert = _jwtToken.Certificate;
+                var privateKey = x5Cert.GetRSAPrivateKey();
+                token = Jose.JWT.Encode(jwtBody, privateKey, Jose.JwsAlgorithm.RS256, headerClaimSet);
+            }
+
             return token;
         }
 
@@ -102,12 +115,22 @@ namespace AuthenticationSdk.authentication.jwt
 
         private Dictionary<string, object> GetHeaderClaimSet()
         {
-            var x5Cert = _jwtToken.Certificate;
-            var serialNumber = CertificateUtility.ExtractSerialNumber(x5Cert);
+            string kid;
+            if (_merchantConfig.IsSharedSecretKeyType)
+            {
+                /* Shared Secret: kid = merchantKeyId */
+                kid = _jwtToken.MerchantKeyId;
+            }
+            else
+            {
+                /* P12: kid = certificate serial number */
+                var x5Cert = _jwtToken.Certificate;
+                kid = CertificateUtility.ExtractSerialNumber(x5Cert);
+            }
 
             var jwtHeaders = new Dictionary<string, object>
             {
-                { "kid", serialNumber },
+                { "kid", kid },
                 { "typ", "JWT" }
             };
 
