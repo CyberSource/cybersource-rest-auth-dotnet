@@ -47,19 +47,20 @@ namespace AuthenticationSdk.util
             try
             {
                 ObjectCache cache = MemoryCache.Default;
-                var matches = Regex.Match(p12FilePath, regexForFileNameFromDirectory);
-                var certFile = matches.Groups[11].ToString();
+                // Use the full canonical path as the cache key to prevent cross-tenant key collisions
+                // when multiple merchants have keystores with the same filename in different directories.
+                var certFile = Path.GetFullPath(p12FilePath);
+                CertInfo certInfo = null;
                 if (!cache.Contains(certFile) || ((CertInfo)cache[certFile]).Timestamp != File.GetLastWriteTime(p12FilePath))
                 {
                     var policy = new CacheItemPolicy();
                     var filePaths = new List<string>();
-                    var cachedFilePath = Path.GetFullPath(p12FilePath);
-                    filePaths.Add(cachedFilePath);
+                    filePaths.Add(certFile);
                     policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
 
                     X509Certificate2Collection certificateCollection = FetchCertificateCollectionFromP12File(p12FilePath, keyPassword);
 
-                    CertInfo certInfo = new CertInfo
+                    certInfo = new CertInfo
                     {
                         Certificates = certificateCollection,
                         Timestamp = File.GetLastWriteTime(p12FilePath)
@@ -70,8 +71,13 @@ namespace AuthenticationSdk.util
                         cache.Set(certFile, certInfo, policy);
                     }
                 }
-
-                return ((CertInfo)cache[certFile]).Certificates;
+                else
+                {
+                    certInfo = (CertInfo)cache[certFile];
+                }
+                // Return from the local variable to avoid a TOCTOU race where a concurrent thread
+                // for a different tenant could overwrite the cache entry between Set and read.
+                return certInfo.Certificates;
             }
             catch (Exception e)
             {
@@ -94,8 +100,8 @@ namespace AuthenticationSdk.util
                     var pemFilePath = merchantConfig.PemFileDirectory;
                     ObjectCache cache = MemoryCache.Default;
 
-                    var matches = Regex.Match(merchantConfig.PemFileDirectory, regexForFileNameFromDirectory);
-                    var certFile = matches.Groups[11].ToString();
+                    // Use the full canonical path as the cache key to prevent cross-tenant key collisions.
+                    var certFile = Path.GetFullPath(pemFilePath);
 
                     if (!cache.Contains(certFile))
                     {
@@ -301,7 +307,7 @@ namespace AuthenticationSdk.util
         private static X509Certificate2Collection FetchCertificateCollectionFromP12File(string p12FilePath, string keyPassword)
         {
             var certificates = new X509Certificate2Collection();
-            certificates.Import(p12FilePath, keyPassword, X509KeyStorageFlags.PersistKeySet);
+            certificates.Import(p12FilePath, keyPassword, Utility.GetP12KeyStorageFlags());
 
             //return all certs in p12
             return certificates;

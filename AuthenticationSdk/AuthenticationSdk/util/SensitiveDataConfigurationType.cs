@@ -22,7 +22,26 @@ namespace AuthenticationSdk.util
             new SensitiveTag("prefix", "", "", false),
             new SensitiveTag("bin", "", "", false),
             new SensitiveTag("encryptedRequest", "", "", false),
-            new SensitiveTag("encryptedResponse", "", "", false)
+            new SensitiveTag("encryptedResponse", "", "", false),
+            new SensitiveTag("paymentCredentialsReference", "", "", false),
+            new SensitiveTag("transientToken", "", "", false),
+            new SensitiveTag("jti", "", "", false),
+            // Address and location PII (AISAST-10816: VerificationApi, AISAST-10815: PullFundsApi)
+            new SensitiveTag("address1", "", "", false),
+            new SensitiveTag("address2", "", "", false),
+            new SensitiveTag("address3", "", "", false),
+            new SensitiveTag("address4", "", "", false),
+            new SensitiveTag("postalCode", "", "", false),
+            // Personal identity PII (AISAST-10815: PullFundsApi sender/recipient)
+            new SensitiveTag("dateOfBirth", "", "", false),
+            new SensitiveTag("middleName", "", "", false),
+            new SensitiveTag("middleInitial", "", "", false),
+            new SensitiveTag("identificationNumber", "", "", false),
+            // Payment/account identifiers (AISAST-10815: PullFundsApi)
+            new SensitiveTag("accountId", "", "", false),
+            new SensitiveTag("referenceNumber", "", "", false),
+            new SensitiveTag("cryptogram", "", "", false),
+            new SensitiveTag("cavv", "", "", false)
         };
 
         public static AuthenticationSchemeTag[] authenticationTags = new AuthenticationSchemeTag[]

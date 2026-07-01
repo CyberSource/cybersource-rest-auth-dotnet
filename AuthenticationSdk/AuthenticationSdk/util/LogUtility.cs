@@ -85,6 +85,12 @@ namespace AuthenticationSdk.util
             {
                 try
                 {
+                    // Mask sensitive fields in key = value format (e.g., path/query parameters)
+                    foreach (string sensitiveField in sensitiveTagsList)
+                    {
+                        str = Regex.Replace(str, $@"({Regex.Escape(sensitiveField)}\s*=\s*)\S+", "$1XXXXX");
+                    }
+
                     foreach (KeyValuePair<string, string> tag in authenticationTags)
                     {
                         str = Regex.Replace(str, tag.Key, tag.Value);

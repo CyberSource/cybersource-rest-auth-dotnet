@@ -211,7 +211,7 @@ namespace AuthenticationSdk.util
             {
                 X509Certificate2Collection collection = new X509Certificate2Collection();
 
-                collection.Import(filePath, new System.Net.NetworkCredential(string.Empty, password).Password, X509KeyStorageFlags.Exportable);
+                collection.Import(filePath, new System.Net.NetworkCredential(string.Empty, password).Password, Utility.GetP12KeyStorageFlags());
 
                 foreach (X509Certificate2 cert in collection)
                 {
@@ -289,7 +289,7 @@ namespace AuthenticationSdk.util
 
                 // Load all certificates from P12 file
                 X509Certificate2Collection collection = new X509Certificate2Collection();
-                collection.Import(filePath, new System.Net.NetworkCredential(string.Empty, password).Password, X509KeyStorageFlags.Exportable);
+                collection.Import(filePath, new System.Net.NetworkCredential(string.Empty, password).Password, Utility.GetP12KeyStorageFlags());
 
                 if (collection.Count == 0)
                 {

@@ -8,6 +8,17 @@ namespace AuthenticationSdk.util
 {
     public static class Utility
     {
+        /// <summary>
+        /// Determines the <see cref="X509KeyStorageFlags"/> to use when importing a PKCS#12 keystore.
+        /// Combines <see cref="X509KeyStorageFlags.Exportable"/> so the private key can be exported
+        /// for BouncyCastle interop (required by the JWT RS256 signing flow), with
+        /// <see cref="X509KeyStorageFlags.MachineKeySet"/> so the key is stored in the machine key
+        /// store rather than the per-user key store.
+        /// </summary>
+        internal static X509KeyStorageFlags GetP12KeyStorageFlags()
+        {
+            return X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet;
+        }
 
         /// <summary>
         /// Reads a private key from a PKCS#12 (.p12 or .pfx) file.
@@ -31,7 +42,7 @@ namespace AuthenticationSdk.util
                 var cert = new X509Certificate2(
                     p12FilePath,
                     password == null ? string.Empty : new System.Net.NetworkCredential(string.Empty, password).Password,
-                    X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet
+                    GetP12KeyStorageFlags()
                 );
 
                 // Check if private key exists
