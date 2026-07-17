@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37328.6
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cybersource.Authentication", "src\Cybersource.Authentication.csproj", "{95296F9A-0509-4893-B853-C60263573FCC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cybersource.Authentication.Tests", "tests\Cybersource.Authentication.Tests.csproj", "{6FAD75D6-C751-B653-05E8-F3964F5AD74A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{95296F9A-0509-4893-B853-C60263573FCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95296F9A-0509-4893-B853-C60263573FCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95296F9A-0509-4893-B853-C60263573FCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95296F9A-0509-4893-B853-C60263573FCC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FAD75D6-C751-B653-05E8-F3964F5AD74A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FAD75D6-C751-B653-05E8-F3964F5AD74A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FAD75D6-C751-B653-05E8-F3964F5AD74A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FAD75D6-C751-B653-05E8-F3964F5AD74A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DF40887E-BE27-46D8-B127-B593EFFEE6DE}
+	EndGlobalSection
+EndGlobal
