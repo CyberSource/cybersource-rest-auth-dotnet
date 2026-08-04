@@ -28,7 +28,8 @@
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net461'
                  Or '$(TargetFramework)' == 'net5.0'
-                 Or '$(TargetFramework)' == 'net6.0'">
+                 Or '$(TargetFramework)' == 'net6.0'
+                 Or '$(TargetFramework)' == 'net7.0'">
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
 

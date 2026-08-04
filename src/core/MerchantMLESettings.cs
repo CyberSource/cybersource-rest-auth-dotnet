@@ -1,5 +1,6 @@
 ﻿using AuthenticationSdk.util;
-using NLog;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -27,7 +28,7 @@ namespace AuthenticationSdk.core
         /// <param name="mapToControlMLEonAPI">Dictionary mapping API operation names to MLE control settings in format "requestMLE::responseMLE" or "requestMLE" to override global MLE configuration per API</param>
         /// <param name="responseMlePrivateKey">Optional pre-loaded asymmetric private key for decrypting MLE responses. If provided, this takes precedence over loading from file path.</param>
         /// <exception cref="Exception">Thrown when configuration is invalid or required MLE properties are missing.</exception>
-        public MerchantMLESettings(IReadOnlyDictionary<string, string> merchantMLEDictionary = null, Dictionary<string, string> mapToControlMLEonAPI = null, AsymmetricAlgorithm responseMlePrivateKey = null) : this(merchantMLEDictionary, mapToControlMLEonAPI, responseMlePrivateKey, false)
+        public MerchantMLESettings(IReadOnlyDictionary<string, string> merchantMLEDictionary = null, Dictionary<string, string> mapToControlMLEonAPI = null, AsymmetricAlgorithm responseMlePrivateKey = null, ILoggerFactory loggerFactory = null) : this(merchantMLEDictionary, mapToControlMLEonAPI, responseMlePrivateKey, loggerFactory, false)
         {
         }
 
@@ -39,12 +40,9 @@ namespace AuthenticationSdk.core
         /// <param name="responseMlePrivateKey">Optional pre-loaded asymmetric private key for decrypting MLE responses. If provided, this takes precedence over loading from file path.</param>
         /// <param name="isValidated">Indicates whether the provided MLE control settings have already been validated. If true, validation will be skipped.</param>
         /// <exception cref="Exception">Thrown when configuration is invalid or required MLE properties are missing.</exception>
-        internal MerchantMLESettings(IReadOnlyDictionary<string, string> merchantMLEDictionary = null, Dictionary<string, string> mapToControlMLEonAPI = null, AsymmetricAlgorithm responseMlePrivateKey = null, bool isValidated = false) 
+        internal MerchantMLESettings(IReadOnlyDictionary<string, string> merchantMLEDictionary = null, Dictionary<string, string> mapToControlMLEonAPI = null, AsymmetricAlgorithm responseMlePrivateKey = null, ILoggerFactory loggerFactory = null, bool isValidated = false)
         {
-            if (Logger == null)
-            {
-                Logger = LogManager.GetCurrentClassLogger();
-            }
+            Logger = loggerFactory?.CreateLogger<MerchantMLESettings>() ?? NullLogger<MerchantMLESettings>.Instance;
 
             if (merchantMLEDictionary == null)
             {
@@ -56,7 +54,7 @@ namespace AuthenticationSdk.core
 
                     if (!isValidated)
                     {
-                        var _validator = new MerchantMLESettingsValidator();
+                        var _validator = new MerchantMLESettingsValidator(loggerFactory);
                         _validator.ValidateMLESettings(merchantConfigSection, mapToControlMLEonAPI, responseMlePrivateKey);
                     }
 
@@ -75,7 +73,7 @@ namespace AuthenticationSdk.core
             {
                 if (!isValidated)
                 {
-                    var _validator = new MerchantMLESettingsValidator();
+                    var _validator = new MerchantMLESettingsValidator(loggerFactory);
                     _validator.ValidateMLESettings(merchantMLEDictionary, mapToControlMLEonAPI, responseMlePrivateKey);
                 }
 
@@ -212,9 +210,9 @@ namespace AuthenticationSdk.core
         public AsymmetricAlgorithm ResponseMlePrivateKey { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the NLog logger instance for logging MLE configuration and validation messages.
+        /// Gets or sets the logger instance for logging MLE configuration and validation messages.
         /// </summary>
-        public static Logger Logger { get; internal set; }
+        public ILogger<MerchantMLESettings> Logger { get; internal set; } = NullLogger<MerchantMLESettings>.Instance;
 
         /// <summary>
         /// Gets or sets a value indicating whether MLE is enabled globally for all requests for optional APIs.

@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,8 +18,6 @@ namespace AuthenticationSdk.util
     /// </summary>
     public class CertificateUtility
     {
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-
         /// <summary>
         /// Validates that the given file path exists and is not empty.
         /// </summary>
@@ -26,11 +25,13 @@ namespace AuthenticationSdk.util
         /// <param name="pathType">A description of the path type (e.g., "Input file").</param>
         /// <exception cref="ArgumentException">If the path is null or empty.</exception>
         /// <exception cref="IOException">If the file does not exist.</exception>
-        public static void ValidatePathAndFile(string filePath, string pathType)
+        public static void ValidatePathAndFile(string filePath, string pathType, ILoggerFactory loggerFactory = null)
         {
-            if (string.IsNullOrEmpty(filePath.Trim()))
+            ILogger logger = loggerFactory?.CreateLogger<CertificateUtility>() ?? NullLogger<CertificateUtility>.Instance;
+
+            if (string.IsNullOrWhiteSpace(filePath))
             {
-                logger.Error(pathType + " path cannot be null or empty.");
+                logger.LogError(pathType + " path cannot be null or empty.");
                 throw new ArgumentException(pathType + " path cannot be null or empty.");
             }
 
@@ -44,25 +45,25 @@ namespace AuthenticationSdk.util
             string path = normalizedPath;
             if (!File.Exists(path))
             {
-                logger.Error($"{pathType} does not exist: {path}");
+                logger.LogError($"{pathType} does not exist: {path}");
                 throw new IOException($"{pathType} does not exist: {path}");
             }
             if ((File.GetAttributes(path) & FileAttributes.Directory) == FileAttributes.Directory)
             {
-                logger.Error($"{pathType} does not have valid file: {path}");
+                logger.LogError($"{pathType} does not have valid file: {path}");
                 throw new IOException($"{pathType} does not have valid file: {path}");
             }
             try
             {
-                using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read))
+                using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     // File is readable
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                logger.Error($"{pathType} is not readable: {path}");
-                throw new IOException($"{pathType} is not readable: {path}");
+                logger.LogError(e, $"{pathType} is not readable: {path}");
+                throw new IOException($"{pathType} is not readable: {path}", e);
             }
         }
 
@@ -92,8 +93,10 @@ namespace AuthenticationSdk.util
             return collection;
         }
 
-        public static void ValidateCertificateExpiry(X509Certificate2 certificate, string keyAlias, string mleCacheKeyIdentifier)
+        public static void ValidateCertificateExpiry(X509Certificate2 certificate, string keyAlias, string mleCacheKeyIdentifier, ILoggerFactory loggerFactory = null)
         {
+            ILogger logger = loggerFactory?.CreateLogger<CertificateUtility>() ?? NullLogger<CertificateUtility>.Instance;
+
             string warningMessageForNoExpiryDate = "Certificate does not have expiry date";
             string warningMessageForCertificateExpiringSoon = "Certificate with alias {} is going to expire on {}. Please update the certificate before then.";
             string warningMessageForExpiredCertificate = "Certificate with alias {} is expired as of {}. Please update the certificate.";
@@ -115,19 +118,19 @@ namespace AuthenticationSdk.util
             if (certificate.NotAfter == DateTime.MinValue)
             {
                 // Certificate does not have an expiry date
-                logger.Warn(warningMessageForNoExpiryDate);
+                logger.LogWarning(warningMessageForNoExpiryDate);
             }
             else if (certificate.NotAfter < DateTime.Now)
             {
                 // Certificate is already expired
-                logger.Warn(warningMessageForExpiredCertificate, keyAlias, certificate.NotAfter);
+                logger.LogWarning(warningMessageForExpiredCertificate, keyAlias, certificate.NotAfter);
             }
             else
             {
                 TimeSpan timeToExpire = certificate.NotAfter - DateTime.Now;
                 if (timeToExpire.TotalDays < Constants.CertificateExpiryDateWarningDays)
                 {
-                    logger.Warn(warningMessageForCertificateExpiringSoon, keyAlias, certificate.NotAfter);
+                    logger.LogWarning(warningMessageForCertificateExpiringSoon, keyAlias, certificate.NotAfter);
                 }
             }
         }
@@ -139,11 +142,13 @@ namespace AuthenticationSdk.util
         /// <param name="x509Certificate">The X509 certificate to extract the serial number from.</param>
         /// <returns>The extracted serial number.</returns>
         /// <exception cref="ArgumentNullException">If the certificate is null.</exception>
-        public static string ExtractSerialNumber(X509Certificate2 x509Certificate)
+        public static string ExtractSerialNumber(X509Certificate2 x509Certificate, ILoggerFactory loggerFactory = null)
         {
+            ILogger logger = loggerFactory?.CreateLogger<CertificateUtility>() ?? NullLogger<CertificateUtility>.Instance;
+
             if (x509Certificate == null)
             {
-                logger.Error("MLE certificate is null");
+                logger.LogError("MLE certificate is null");
                 throw new ArgumentNullException(nameof(x509Certificate), "MLE certificate is null");
             }
 
@@ -167,7 +172,7 @@ namespace AuthenticationSdk.util
 
             if (string.IsNullOrEmpty(serialNumber))
             {
-                logger.Warn($"Serial number not found in certificate subject DN, using certificate SerialNumber property");
+                logger.LogWarning($"Serial number not found in certificate subject DN, using certificate SerialNumber property");
                 return x509Certificate.SerialNumber;
             }
 
@@ -182,8 +187,10 @@ namespace AuthenticationSdk.util
         /// <param name="alias">The certificate alias to search for</param>
         /// <returns>The matching X509Certificate2, or null if not found</returns>
         /// <exception cref="ArgumentException">If required parameters are invalid</exception>
-        public static X509Certificate2 GetCertificateByAliasFromP12(string filePath, SecureString password, string alias)
+        public static X509Certificate2 GetCertificateByAliasFromP12(string filePath, SecureString password, string alias, ILoggerFactory loggerFactory = null)
         {
+            ILogger logger = loggerFactory?.CreateLogger<CertificateUtility>() ?? NullLogger<CertificateUtility>.Instance;
+
             if (string.IsNullOrEmpty(filePath))
             {
                 throw new ArgumentException("File path cannot be null or empty", nameof(filePath));
@@ -196,7 +203,7 @@ namespace AuthenticationSdk.util
 
             if (!File.Exists(filePath))
             {
-                logger.Error($"P12/PFX file not found: {filePath}");
+                logger.LogError($"P12/PFX file not found: {filePath}");
                 return null;
             }
 
@@ -212,17 +219,17 @@ namespace AuthenticationSdk.util
                     // Search for alias in Common Name (CN)
                     if (subjectDN.Contains("CN=" + alias.ToUpperInvariant()))
                     {
-                        logger.Debug($"Certificate found for alias '{alias}' in P12 file");
+                        logger.LogDebug($"Certificate found for alias '{alias}' in P12 file");
                         return cert;
                     }
                 }
 
-                logger.Debug($"No certificate found for alias '{alias}' in P12 file");
+                logger.LogDebug($"No certificate found for alias '{alias}' in P12 file");
                 return null;
             }
             catch (Exception ex)
             {
-                logger.Error($"Error while retrieving certificate by alias from P12 file: {ex.Message}");
+                logger.LogError($"Error while retrieving certificate by alias from P12 file: {ex.Message}");
                 return null;
             }
         }
@@ -232,21 +239,25 @@ namespace AuthenticationSdk.util
         /// </summary>
         /// <param name="filePath">The path to the PKCS12 (.p12/.pfx) file</param>
         /// <param name="password">The password to unlock the keystore</param>
+        /// <param name="loggerFactory">Optional logger factory for logging</param>
         /// <returns>True if the P12 is CyberSource-generated, false otherwise</returns>
-        public static bool IsP12GeneratedByCyberSource(string filePath, SecureString password)
+        public static bool IsP12GeneratedByCyberSource(string filePath, SecureString password, ILoggerFactory loggerFactory = null)
         {
+            ILogger logger = loggerFactory?.CreateLogger<CertificateUtility>() ?? NullLogger<CertificateUtility>.Instance;
+
             try
             {
                 X509Certificate2 cyberSourceCert = GetCertificateByAliasFromP12(
                     filePath, 
                     password, 
-                    Constants.DefaultMleAliasForCert
+                    Constants.DefaultMleAliasForCert,
+                    loggerFactory
                 );
                 return cyberSourceCert != null;
             }
             catch (Exception ex)
             {
-                logger.Error($"Error while checking if P12 is generated by CyberSource: {ex.Message}");
+                logger.LogError($"Error while checking if P12 is generated by CyberSource: {ex.Message}");
                 return false;
             }
         }
@@ -272,12 +283,15 @@ namespace AuthenticationSdk.util
         /// <param name="filePath">Path to the P12 file</param>
         /// <param name="password">Password for the P12 file</param>
         /// <param name="merchantId">The merchant ID to match against the CN in the certificate subject</param>
+        /// <param name="loggerFactory">Optional logger factory for logging</param>
         /// <returns>The serial number extracted from the certificate's subject, or null if not found</returns>
-        public static string ExtractResponseMleKidFromP12(string filePath, SecureString password, string merchantId)
+        public static string ExtractResponseMleKidFromP12(string filePath, SecureString password, string merchantId, ILoggerFactory loggerFactory = null)
         {
+            ILogger logger = loggerFactory?.CreateLogger<CertificateUtility>() ?? NullLogger<CertificateUtility>.Instance;
+
             try
             {
-                logger.Debug($"Extracting MLE KID from P12 file: {filePath} for merchantId: {merchantId}");
+                logger.LogDebug($"Extracting MLE KID from P12 file: {filePath} for merchantId: {merchantId}");
 
                 // Load all certificates from P12 file
                 X509Certificate2Collection collection = new X509Certificate2Collection();
@@ -285,18 +299,18 @@ namespace AuthenticationSdk.util
 
                 if (collection.Count == 0)
                 {
-                    logger.Error($"No certificates found in P12 file: {filePath}");
+                    logger.LogError($"No certificates found in P12 file: {filePath}");
                     return null;
                 }
 
-                logger.Debug($"Found {collection.Count} certificate(s) in P12 file");
+                logger.LogDebug($"Found {collection.Count} certificate(s) in P12 file");
 
                 // Iterate through certificates to find one with CN matching merchantId
                 foreach (X509Certificate2 cert in collection)
                 {
                     if (cert.Subject == null)
                     {
-                        logger.Debug("Certificate has no subject, skipping");
+                        logger.LogDebug("Certificate has no subject, skipping");
                         continue;
                     }
 
@@ -305,40 +319,40 @@ namespace AuthenticationSdk.util
 
                     if (string.IsNullOrEmpty(cn))
                     {
-                        logger.Debug($"Certificate has no CN in subject: {cert.Subject}, skipping");
+                        logger.LogDebug($"Certificate has no CN in subject: {cert.Subject}, skipping");
                         continue;
                     }
 
-                    logger.Debug($"Certificate CN: {cn}");
+                    logger.LogDebug($"Certificate CN: {cn}");
 
                     // Check if CN matches merchantId (case-insensitive)
                     if (cn.Equals(merchantId, StringComparison.OrdinalIgnoreCase))
                     {
-                        logger.Debug($"Found certificate with matching CN: {cn}");
+                        logger.LogDebug($"Found certificate with matching CN: {cn}");
 
                         // Extract serial number from certificate subject
-                        string serialNumber = ExtractSerialNumber(cert);
+                        string serialNumber = ExtractSerialNumber(cert, loggerFactory);
 
                         if (!string.IsNullOrEmpty(serialNumber))
                         {
-                            logger.Debug($"Serial number (MLE KID) extracted: {serialNumber}");
+                            logger.LogDebug($"Serial number (MLE KID) extracted: {serialNumber}");
                             return serialNumber;
                         }
                         else
                         {
-                            logger.Warn($"Certificate with CN={cn} found but has no serial number in subject");
+                            logger.LogWarning($"Certificate with CN={cn} found but has no serial number in subject");
                         }
                     }
                 }
 
                 // If we get here, no matching certificate was found
-                logger.Error($"No certificate with CN matching merchantId ({merchantId}) found in P12 file: {filePath}");
+                logger.LogError($"No certificate with CN matching merchantId ({merchantId}) found in P12 file: {filePath}");
                 return null;
 
             }
             catch (Exception ex)
             {
-                logger.Error($"Error extracting MLE KID from P12 file: {filePath}: {ex.Message}");
+                logger.LogError($"Error extracting MLE KID from P12 file: {filePath}: {ex.Message}");
                 return null;
             }
         }

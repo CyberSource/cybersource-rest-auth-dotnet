@@ -1,4 +1,5 @@
-﻿﻿using NLog;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -10,7 +11,6 @@ namespace AuthenticationSdk.util
 {
     public static class Utility
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// Determines the <see cref="X509KeyStorageFlags"/> to use when importing a PKCS#12 keystore.
@@ -47,9 +47,12 @@ namespace AuthenticationSdk.util
         /// <param name="value">The configuration value to validate</param>
         /// <param name="fieldName">The name of the field (for logging purposes)</param>
         /// <param name="defaultValue">The default value to use if validation fails (can be null)</param>
+        /// <param name="loggerFactory">The logger factory to create a logger instance</param>
         /// <returns>The validated value or default</returns>
-        public static string GetPositiveIntOrDefault(string value, string fieldName, string defaultValue)
+        public static string GetPositiveIntOrDefault(string value, string fieldName, string defaultValue, ILoggerFactory loggerFactory = null)
         {
+            ILogger logger = loggerFactory?.CreateLogger("Utility") ?? NullLogger.Instance;
+
             if (value != null)
             {
                 if (int.TryParse(value, out int parsed) && parsed > 0)
@@ -57,11 +60,11 @@ namespace AuthenticationSdk.util
                     return value;
                 }
 
-                Logger.Warn($"Invalid {fieldName} value '{value}'. Must be a positive integer. Using default: {defaultValue ?? "null"}");
+                logger.LogWarning($"Invalid {fieldName} value '{value}'. Must be a positive integer. Using default: {defaultValue ?? "null"}");
             }
             else
             {
-                Logger.Warn($"{fieldName} is not set. Using default: {defaultValue ?? "null"}");
+                logger.LogWarning($"{fieldName} is not set. Using default: {defaultValue ?? "null"}");
             }
 
             return defaultValue;
