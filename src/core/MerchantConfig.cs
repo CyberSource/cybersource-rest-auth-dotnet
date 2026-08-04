@@ -1,5 +1,6 @@
 ﻿using AuthenticationSdk.util;
-using NLog;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -20,14 +21,11 @@ namespace AuthenticationSdk.core
     *============================================================================================*/
     public class MerchantConfig
     {
-        public MerchantConfig(IReadOnlyDictionary<string, string> merchantConfigDictionary = null, Dictionary<string, string> mapToControlMLEonAPI = null, AsymmetricAlgorithm responseMlePrivateKey = null)
+        public MerchantConfig(IReadOnlyDictionary<string, string> merchantConfigDictionary = null, Dictionary<string, string> mapToControlMLEonAPI = null, AsymmetricAlgorithm responseMlePrivateKey = null, ILoggerFactory loggerFactory = null)
         {
-            var _propertiesSetUsing = string.Empty;
+            Logger = loggerFactory?.CreateLogger<MerchantConfig>() ?? NullLogger<MerchantConfig>.Instance;
 
-            if (Logger == null)
-            {
-                Logger = LogManager.GetCurrentClassLogger();
-            }
+            var _propertiesSetUsing = string.Empty;
 
             /*
              * Set the properties of Merchant Config
@@ -51,12 +49,12 @@ namespace AuthenticationSdk.core
                 }
                 catch (ConfigurationErrorsException ex)
                 {
-                    Logger.Error($"Error accessing MerchantConfig section in App.Config: {ex.Message}");
+                    Logger.LogError(ex, "Error accessing MerchantConfig section in App.Config");
                     throw new Exception($"{Constants.ErrorPrefix} Error accessing MerchantConfig section in App.Config: {ex.Message}", ex);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"Unexpected error accessing MerchantConfig section in App.Config: {ex.Message}");
+                    Logger.LogError(ex, "Unexpected error accessing MerchantConfig section in App.Config");
                     throw new Exception($"{Constants.ErrorPrefix} Unexpected error accessing MerchantConfig section in App.Config: {ex.Message}", ex);
                 }
 
@@ -68,7 +66,7 @@ namespace AuthenticationSdk.core
                 }
                 else
                 {
-                    Logger.Error($"Merchant Configuration Missing in App.Config File");
+                    Logger.LogError("Merchant Configuration Missing in App.Config File");
                     throw new Exception($"{Constants.ErrorPrefix} Merchant Configuration Missing in App.Config File");
                 }
             }
@@ -78,10 +76,10 @@ namespace AuthenticationSdk.core
                 ResponseMlePrivateKey = responseMlePrivateKey;
             }
 
-            Logger.Debug("APPLICATION LOGGING START:\n");
+            Logger.LogDebug("APPLICATION LOGGING START:\n");
 
             // Logging the source of properties' values
-            Logger.Trace("Reading Merchant Configuration from " + _propertiesSetUsing);
+            Logger.LogTrace("Reading Merchant Configuration from " + _propertiesSetUsing);
 
             // Validations
             ValidateProperties();
@@ -164,7 +162,7 @@ namespace AuthenticationSdk.core
 
         public string ProxyPassword { get; set; }
 
-        public static Logger Logger { get; set; }
+        public ILogger<MerchantConfig> Logger { get; internal set; } = NullLogger<MerchantConfig>.Instance;
 
         public string HostName { get; set; }
 
@@ -337,7 +335,7 @@ namespace AuthenticationSdk.core
                 }
             }
 
-            Logger.Debug($"Merchant Configuration :\n{merchCfgLogString}");
+            Logger.LogDebug("Merchant Configuration :{NewLine}{Message}", Environment.NewLine, merchCfgLogString);
         }
 
         private void SetValuesFromAppConfig(NameValueCollection merchantConfigSection, Dictionary<string, string> mapToControlMLEonAPI)
@@ -403,7 +401,7 @@ namespace AuthenticationSdk.core
                 bool useMLEGlobally = bool.Parse(merchantConfigSection["useMLEGlobally"]);
                 if (useMLEGlobally != EnableRequestMLEForOptionalApisGlobally)
                 {
-                    Logger.Error("Both useMLEGlobally and enableRequestMLEForOptionalApisGlobally are set but their values do not match.");
+                    Logger.LogError("Both useMLEGlobally and enableRequestMLEForOptionalApisGlobally are set but their values do not match.");
                     throw new Exception("Both useMLEGlobally and enableRequestMLEForOptionalApisGlobally are set but their values do not match.");
                 }
             }
@@ -731,7 +729,7 @@ namespace AuthenticationSdk.core
                         bool useMLEGlobally = bool.Parse(merchantConfigDictionary["useMLEGlobally"]);
                         if (useMLEGlobally != EnableRequestMLEForOptionalApisGlobally)
                         {
-                            Logger.Error("Both useMLEGlobally and enableRequestMLEForOptionalApisGlobally are set but their values do not match.");
+                            Logger.LogError("Both useMLEGlobally and enableRequestMLEForOptionalApisGlobally are set but their values do not match.");
                             throw new Exception("Both useMLEGlobally and enableRequestMLEForOptionalApisGlobally are set but their values do not match.");
                         }
                     }
@@ -814,7 +812,7 @@ namespace AuthenticationSdk.core
             }
             catch (KeyNotFoundException err)
             {
-                Logger.Error($"{err.Message}");
+                Logger.LogError(err, $"{err.Message}");
                 throw new Exception($"{Constants.ErrorPrefix} {err.Message}");
             }
         }
@@ -833,7 +831,7 @@ namespace AuthenticationSdk.core
 
                 if (string.IsNullOrEmpty(value))
                 {
-                    Logger.Error($"ConfigException : Invalid MLE control map value for key '{key}'. Value cannot be null or empty.");
+                    Logger.LogError($"ConfigException : Invalid MLE control map value for key '{key}'. Value cannot be null or empty.");
                     throw new Exception($"Invalid MLE control map value for key '{key}'. Value cannot be null or empty.");
                 }
 
@@ -844,7 +842,7 @@ namespace AuthenticationSdk.core
 
                     if (parts.Length != 2)
                     {
-                        Logger.Error($"ConfigException : Invalid MLE control map value format for key '{key}'. Expected format: true/false for 'requestMLE::responseMLE' but got: '{value}'");
+                        Logger.LogError($"ConfigException : Invalid MLE control map value format for key '{key}'. Expected format: true/false for 'requestMLE::responseMLE' but got: '{value}'");
                         throw new Exception($"Invalid MLE control map value format for key '{key}'. Expected format: true/false for 'requestMLE::responseMLE' but got: '{value}'");
                     }
 
@@ -854,14 +852,14 @@ namespace AuthenticationSdk.core
                     // Validate first part (request MLE) - can be empty, "true", or "false"
                     if (!string.IsNullOrEmpty(requestMLE) && !Utility.IsValidBooleanString(requestMLE))
                     {
-                        Logger.Error($"ConfigException : Invalid request MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{requestMLE}'");
+                        Logger.LogError($"ConfigException : Invalid request MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{requestMLE}'");
                         throw new Exception($"Invalid request MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{requestMLE}'");
                     }
 
                     // Validate second part (response MLE) - can be empty, "true", or "false"
                     if (!string.IsNullOrEmpty(responseMLE) && !Utility.IsValidBooleanString(responseMLE))
                     {
-                        Logger.Error($"ConfigException : Invalid response MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{responseMLE}'");
+                        Logger.LogError($"ConfigException : Invalid response MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{responseMLE}'");
                         throw new Exception($"Invalid response MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{responseMLE}'");
                     }
                 }
@@ -870,7 +868,7 @@ namespace AuthenticationSdk.core
                     // Value without "::" separator - should be "true" or "false"
                     if (!Utility.IsValidBooleanString(value))
                     {
-                        Logger.Error($"ConfigException : Invalid MLE control map value for key '{key}'. Expected 'true' or 'false' for requestMLE but got: '{value}'");
+                        Logger.LogError($"ConfigException : Invalid MLE control map value for key '{key}'. Expected 'true' or 'false' for requestMLE but got: '{value}'");
                         throw new Exception($"Invalid MLE control map value for key '{key}'. Expected 'true' or 'false' for requestMLE but got: '{value}'");
                     }
                 }
@@ -897,7 +895,7 @@ namespace AuthenticationSdk.core
             // setting up hostname based on the run environment value
             if (string.IsNullOrEmpty(RunEnvironment))
             {
-                Logger.Error("Run Environment cannot be null or empty");
+                Logger.LogError("Run Environment cannot be null or empty");
                 throw new Exception($"{Constants.ErrorPrefix} Merchant Config field - RunEnvironment is Mandatory");
             }
             else if (Constants.OldRunEnvironmentConstants.Contains(RunEnvironment.ToUpper()))
@@ -913,19 +911,19 @@ namespace AuthenticationSdk.core
             {
                 if (string.IsNullOrEmpty(MerchantId))
                 {
-                    Logger.Error("Merchant ID cannot be null or empty");
+                    Logger.LogError("Merchant ID cannot be null or empty");
                     throw new Exception($"{Constants.ErrorPrefix} Merchant Config field - MerchantID is Mandatory");
                 }
 
                 if (string.IsNullOrEmpty(MerchantKeyId))
                 {
-                    Logger.Error("Merchant Key ID cannot be null or empty");
+                    Logger.LogError("Merchant Key ID cannot be null or empty");
                     throw new Exception($"{Constants.ErrorPrefix} Merchant Config field - MerchantKeyId is Mandatory");
                 }
 
                 if (string.IsNullOrEmpty(MerchantSecretKey))
                 {
-                    Logger.Error("Merchant Secret Key cannot be null or empty");
+                    Logger.LogError("Merchant Secret Key cannot be null or empty");
                     throw new Exception($"{Constants.ErrorPrefix} Merchant Config field - MerchantSecretKey is Mandatory");
                 }
             }
@@ -935,7 +933,7 @@ namespace AuthenticationSdk.core
             {
                 if (string.IsNullOrEmpty(MerchantId))
                 {
-                    Logger.Error("Merchant ID cannot be null or empty");
+                    Logger.LogError("Merchant ID cannot be null or empty");
                     throw new Exception($"{Constants.ErrorPrefix} Merchant Config field - MerchantID is Mandatory");
                 }
 
@@ -943,7 +941,7 @@ namespace AuthenticationSdk.core
                 if (!string.Equals(JwtKeyType, Constants.JwtKeyTypeP12, StringComparison.OrdinalIgnoreCase)
                     && !string.Equals(JwtKeyType, Constants.JwtKeyTypeSharedSecret, StringComparison.OrdinalIgnoreCase))
                 {
-                    Logger.Error(Constants.InvalidJwtKeyTypeErrorMessage + "Provided value: " + JwtKeyType);
+                    Logger.LogError(Constants.InvalidJwtKeyTypeErrorMessage + "Provided value: " + JwtKeyType);
                     throw new Exception($"{Constants.InvalidJwtKeyTypeErrorMessage}Provided value: {JwtKeyType}");
                 }
 
@@ -952,13 +950,13 @@ namespace AuthenticationSdk.core
                     // JWT with SHARED_SECRET — validate symmetric key fields
                     if (string.IsNullOrEmpty(MerchantKeyId))
                     {
-                        Logger.Error("Merchant Key ID cannot be null or empty for JWT with SHARED_SECRET");
+                        Logger.LogError("Merchant Key ID cannot be null or empty for JWT with SHARED_SECRET");
                         throw new Exception($"{Constants.ErrorPrefix} Merchant Config field - MerchantKeyId is Mandatory when jwtKeyType is SHARED_SECRET");
                     }
 
                     if (string.IsNullOrEmpty(MerchantSecretKey))
                     {
-                        Logger.Error("Merchant Secret Key cannot be null or empty for JWT with SHARED_SECRET");
+                        Logger.LogError("Merchant Secret Key cannot be null or empty for JWT with SHARED_SECRET");
                         throw new Exception($"{Constants.ErrorPrefix} Merchant Config field - MerchantSecretKey is Mandatory when jwtKeyType is SHARED_SECRET");
                     }
                 }
@@ -968,7 +966,7 @@ namespace AuthenticationSdk.core
                     if (string.IsNullOrEmpty(KeyAlias))
                     {
                         KeyAlias = MerchantId;
-                        Logger.Warn("Key Alias not provided. Assigning the value of Merchant ID");
+                        Logger.LogWarning("Key Alias not provided. Assigning the value of Merchant ID");
                         throw new Exception($"{Constants.WarningPrefix} KeyAlias not provided. Assigning the value of: [MerchantID]");
                     }
 
@@ -978,35 +976,35 @@ namespace AuthenticationSdk.core
                     if (!useMetaKeyFlag && !string.Equals(KeyAlias, MerchantId))
                     {
                         KeyAlias = MerchantId;
-                        Logger.Warn("Key Alias value provided is incorrect. Assigning the value of Merchant ID");
+                        Logger.LogWarning("Key Alias value provided is incorrect. Assigning the value of Merchant ID");
                         throw new Exception($"{Constants.WarningPrefix} Incorrect value of KeyAlias provided. Assigning the value of: [MerchantID]");
                     }
                     
                     if (useMetaKeyFlag && !string.Equals(KeyAlias, PortfolioId))
                     {
                         KeyAlias = PortfolioId;
-                        Logger.Warn("Key Alias value provided is incorrect for MetaKey enabled. Assigning the value of Portfolio ID");
+                        Logger.LogWarning("Key Alias value provided is incorrect for MetaKey enabled. Assigning the value of Portfolio ID");
                         throw new Exception($"{Constants.WarningPrefix} Incorrect value of KeyAlias provided for MetaKey enabled. Assigning the value of: [PortfolioID]");
                     }
 
                     if (string.IsNullOrEmpty(KeyPass))
                     {
                         KeyPass = MerchantId;
-                        Logger.Warn("Key Password not provided. Assigning the value of Merchant ID");
+                        Logger.LogWarning("Key Password not provided. Assigning the value of Merchant ID");
                         throw new Exception($"{Constants.WarningPrefix} KeyPassword not provided. Assigning the value of: [MerchantID]");
                     }
 
                     if (string.IsNullOrEmpty(KeyDirectory))
                     {
                         KeyDirectory = Constants.P12FileDirectory;
-                        Logger.Warn($"Keys Directory not provided. Using Default Path: {KeyDirectory}");
+                        Logger.LogWarning($"Keys Directory not provided. Using Default Path: {KeyDirectory}");
                         throw new Exception($"{Constants.WarningPrefix} KeysDirectory not provided. Using Default Path: {KeyDirectory}");
                     }
 
                     if (string.IsNullOrEmpty(KeyfileName))
                     {
                         KeyfileName = MerchantId;
-                        Logger.Warn("Key Filename not provided. Assigning the value of Merchant ID");
+                        Logger.LogWarning("Key Filename not provided. Assigning the value of Merchant ID");
                         throw new Exception($"{Constants.WarningPrefix} KeyfileName not provided. Assigning the value of: [MerchantId]");
                     }
 
@@ -1043,7 +1041,7 @@ namespace AuthenticationSdk.core
             //if MLE=true then check for auth Type
             if (requestMleConfigured && !Enumerations.AuthenticationType.JWT.ToString().Equals(AuthenticationType, StringComparison.OrdinalIgnoreCase))
             {
-                Logger.Error("Request MLE is only supported in JWT auth type");
+                Logger.LogError("Request MLE is only supported in JWT auth type");
                 throw new Exception("Request MLE is only supported in JWT auth type");
             }
 
@@ -1056,7 +1054,7 @@ namespace AuthenticationSdk.core
                 }
                 catch (IOException err)
                 {
-                    Logger.Error(err.Message);
+                    Logger.LogError(err, err.Message);
                     throw new Exception(err.Message);
                 }
             }
@@ -1080,21 +1078,21 @@ namespace AuthenticationSdk.core
                 // Validate for Auth type - Currently responseMLE feature will be enabled for JWT auth type only
                 if (!Enumerations.AuthenticationType.JWT.ToString().Equals(AuthenticationType, StringComparison.OrdinalIgnoreCase))
                 {
-                    Logger.Error("Response MLE is only supported for JWT auth type");
+                    Logger.LogError("Response MLE is only supported for JWT auth type");
                     throw new Exception("Response MLE is only supported for JWT auth type");
                 }
 
                 // Check if either private key object or private key file path is provided
                 if (ResponseMlePrivateKey == null && string.IsNullOrEmpty(ResponseMlePrivateKeyFilePath))
                 {
-                    Logger.Error("Response MLE is enabled but no private key provided. Either set ResponseMlePrivateKey object or provide ResponseMlePrivateKeyFilePath.");
+                    Logger.LogError("Response MLE is enabled but no private key provided. Either set ResponseMlePrivateKey object or provide ResponseMlePrivateKeyFilePath.");
                     throw new Exception("Response MLE is enabled but no private key provided. Either set ResponseMlePrivateKey object or provide ResponseMlePrivateKeyFilePath.");
                 }
 
                 // Check if both private key object and private key file path are provided
                 if (ResponseMlePrivateKey != null && !string.IsNullOrEmpty(ResponseMlePrivateKeyFilePath))
                 {
-                    Logger.Error("ConfigException : Both responseMlePrivateKey object and responseMlePrivateKeyFilePath are provided. Please provide only one of them for response mle private key.");
+                    Logger.LogError("ConfigException : Both responseMlePrivateKey object and responseMlePrivateKeyFilePath are provided. Please provide only one of them for response mle private key.");
                     throw new Exception("Both responseMlePrivateKey object and responseMlePrivateKeyFilePath are provided. Please provide only one of them for response mle private key.");
                 }
 
@@ -1107,7 +1105,7 @@ namespace AuthenticationSdk.core
                     }
                     catch (IOException err)
                     {
-                        Logger.Error("Invalid responseMlePrivateKeyFilePath - " + err.Message);
+                        Logger.LogError(err, "Invalid responseMlePrivateKeyFilePath - " + err.Message);
                         throw new Exception("Invalid responseMlePrivateKeyFilePath - " + err.Message);
                     }
                 }
@@ -1123,7 +1121,7 @@ namespace AuthenticationSdk.core
                         extension.Equals("pfx", StringComparison.OrdinalIgnoreCase))
                     {
                         skipKidValidation = true;
-                        Logger.Debug("P12/PFX file detected. responseMleKID validation will be deferred to JWT token generation time for possible auto-extraction.");
+                        Logger.LogDebug("P12/PFX file detected. responseMleKID validation will be deferred to JWT token generation time for possible auto-extraction.");
                     }
                 }
 
@@ -1131,7 +1129,7 @@ namespace AuthenticationSdk.core
                 // If non-P12/PFX file path is provided (PEM, KEY, P8), KID validation is required
                 if (!skipKidValidation && string.IsNullOrEmpty(ResponseMleKID))
                 {
-                    Logger.Error("ConfigException : Response MLE is enabled but responseMleKID is not provided.");
+                    Logger.LogError("ConfigException : Response MLE is enabled but responseMleKID is not provided.");
                     throw new Exception("Response MLE is enabled but responseMleKID is not provided.");
                 }
             }
@@ -1141,7 +1139,7 @@ namespace AuthenticationSdk.core
         {
             if (string.IsNullOrEmpty(KeyfileName))
             {
-                Logger.Error("Key Filename not provided. Assigning the value of Merchant ID");
+                Logger.LogError("Key Filename not provided. Assigning the value of Merchant ID");
                 if (!string.IsNullOrEmpty(MerchantId))
                 {
                     KeyfileName = MerchantId;
@@ -1151,14 +1149,14 @@ namespace AuthenticationSdk.core
             if (string.IsNullOrEmpty(KeyDirectory))
             {
                 KeyDirectory = Constants.P12FileDirectory;
-                Logger.Error($"Keys Directory not provided. Using Default Path: {KeyDirectory}");
+                Logger.LogError($"Keys Directory not provided. Using Default Path: {KeyDirectory}");
             }
 
             DirectoryInfo dirInfo = new DirectoryInfo(KeyDirectory);
 
             if (!dirInfo.Exists)
             {
-                Logger.Error($"KeyDirectory not found, Entered directory : {KeyDirectory}");
+                Logger.LogError($"KeyDirectory not found, Entered directory : {KeyDirectory}");
                 return false;
             }
 
@@ -1170,11 +1168,11 @@ namespace AuthenticationSdk.core
                 newFile = new FileInfo(keyFilePath);
                 if (!newFile.Exists)
                 {
-                    Logger.Error($"KeyFile not found, Entered path/file name : {keyFilePath}");
+                    Logger.LogError($"KeyFile not found, Entered path/file name : {keyFilePath}");
                     return false;
                 }
 
-                Logger.Info($"Entered file/path value for Key File : {keyFilePath}");
+                Logger.LogInformation($"Entered file/path value for Key File : {keyFilePath}");
             }
             catch (Exception)
             {
@@ -1184,7 +1182,7 @@ namespace AuthenticationSdk.core
             bool isReadable = false;
             try
             {
-                using (FileStream fs = newFile.Open(FileMode.Open, FileAccess.Read))
+                using (FileStream fs = newFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     isReadable = true;
                 }
@@ -1201,7 +1199,7 @@ namespace AuthenticationSdk.core
             }
             else
             {
-                Logger.Info($"File cannot be accessed. Permission denied : {keyFilePath}");
+                Logger.LogInformation($"File cannot be accessed. Permission denied : {keyFilePath}");
                 return false;
             }
         }

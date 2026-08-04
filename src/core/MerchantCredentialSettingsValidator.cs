@@ -210,7 +210,7 @@ namespace AuthenticationSdk.core
             {
                 if (newFile != null && newFile.Exists)
                 {
-                    using FileStream fs = newFile.Open(FileMode.Open, FileAccess.Read);
+                    using FileStream fs = newFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
                     isReadable = true;
                 }
             }

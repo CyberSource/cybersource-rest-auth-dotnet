@@ -1,5 +1,6 @@
 ﻿using AuthenticationSdk.util;
-using NLog;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -22,8 +23,9 @@ namespace AuthenticationSdk.core
         /// Initializes a new instance of the <see cref="MerchantCredentialSettings"/> class.
         /// </summary>
         /// <param name="merchantCredentialsDictionary">Dictionary containing merchant credentials configuration values from App.Config or custom source. If null, configuration is loaded from the MerchantConfig section in App.Config.<br/>Refer to <see cref="MerchantConfigurationKeys.MerchantCredentialSettingsKeys"/> for the list of possible keys</param>
+        /// <param name="loggerFactory">The logger factory for creating logger instances.</param>
         /// <exception cref="Exception">Thrown when configuration is invalid or required credentials are missing for the specified authentication type.</exception>
-        public MerchantCredentialSettings(IReadOnlyDictionary<string, string> merchantCredentialsDictionary = null) : this(merchantCredentialsDictionary, false)
+        public MerchantCredentialSettings(IReadOnlyDictionary<string, string> merchantCredentialsDictionary = null, ILoggerFactory loggerFactory = null) : this(merchantCredentialsDictionary, loggerFactory, false)
         {
             var _validator = new MerchantCredentialSettingsValidator();
             if (!string.IsNullOrEmpty(AuthenticationType))
@@ -47,8 +49,6 @@ namespace AuthenticationSdk.core
                         this.AddMutualAuthCredentials(merchantCredentialsDictionary);
                         break;
                     default:
-                        //Logger.Error("Invalid or unsupported authentication type specified in configuration.");
-                        //throw new Exception($"{Constants.ErrorPrefix} Invalid or unsupported authentication type specified in configuration.");
                         break;
                 }
             }
@@ -58,11 +58,12 @@ namespace AuthenticationSdk.core
         /// Initializes a new instance of the <see cref="MerchantCredentialSettings"/> class.
         /// </summary>
         /// <param name="merchantCredentialsDictionary">Dictionary containing merchant credentials configuration values from App.Config or custom source. If null, configuration is loaded from the MerchantConfig section in App.Config.<br/>Refer to <see cref="MerchantConfigurationKeys.MerchantCredentialSettingsKeys"/> for the list of possible keys</param>
+        /// <param name="loggerFactory">The logger factory for creating logger instances.</param>
         /// <param name="isValidated">Indicates whether the provided merchant credentials have already been validated. If true, validation will be skipped.</param>
         /// <exception cref="Exception">Thrown when configuration is invalid or required credentials are missing for the specified authentication type.</exception>
-        internal MerchantCredentialSettings(IReadOnlyDictionary<string, string> merchantCredentialsDictionary = null, bool isValidated = false)
+        internal MerchantCredentialSettings(IReadOnlyDictionary<string, string> merchantCredentialsDictionary = null, ILoggerFactory loggerFactory = null, bool isValidated = false)
         {
-            Logger ??= LogManager.GetCurrentClassLogger();
+            Logger = loggerFactory?.CreateLogger<MerchantCredentialSettings>() ?? NullLogger<MerchantCredentialSettings>.Instance;
 
             if (merchantCredentialsDictionary == null)
             {
@@ -82,12 +83,12 @@ namespace AuthenticationSdk.core
                 }
                 catch (ConfigurationErrorsException ex)
                 {
-                    Logger.Error($"Error accessing MerchantConfig section in App.Config: {ex.Message}");
+                    Logger.LogError(ex, "Error accessing MerchantConfig section in App.Config");
                     throw new Exception($"{Constants.ErrorPrefix} Error accessing MerchantConfig section in App.Config: {ex.Message}", ex);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"Unexpected error accessing MerchantConfig section in App.Config: {ex.Message}");
+                    Logger.LogError(ex, "Unexpected error accessing MerchantConfig section in App.Config");
                     throw new Exception($"{Constants.ErrorPrefix} Unexpected error accessing MerchantConfig section in App.Config: {ex.Message}", ex);
                 }
             }
@@ -173,13 +174,13 @@ namespace AuthenticationSdk.core
                 }
                 else
                 {
-                    Logger.Error("Merchant credentials configuration is missing or invalid.");
+                    Logger.LogError("Merchant credentials configuration is missing or invalid.");
                     throw new KeyNotFoundException("KeyNotFoundException : Merchant credentials configuration is missing or invalid.");
                 }
             }
             catch (KeyNotFoundException err)
             {
-                Logger.Error($"Configuration error: {err.Message}");
+                Logger.LogError(err, "Configuration error");
                 throw new Exception($"{Constants.ErrorPrefix} {err.Message}", err);
             }
         }
@@ -316,9 +317,9 @@ namespace AuthenticationSdk.core
         public string JwtKeyType { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the NLog logger instance for logging credential configuration and validation messages.
+        /// Gets or sets the logger instance for logging credential configuration and validation messages.
         /// </summary>
-        public static Logger Logger { get; internal set; }
+        public ILogger<MerchantCredentialSettings> Logger { get; internal set; } = NullLogger<MerchantCredentialSettings>.Instance;
         #endregion Properties
 
         #region Mutable Setters

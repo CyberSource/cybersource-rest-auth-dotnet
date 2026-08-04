@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using AuthenticationSdk.core;
 using AuthenticationSdk.util;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
@@ -35,6 +36,7 @@ namespace AuthenticationSdk.authentication.jwt
         private readonly JwtToken _jwtToken;
         private readonly bool _isResponseMLEForApi;
         private readonly bool _isSharedSecret;
+        private readonly ILoggerFactory _loggerFactory;
         private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
         {
             WriteIndented = false
@@ -42,12 +44,13 @@ namespace AuthenticationSdk.authentication.jwt
         #endregion
 
         #region NEW CONSTRUCTOR
-        public JwtTokenGenerator(IMerchantCredentialSettings merchantCredentialSettings, IMerchantRequestSettings merchantRequestSettings, IMerchantMLESettings merchantMLESettings, bool isResponseMLEForApi)
+        public JwtTokenGenerator(IMerchantCredentialSettings merchantCredentialSettings, IMerchantRequestSettings merchantRequestSettings, IMerchantMLESettings merchantMLESettings, bool isResponseMLEForApi, ILoggerFactory loggerFactory = null)
         {
             _isResponseMLEForApi = isResponseMLEForApi;
             _merchantCredentialSettings = merchantCredentialSettings;
             _merchantRequestSettings = merchantRequestSettings;
             _merchantMLESettings = merchantMLESettings;
+            _loggerFactory = loggerFactory;
             _isSharedSecret = merchantCredentialSettings.IsSharedSecretKeyType();
 
             _jwtToken = new JwtToken(_merchantCredentialSettings, _merchantRequestSettings, _isSharedSecret);
@@ -199,7 +202,7 @@ namespace AuthenticationSdk.authentication.jwt
             if (_isResponseMLEForApi)
             {
                 // Validate and auto-extract Response MLE KID if needed
-                string validatedKid = MLEUtility.ValidateAndAutoExtractResponseMleKid(issuer, _merchantMLESettings);
+                string validatedKid = MLEUtility.ValidateAndAutoExtractResponseMleKid(issuer, _merchantMLESettings, _loggerFactory);
                 jwtPayload["v-c-response-mle-kid"] = validatedKid;
             }
 
@@ -212,7 +215,7 @@ namespace AuthenticationSdk.authentication.jwt
         private JsonObject GetHeaderClaimSet(JwtToken jwtTokenValue)
         {
             var x5Cert = jwtTokenValue.Certificate;
-            var serialNumber = CertificateUtility.ExtractSerialNumber(x5Cert);
+            var serialNumber = CertificateUtility.ExtractSerialNumber(x5Cert, _loggerFactory);
 
             return new JsonObject
             {

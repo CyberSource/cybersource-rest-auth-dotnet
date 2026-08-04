@@ -1,5 +1,6 @@
 ﻿using AuthenticationSdk.core;
-using NLog;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,7 +19,9 @@ namespace AuthenticationSdk.util
 {
     public static class MLEUtility
     {
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        // Immutable no-op default. Methods that receive an ILoggerFactory create a per-call
+        // local logger instead of mutating shared static state (which is not thread-safe).
+        private static readonly ILogger logger = NullLogger.Instance;
         private static readonly LogUtility logUtility = new LogUtility();
 
         public static bool CheckIsMLEForAPI(MerchantConfig merchantConfig, string inboundMLEStatus, string operationIds)
@@ -65,16 +68,17 @@ namespace AuthenticationSdk.util
             {
                 return null;
             }
+
             string payload = requestBody.ToString();
-            logUtility.LogDebugMessage(logger, Constants.LOG_REQUEST_BEFORE_MLE + payload);
+            logger.LogDebug(logUtility.MaskSensitiveData(Constants.LOG_REQUEST_BEFORE_MLE + payload));
 
             X509Certificate2 mleCertificate = GetRequestMLECertificate(merchantConfig);
 
             // Handling special case : MLE Certificate is not currently available for HTTP Signature
             if (mleCertificate == null && Constants.AuthMechanismHttp.Equals(merchantConfig.AuthenticationType, StringComparison.OrdinalIgnoreCase))
             {
-                logger.Debug("The certificate to use for MLE for requests is not provided in the merchant configuration. Please ensure that the certificate path is provided.");
-                logger.Debug("Currently, MLE for requests using HTTP Signature as authentication is not supported by Cybersource. By default, the SDK will fall back to non-encrypted requests.");
+                logger.LogDebug("The certificate to use for MLE for requests is not provided in the merchant configuration. Please ensure that the certificate path is provided.");
+                logger.LogDebug("Currently, MLE for requests using HTTP Signature as authentication is not supported by Cybersource. By default, the SDK will fall back to non-encrypted requests.");
                 return requestBody;
             }
 
@@ -92,7 +96,7 @@ namespace AuthenticationSdk.util
             var jweToken = JWEUtilty.EncryptJweCompact(payloadBytes, rsa, serialNumber);
 
             string mleRequest = CreateJsonString(jweToken);
-            logUtility.LogDebugMessage(logger, Constants.LOG_REQUEST_AFTER_MLE + mleRequest);
+            logger.LogDebug(logUtility.MaskSensitiveData(Constants.LOG_REQUEST_AFTER_MLE + mleRequest));
 
             return mleRequest;
         }
@@ -173,7 +177,7 @@ namespace AuthenticationSdk.util
                 return false;
             }
         }
-        private static string GetResponseMleToken(string mleResponseBody)
+        private static string GetResponseMleToken(string mleResponseBody, ILogger logger)
         {
             try
             {
@@ -183,7 +187,7 @@ namespace AuthenticationSdk.util
             catch (Exception e)
             {
                 string errorMessage = $"Failed to extract MLE response token: {e.Message}";
-                logger.Error(errorMessage, e);
+                logger.LogError(e, errorMessage);
                 throw new MLEException("DECRYPTION", errorMessage, e);
             }
         }
@@ -198,15 +202,17 @@ namespace AuthenticationSdk.util
             var responseMlePrivateKey = Cache.GetMleResponsePrivateKeyFromFilePath(merchantConfig);
             return responseMlePrivateKey;
         }
-        public static string DecryptMleResponsePayload(MerchantConfig merchantConfig, string mleResponseBody)
+        public static string DecryptMleResponsePayload(MerchantConfig merchantConfig, string mleResponseBody, ILoggerFactory loggerFactory)
         {
+            ILogger logger = loggerFactory?.CreateLogger("MLEUtility") ?? NullLogger.Instance;
+
             if (!CheckIsMleEncryptedResponse(mleResponseBody))
             {
                 throw new MLEException("VALIDATION", "Response body is not MLE encrypted.");
             }
 
             var mlePrivateKey = GetMleResponsePrivateKey(merchantConfig);
-            string jweResponseToken = GetResponseMleToken(mleResponseBody);
+            string jweResponseToken = GetResponseMleToken(mleResponseBody, logger);
 
             if (string.IsNullOrEmpty(jweResponseToken))
             {
@@ -216,7 +222,7 @@ namespace AuthenticationSdk.util
 
             try
             {
-                logUtility.LogDebugMessage(logger, Constants.LOG_NETWORK_RESPONSE_BEFORE_MLE_DECRYPTION + mleResponseBody);
+                logger.LogDebug(logUtility.MaskSensitiveData(Constants.LOG_NETWORK_RESPONSE_BEFORE_MLE_DECRYPTION + mleResponseBody));
 
                 // Convert AsymmetricAlgorithm to RSA if needed
                 RSA rsaKey = mlePrivateKey as RSA;
@@ -225,27 +231,27 @@ namespace AuthenticationSdk.util
                     throw new MLEException("KEY_TYPE", "MLE Response private key is not an RSA key. Only RSA keys are supported for MLE decryption.");
                 }
                 string decryptedResponse = JWEUtilty.DecryptUsingRSAParameters(rsaKey.ExportParameters(true), jweResponseToken);
-                logUtility.LogDebugMessage(logger, Constants.LOG_NETWORK_RESPONSE_AFTER_MLE_DECRYPTION + decryptedResponse);
+                logger.LogDebug(logUtility.MaskSensitiveData(Constants.LOG_NETWORK_RESPONSE_AFTER_MLE_DECRYPTION + decryptedResponse));
                 return decryptedResponse;
             }
             catch (Org.BouncyCastle.Crypto.InvalidCipherTextException e)
             {
                 string errorMessage = $"MLE Response decryption failed (InvalidCipherTextException): {e.Message}. " +
                                       $"Possible reason: The provided RSA private key does not match the public key used to encrypt the message.";
-                logger.Error(errorMessage, e);
+                logger.LogError(e, errorMessage);
                 throw new MLEException("JOSE_DECRYPTION", errorMessage, e);
             }
             catch (CryptographicException e)
             {
                 string errorMessage = $"MLE Response decryption failed (CryptographicException): {e.Message}. " +
                                       "This may happen if the private key is incorrect or corrupted.";
-                logger.Error(errorMessage, e);
+                logger.LogError(e, errorMessage);
                 throw new MLEException("CRYPTO_DECRYPTION", errorMessage, e);
             }
             catch (Exception e)
             {
                 string errorMessage = $"MLE Response decryption failed: {e.Message}";
-                logger.Error(errorMessage, e);
+                logger.LogError(e, errorMessage);
                 throw new MLEException("DECRYPTION", errorMessage, e);
             }
         }
@@ -263,11 +269,11 @@ namespace AuthenticationSdk.util
             // If ResponseMlePrivateKey object is provided directly, use configured responseMleKID
             if (merchantConfig.ResponseMlePrivateKey != null)
             {
-                logger.Debug("responseMlePrivateKey is provided directly, using configured responseMleKID");
+                logger.LogDebug("responseMlePrivateKey is provided directly, using configured responseMleKID");
                 return merchantConfig.ResponseMleKID;
             }
 
-            logger.Debug("Validating responseMleKID for JWT token generation");
+            logger.LogDebug("Validating responseMleKID for JWT token generation");
             string cybsKid = null;
             bool isP12File = false;
 
@@ -285,13 +291,13 @@ namespace AuthenticationSdk.util
             }
             catch (IOException e)
             {
-                logger.Debug("No valid private key file path provided, skipping auto-extraction", e);
+                logger.LogDebug(e, "No valid private key file path provided, skipping auto-extraction");
             }
 
             // Attempt to extract KID from CyberSource P12/PFX file
             if (isP12File)
             {
-                logger.Debug("P12/PFX file detected, checking if it is a CyberSource certificate");
+                logger.LogDebug("P12/PFX file detected, checking if it is a CyberSource certificate");
                 CachedMLEKId cachedData = Cache.GetMLEKIdDataFromCache(merchantConfig);
 
                 if (cachedData != null)
@@ -304,18 +310,18 @@ namespace AuthenticationSdk.util
                     else
                     {
                         // KID is null means either non-CyberSource P12 or extraction failed
-                        logger.Debug("Private key file is not a CyberSource generated P12/PFX file, skipping auto-extraction");
+                        logger.LogDebug("Private key file is not a CyberSource generated P12/PFX file, skipping auto-extraction");
                     }
                 }
             }
             else
             {
-                logger.Debug("Private key file is not a P12/PFX file, skipping auto-extraction");
+                logger.LogDebug("Private key file is not a P12/PFX file, skipping auto-extraction");
             }
 
             if (cybsKid != null)
             {
-                logger.Debug("Successfully auto-extracted responseMleKID from CyberSource P12 certificate");
+                logger.LogDebug("Successfully auto-extracted responseMleKID from CyberSource P12 certificate");
             }
 
             string configuredKID = merchantConfig.ResponseMleKID;
@@ -329,17 +335,17 @@ namespace AuthenticationSdk.util
             }
             else if (cybsKid == null)
             {
-                logger.Debug("Using manually configured responseMleKID");
+                logger.LogDebug("Using manually configured responseMleKID");
                 return configuredKID;
             }
             else if (configuredKID == null)
             {
-                logger.Debug("Using auto-extracted responseMleKID from CyberSource certificate");
+                logger.LogDebug("Using auto-extracted responseMleKID from CyberSource certificate");
                 return cybsKid;
             }
             else if (!cybsKid.Equals(configuredKID))
             {
-                logger.Warn("Auto-extracted responseMleKID does not match manually configured responseMleKID. Using configured value as preference");
+                logger.LogWarning("Auto-extracted responseMleKID does not match manually configured responseMleKID. Using configured value as preference");
             }
 
             return configuredKID;
@@ -353,17 +359,20 @@ namespace AuthenticationSdk.util
         /// <param name="merchantCredentialSettings">Object of IMerchantCredentialSettings containing merchant credentials.</param>
         /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing merchant MLE configuration including the private key.</param>
         /// <param name="mleResponseBody">The MLE-encrypted response body containing the encryptedResponse token.</param>
+        /// <param name="loggerFactory">Optional logger factory for logging.</param>
         /// <returns>The decrypted response payload as a string.</returns>
         /// <exception cref="Exception">Thrown when response is not MLE-encrypted, token cannot be extracted, or decryption fails due to key mismatch or corruption.</exception>
-        public static string DecryptMleResponsePayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, string mleResponseBody)
+        public static string DecryptMleResponsePayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, string mleResponseBody, ILoggerFactory loggerFactory = null)
         {
+            ILogger logger = loggerFactory?.CreateLogger("MLEUtility") ?? NullLogger.Instance;
+
             if (!CheckIsMleEncryptedResponse(mleResponseBody))
             {
                 throw new Exception("Response body is not MLE encrypted.");
             }
 
-            var mlePrivateKey = GetMleResponsePrivateKey(merchantCredentialSettings, merchantMLESettings);
-            string jweResponseToken = GetResponseMleToken(mleResponseBody);
+            var mlePrivateKey = GetMleResponsePrivateKey(merchantCredentialSettings, merchantMLESettings, loggerFactory);
+            string jweResponseToken = GetResponseMleToken(mleResponseBody, logger);
 
             if (string.IsNullOrEmpty(jweResponseToken))
             {
@@ -373,7 +382,7 @@ namespace AuthenticationSdk.util
 
             try
             {
-                logUtility.LogDebugMessage(logger, Constants.LOG_NETWORK_RESPONSE_BEFORE_MLE_DECRYPTION + mleResponseBody);
+                logger.LogDebug(logUtility.MaskSensitiveData(Constants.LOG_NETWORK_RESPONSE_BEFORE_MLE_DECRYPTION + mleResponseBody));
 
                 // Convert AsymmetricAlgorithm to RSA if needed
                 RSA rsaKey = mlePrivateKey as RSA;
@@ -432,27 +441,27 @@ namespace AuthenticationSdk.util
                     ClearRSAParameters(ref rsaParameters);
                 }
 #endif
-                logUtility.LogDebugMessage(logger, Constants.LOG_NETWORK_RESPONSE_AFTER_MLE_DECRYPTION + decryptedResponse);
+                logger.LogDebug(logUtility.MaskSensitiveData(Constants.LOG_NETWORK_RESPONSE_AFTER_MLE_DECRYPTION + decryptedResponse));
                 return decryptedResponse;
             }
             catch (Org.BouncyCastle.Crypto.InvalidCipherTextException e)
             {
                 string errorMessage = $"MLE Response decryption failed (InvalidCipherTextException): {e.Message}. " +
                                       $"Possible reason: The provided RSA private key does not match the public key used to encrypt the message.";
-                logger.Error(errorMessage, e);
+                logger.LogError(e, errorMessage);
                 throw new MLEException("JOSE_DECRYPTION", errorMessage, e);
             }
             catch (CryptographicException e)
             {
                 string errorMessage = $"MLE Response decryption failed (CryptographicException): {e.Message}. " +
                                       "This may happen if the private key is incorrect or corrupted.";
-                logger.Error(errorMessage, e);
+                logger.LogError(e, errorMessage);
                 throw new MLEException("CRYPTO_DECRYPTION", errorMessage, e);
             }
             catch (Exception e)
             {
                 string errorMessage = $"MLE Response decryption failed: {e.Message}";
-                logger.Error(errorMessage, e);
+                logger.LogError(e, errorMessage);
                 throw new MLEException("DECRYPTION", errorMessage, e);
             }
         }
@@ -463,8 +472,9 @@ namespace AuthenticationSdk.util
         /// </summary>
         /// <param name="merchantCredentialSettings">Object of IMerchantCredentialSettings containing merchant credentials.</param>
         /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing merchant MLE configuration including the private key settings.</param>
+        /// <param name="loggerFactory">Optional ILoggerFactory for logging purposes.</param>
         /// <returns>The asymmetric private key used for decrypting MLE responses, or null if not configured.</returns>
-        private static AsymmetricAlgorithm GetMleResponsePrivateKey(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings)
+        private static AsymmetricAlgorithm GetMleResponsePrivateKey(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory = null)
         {
             // First priority - if privateKey is given in merchant config return that
             if (merchantMLESettings.ResponseMlePrivateKey != null)
@@ -472,7 +482,7 @@ namespace AuthenticationSdk.util
                 return merchantMLESettings.ResponseMlePrivateKey;
             }
             // Second priority - get the privateKey from merchantConfig.ResponseMlePrivateKeyFilePath
-            var responseMlePrivateKey = Cache.GetMleResponsePrivateKeyFromFilePath(merchantCredentialSettings, merchantMLESettings);
+            var responseMlePrivateKey = Cache.GetMleResponsePrivateKeyFromFilePath(merchantCredentialSettings, merchantMLESettings, loggerFactory);
             return responseMlePrivateKey;
         }
 
@@ -483,25 +493,28 @@ namespace AuthenticationSdk.util
         /// </summary>
         /// <param name="merchantCredentialSettings">Object of IMerchantCredentialSettings containing merchant credentials (MerchantId, UseMetaKey, PortfolioId).</param>
         /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing merchant MLE configuration including ResponseMleKID and private key settings.</param>
+        /// <param name="loggerFactory">Optional ILoggerFactory for logging purposes.</param>
         /// <returns>The validated or auto-extracted Response MLE KID.</returns>
         /// <exception cref="Exception">Thrown when KID cannot be determined either through auto-extraction or manual configuration.</exception>
-        public static string ValidateAndAutoExtractResponseMleKid(string keyIssuer, IMerchantMLESettings merchantMLESettings)
+        public static string ValidateAndAutoExtractResponseMleKid(string keyIssuer, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory = null)
         {
+            ILogger logger = loggerFactory?.CreateLogger("MLEUtility") ?? NullLogger.Instance;
+
             // If ResponseMlePrivateKey object is provided directly, use configured responseMleKID
             if (merchantMLESettings.ResponseMlePrivateKey != null)
             {
-                logger.Debug("responseMlePrivateKey is provided directly, using configured responseMleKID");
+                logger.LogDebug("responseMlePrivateKey is provided directly, using configured responseMleKID");
                 return merchantMLESettings.ResponseMleKID;
             }
 
-            logger.Debug("Validating responseMleKID for JWT token generation");
+            logger.LogDebug("Validating responseMleKID for JWT token generation");
             string cybsKid = null;
             bool isP12File = false;
 
             // Check file path validity and determine if it's a P12/PFX file
             try
             {
-                CertificateUtility.ValidatePathAndFile(merchantMLESettings.ResponseMlePrivateKeyFilePath, "responseMlePrivateKeyFilePath");
+                CertificateUtility.ValidatePathAndFile(merchantMLESettings.ResponseMlePrivateKeyFilePath, "responseMlePrivateKeyFilePath", loggerFactory);
                 string extension = CertificateUtility.GetFileExtension(merchantMLESettings.ResponseMlePrivateKeyFilePath);
 
                 if (extension.Equals("p12", StringComparison.OrdinalIgnoreCase) ||
@@ -512,14 +525,14 @@ namespace AuthenticationSdk.util
             }
             catch (IOException e)
             {
-                logger.Debug("No valid private key file path provided, skipping auto-extraction", e);
+                logger.LogDebug(e, "No valid private key file path provided, skipping auto-extraction");
             }
 
             // Attempt to extract KID from CyberSource P12/PFX file
             if (isP12File)
             {
-                logger.Debug("P12/PFX file detected, checking if it is a CyberSource certificate");
-                CachedMLEKId cachedData = Cache.GetMLEKIdDataFromCache(keyIssuer, merchantMLESettings);
+                logger.LogDebug("P12/PFX file detected, checking if it is a CyberSource certificate");
+                CachedMLEKId cachedData = Cache.GetMLEKIdDataFromCache(keyIssuer, merchantMLESettings, loggerFactory);
 
                 if (cachedData != null)
                 {
@@ -531,18 +544,18 @@ namespace AuthenticationSdk.util
                     else
                     {
                         // KID is null means either non-CyberSource P12 or extraction failed
-                        logger.Debug("Private key file is not a CyberSource generated P12/PFX file, skipping auto-extraction");
+                        logger.LogDebug("Private key file is not a CyberSource generated P12/PFX file, skipping auto-extraction");
                     }
                 }
             }
             else
             {
-                logger.Debug("Private key file is not a P12/PFX file, skipping auto-extraction");
+                logger.LogDebug("Private key file is not a P12/PFX file, skipping auto-extraction");
             }
 
             if (cybsKid != null)
             {
-                logger.Debug("Successfully auto-extracted responseMleKID from CyberSource P12 certificate");
+                logger.LogDebug("Successfully auto-extracted responseMleKID from CyberSource P12 certificate");
             }
 
             string configuredKID = merchantMLESettings.ResponseMleKID;
@@ -556,17 +569,17 @@ namespace AuthenticationSdk.util
             }
             else if (cybsKid == null)
             {
-                logger.Debug("Using manually configured responseMleKID");
+                logger.LogDebug("Using manually configured responseMleKID");
                 return configuredKID;
             }
             else if (configuredKID == null)
             {
-                logger.Debug("Using auto-extracted responseMleKID from CyberSource certificate");
+                logger.LogDebug("Using auto-extracted responseMleKID from CyberSource certificate");
                 return cybsKid;
             }
             else if (!cybsKid.Equals(configuredKID))
             {
-                logger.Warn("Auto-extracted responseMleKID does not match manually configured responseMleKID. Using configured value as preference");
+                logger.LogWarning("Auto-extracted responseMleKID does not match manually configured responseMleKID. Using configured value as preference");
             }
 
             return configuredKID;
@@ -626,33 +639,35 @@ namespace AuthenticationSdk.util
         /// <param name="merchantCredentialSettings">Object of IMerchantCredentialSettings containing merchant credentials including authentication type.</param>
         /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing MLE configuration including the public certificate settings.</param>
         /// <param name="requestBody">The request payload object to be encrypted.</param>
+        /// <param name="loggerFactory">Optional logger factory for logging.</param>
         /// <returns>A JSON object containing the encrypted request if encryption is successful; otherwise, the original unencrypted request body.</returns>
-        public static object EncryptRequestPayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, object requestBody)
+        public static object EncryptRequestPayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, object requestBody, ILoggerFactory loggerFactory = null)
         {
             if (requestBody == null)
             {
                 return null;
             }
+
+            ILogger logger = loggerFactory?.CreateLogger("MLEUtility") ?? NullLogger.Instance;
+
             string payload = requestBody.ToString();
-            logUtility.LogDebugMessage(logger, Constants.LOG_REQUEST_BEFORE_MLE + payload);
+            logger.LogDebug(logUtility.MaskSensitiveData(Constants.LOG_REQUEST_BEFORE_MLE + payload));
 
             X509Certificate2 mleCertificate = null;
             try
             {
-                mleCertificate = GetRequestMLECertificate(merchantCredentialSettings, merchantMLESettings);
-
+                mleCertificate = GetRequestMLECertificate(merchantCredentialSettings, merchantMLESettings, loggerFactory);
             }
             catch (Exception)
             {
-
                 throw;
             }
 
             // Handling special case : MLE Certificate is not currently available for HTTP Signature
             if (mleCertificate == null && Constants.AuthMechanismHttp.Equals(merchantCredentialSettings.AuthenticationType, StringComparison.OrdinalIgnoreCase))
             {
-                logger.Debug("The certificate to use for MLE for requests is not provided in the merchant configuration. Please ensure that the certificate path is provided.");
-                logger.Debug("Currently, MLE for requests using HTTP Signature as authentication is not supported by Cybersource. By default, the SDK will fall back to non-encrypted requests.");
+                logger.LogDebug("The certificate to use for MLE for requests is not provided in the merchant configuration. Please ensure that the certificate path is provided.");
+                logger.LogDebug("Currently, MLE for requests using HTTP Signature as authentication is not supported by Cybersource. By default, the SDK will fall back to non-encrypted requests.");
                 return requestBody;
             }
 
@@ -664,14 +679,14 @@ namespace AuthenticationSdk.util
                     "or ensure the P12 file path is correctly configured and contains the MLE certificate.");
             }
 
-            string serialNumber = GetSerialNumberFromCertificate(mleCertificate);
+            string serialNumber = GetSerialNumberFromCertificate(mleCertificate, loggerFactory);
             var payloadBytes = System.Text.Encoding.UTF8.GetBytes(payload);
             var rsa = mleCertificate.GetRSAPublicKey();
             var jweToken = JWEUtilty.EncryptJweCompact(payloadBytes, rsa, serialNumber);
 
 
             string mleRequest = CreateJsonString(jweToken);
-            logUtility.LogDebugMessage(logger, Constants.LOG_REQUEST_AFTER_MLE + mleRequest);
+            logger.LogDebug(logUtility.MaskSensitiveData(Constants.LOG_REQUEST_AFTER_MLE + mleRequest));
 
             return mleRequest;
         }
@@ -682,13 +697,14 @@ namespace AuthenticationSdk.util
         /// </summary>
         /// <param name="merchantCredentialSettings">Object of IMerchantCredentialSettings containing merchant credentials.</param>
         /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing MLE configuration including public certificate paths.</param>
+        /// <param name="loggerFactory">Object of ILoggerFactory for logging purposes.</param>
         /// <returns>The X509Certificate2 used for MLE request encryption, or null if no certificate is configured.</returns>
-        private static X509Certificate2 GetRequestMLECertificate(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings)
+        private static X509Certificate2 GetRequestMLECertificate(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory = null)
         {
             X509Certificate2 mleCertificate = null;
             try
             {
-                mleCertificate = Cache.GetRequestMLECertFromCache(merchantCredentialSettings, merchantMLESettings);
+                mleCertificate = Cache.GetRequestMLECertFromCache(merchantCredentialSettings, merchantMLESettings, loggerFactory);
             }
             catch (Exception)
             {
@@ -703,10 +719,11 @@ namespace AuthenticationSdk.util
         /// The serial number is used as the Key ID (kid) in the JWE token header for MLE request encryption.
         /// </summary>
         /// <param name="certificate">The X509Certificate2 from which to extract the serial number.</param>
+        /// <param name="loggerFactory">Object of ILoggerFactory for logging purposes.</param>
         /// <returns>The certificate's serial number as a string.</returns>
-        private static string GetSerialNumberFromCertificate(X509Certificate2 certificate)
+        private static string GetSerialNumberFromCertificate(X509Certificate2 certificate, ILoggerFactory loggerFactory = null)
         {
-            return CertificateUtility.ExtractSerialNumber(certificate);
+            return CertificateUtility.ExtractSerialNumber(certificate, loggerFactory);
         }
 
         /// <summary>

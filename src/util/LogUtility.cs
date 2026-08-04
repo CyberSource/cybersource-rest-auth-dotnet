@@ -1,5 +1,4 @@
-﻿using NLog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -51,11 +50,11 @@ namespace AuthenticationSdk.util
                 {
                     case JsonValueKind.Object:
                         MaskSensitiveDataInJsonContainer(parsedToken.AsObject());
-                        return parsedToken.ToString();
+                        return JsonLoggingCompactor.CompactJsonForPrinting(parsedToken.ToString());
 
                     case JsonValueKind.Array:
                         MaskSensitiveDataInJsonContainer(parsedToken.AsArray(), false);
-                        return parsedToken.ToString();
+                        return JsonLoggingCompactor.CompactJsonForPrinting(parsedToken.ToString());
 
                     default:
                         break;
@@ -206,21 +205,6 @@ namespace AuthenticationSdk.util
         }
 
 
-        public void LogDebugMessage(Logger logger, String debugMessage)
-        {
-            logger.Debug(MaskSensitiveData(debugMessage));
-        }
-
-        public bool IsMaskingEnabled(Logger logger)
-        {
-            if (!(logger.Factory.Configuration?.Variables?.ContainsKey("enableMasking") ?? false))
-            {
-                logger.Warn("NLog configuration is missing key/value pair: enableMasking. Assuming true");
-                return true;
-            }
-
-            return logger.Factory.Configuration.Variables["enableMasking"].ToString().ToLower().Contains("true");
-        }
 
         public string ConvertDictionaryToString(Dictionary<string, string> dict)
         {

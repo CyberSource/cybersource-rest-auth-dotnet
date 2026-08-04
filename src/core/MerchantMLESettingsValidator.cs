@@ -1,4 +1,6 @@
 ﻿using AuthenticationSdk.util;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,6 +26,15 @@ namespace AuthenticationSdk.core
 
     public sealed class MerchantMLESettingsValidator : IMerchantMLESettingsValidator
     {
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger<MerchantMLESettingsValidator> _logger;
+
+        public MerchantMLESettingsValidator(ILoggerFactory loggerFactory = null)
+        {
+            _loggerFactory = loggerFactory;
+            _logger = _loggerFactory?.CreateLogger<MerchantMLESettingsValidator>() ?? NullLogger<MerchantMLESettingsValidator>.Instance;
+        }
+
         /// <summary>
         /// Validates all MLE (Message Level Encryption) configuration settings.
         /// Performs comprehensive validation including:
@@ -71,12 +82,12 @@ namespace AuthenticationSdk.core
                 {
                     try
                     {
-                        CertificateUtility.ValidatePathAndFile(mleForRequestPublicCertPath, MLEKeys.MleForRequestPublicCertPath);
+                        CertificateUtility.ValidatePathAndFile(mleForRequestPublicCertPath, MLEKeys.MleForRequestPublicCertPath, _loggerFactory);
                     }
                     catch (IOException err)
                     {
-                        //Logger.Error(err.Message);
-                        throw new Exception(err.Message);
+                        _logger.LogError(err, "Error validating MLE certificate path.");
+                        throw new Exception(err.Message, err);
                     }
                 }
             }
@@ -87,7 +98,7 @@ namespace AuthenticationSdk.core
                 bool useMLEGlobally = bool.Parse(configurationDictionary[MLEKeys.UseMLEGlobally]);
                 if (useMLEGlobally != enableRequestMLEForOptionalApisGlobally)
                 {
-                    //Logger.Error("Both useMLEGlobally and enableRequestMLEForOptionalApisGlobally are set but their values do not match.");
+                    _logger.LogError("Both useMLEGlobally and enableRequestMLEForOptionalApisGlobally are set but their values do not match.");
                     throw new Exception("Both useMLEGlobally and enableRequestMLEForOptionalApisGlobally are set but their values do not match.");
                 }
             }
@@ -136,14 +147,14 @@ namespace AuthenticationSdk.core
                 // Check if either private key object or private key file path is provided
                 if (responseMlePrivateKey == null && string.IsNullOrEmpty(responseMlePrivateKeyFilePath))
                 {
-                    //Logger.Error("Response MLE is enabled but no private key provided. Either set ResponseMlePrivateKey object or provide ResponseMlePrivateKeyFilePath.");
+                    _logger.LogError("Response MLE is enabled but no private key provided. Either set ResponseMlePrivateKey object or provide ResponseMlePrivateKeyFilePath.");
                     throw new Exception("Response MLE is enabled but no private key provided. Either set ResponseMlePrivateKey object or provide ResponseMlePrivateKeyFilePath.");
                 }
 
                 // Check if both private key object and private key file path are provided
                 if (responseMlePrivateKey != null && !string.IsNullOrEmpty(responseMlePrivateKeyFilePath))
                 {
-                    //Logger.Error("ConfigException : Both responseMlePrivateKey object and responseMlePrivateKeyFilePath are provided. Please provide only one of them for response mle private key.");
+                    _logger.LogError("ConfigException : Both responseMlePrivateKey object and responseMlePrivateKeyFilePath are provided. Please provide only one of them for response mle private key.");
                     throw new Exception("Both responseMlePrivateKey object and responseMlePrivateKeyFilePath are provided. Please provide only one of them for response mle private key.");
                 }
 
@@ -152,12 +163,12 @@ namespace AuthenticationSdk.core
                 {
                     try
                     {
-                        CertificateUtility.ValidatePathAndFile(responseMlePrivateKeyFilePath, "responseMlePrivateKeyFilePath");
+                        CertificateUtility.ValidatePathAndFile(responseMlePrivateKeyFilePath, "responseMlePrivateKeyFilePath", _loggerFactory);
                     }
                     catch (IOException err)
                     {
-                        //Logger.Error("Invalid responseMlePrivateKeyFilePath - " + err.Message);
-                        throw new Exception("Invalid responseMlePrivateKeyFilePath - " + err.Message);
+                        _logger.LogError(err, "Invalid responseMlePrivateKeyFilePath.");
+                        throw new Exception("Invalid responseMlePrivateKeyFilePath - " + err.Message, err);
                     }
                 }
 
@@ -172,7 +183,7 @@ namespace AuthenticationSdk.core
                         extension.Equals("pfx", StringComparison.OrdinalIgnoreCase))
                     {
                         skipKidValidation = true;
-                        //Logger.Debug("P12/PFX file detected. responseMleKID validation will be deferred to JWT token generation time for possible auto-extraction.");
+                        _logger.LogDebug("P12/PFX file detected. responseMleKID validation will be deferred to JWT token generation time for possible auto-extraction.");
                     }
                 }
 
@@ -235,7 +246,7 @@ namespace AuthenticationSdk.core
 
                     if (string.IsNullOrEmpty(value))
                     {
-                        //Logger.Error($"ConfigException : Invalid MLE control map value for key '{key}'. Value cannot be null or empty.");
+                        _logger.LogError($"ConfigException : Invalid MLE control map value for key '{key}'. Value cannot be null or empty.");
                         throw new Exception($"Invalid MLE control map value for key '{key}'. Value cannot be null or empty.");
                     }
 
@@ -246,7 +257,7 @@ namespace AuthenticationSdk.core
 
                         if (parts.Length != 2)
                         {
-                            //Logger.Error($"ConfigException : Invalid MLE control map value format for key '{key}'. Expected format: true/false for 'requestMLE::responseMLE' but got: '{value}'");
+                            _logger.LogError($"ConfigException : Invalid MLE control map value format for key '{key}'. Expected format: true/false for 'requestMLE::responseMLE' but got: '{value}'");
                             throw new Exception($"Invalid MLE control map value format for key '{key}'. Expected format: true/false for 'requestMLE::responseMLE' but got: '{value}'");
                         }
 
@@ -256,14 +267,14 @@ namespace AuthenticationSdk.core
                         // Validate first part (request MLE) - can be empty, "true", or "false"
                         if (!string.IsNullOrEmpty(requestMLE) && !Utility.IsValidBooleanString(requestMLE))
                         {
-                            //Logger.Error($"ConfigException : Invalid request MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{requestMLE}'");
+                            _logger.LogError($"ConfigException : Invalid request MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{requestMLE}'");
                             throw new Exception($"Invalid request MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{requestMLE}'");
                         }
 
                         // Validate second part (response MLE) - can be empty, "true", or "false"
                         if (!string.IsNullOrEmpty(responseMLE) && !Utility.IsValidBooleanString(responseMLE))
                         {
-                            //Logger.Error($"ConfigException : Invalid response MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{responseMLE}'");
+                            _logger.LogError($"ConfigException : Invalid response MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{responseMLE}'");
                             throw new Exception($"Invalid response MLE value for key '{key}'. Expected 'true', 'false', or empty but got: '{responseMLE}'");
                         }
                     }
@@ -272,7 +283,7 @@ namespace AuthenticationSdk.core
                         // Value without "::" separator - should be "true" or "false"
                         if (!Utility.IsValidBooleanString(value))
                         {
-                            //Logger.Error($"ConfigException : Invalid MLE control map value for key '{key}'. Expected 'true' or 'false' for requestMLE but got: '{value}'");
+                            _logger.LogError($"ConfigException : Invalid MLE control map value for key '{key}'. Expected 'true' or 'false' for requestMLE but got: '{value}'");
                             throw new Exception($"Invalid MLE control map value for key '{key}'. Expected 'true' or 'false' for requestMLE but got: '{value}'");
                         }
                     }

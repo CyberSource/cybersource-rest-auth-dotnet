@@ -3,7 +3,8 @@ using AuthenticationSdk.authentication.http;
 using AuthenticationSdk.authentication.jwt;
 using AuthenticationSdk.authentication.oauth;
 using AuthenticationSdk.util;
-using NLog;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AuthenticationSdk.core
 {
@@ -12,21 +13,19 @@ namespace AuthenticationSdk.core
     *===============================================================================*/
     public class Authorize
     {
-        private static Logger _logger;
+        private ILogger<Authorize> _logger = NullLogger<Authorize>.Instance;
         private readonly MerchantConfig _merchantConfig;
-        LogUtility logUtility;
+        private readonly ILoggerFactory _loggerFactory;
 
-        public Authorize(MerchantConfig merchantConfig)
+        public Authorize(MerchantConfig merchantConfig, ILoggerFactory loggerFactory = null)
         {
             _merchantConfig = merchantConfig;
+            _loggerFactory = loggerFactory;
+
             Enumerations.ValidateRequestType(_merchantConfig.RequestType);
             Enumerations.SetRequestType(_merchantConfig);
-            logUtility = new LogUtility();
 
-            if (_logger == null)
-            {
-                _logger = LogManager.GetCurrentClassLogger();
-            }
+            _logger = loggerFactory?.CreateLogger<Authorize>() ?? NullLogger<Authorize>.Instance;
         }
 
         private void LogMerchantDetails()
@@ -34,20 +33,20 @@ namespace AuthenticationSdk.core
             try
             {
                 // Using Request Target provided in the sample code/merchantconfig
-                _logger.Debug($"Request Target: '{_merchantConfig.RequestTarget}'");
+                _logger.LogDebug($"Request Target: '{_merchantConfig.RequestTarget}'");
 
                 // logging Authentication type
-                _logger.Debug($"Authentication Type: {_merchantConfig.AuthenticationType}");
+                _logger.LogDebug($"Authentication Type: {_merchantConfig.AuthenticationType}");
 
                 // logging Request Type
-                _logger.Debug($"Request Type: {_merchantConfig.RequestType}");
+                _logger.LogDebug($"Request Type: {_merchantConfig.RequestType}");
 
                 // Logging all the Properties of MerchantConfig and their respective Values
                 _merchantConfig.LogMerchantConfigurationProperties();
             }
             catch (Exception e)
             {
-                _logger.Error($"Failed to log merchant details: {e.Message}", e);
+                _logger.LogError(e, "Failed to log merchant details");
                 throw new AuthenticationException("LOG_ERROR", $"Failed to log merchant configuration details: {e.Message}", e);
             }
         }
@@ -59,18 +58,14 @@ namespace AuthenticationSdk.core
         #endregion Properties
 
         #region Constructor
-        public Authorize(IMerchantCredentialSettings merchantCredentialSettings, IMerchantRequestSettings merchantRequestSettings, IMerchantMLESettings merchantMLESettings)
+        public Authorize(IMerchantCredentialSettings merchantCredentialSettings, IMerchantRequestSettings merchantRequestSettings, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory = null)
         {
             _merchantRequestSettings = merchantRequestSettings;
             _merchantCredentialSettings = merchantCredentialSettings;
             _merchantMLESettings = merchantMLESettings;
+            _loggerFactory = loggerFactory;
 
-            logUtility = new LogUtility();
-
-            if (_logger == null)
-            {
-                _logger = LogManager.GetCurrentClassLogger();
-            }
+            _logger = loggerFactory?.CreateLogger<Authorize>() ?? NullLogger<Authorize>.Instance;
         }
         #endregion Constructor
 
@@ -81,24 +76,24 @@ namespace AuthenticationSdk.core
             {
                 var signatureObject = (HttpToken)new HttpTokenGenerator(_merchantCredentialSettings, _merchantRequestSettings).GetToken();
 
-                _logger.Debug($"v-c-merchant-id: {signatureObject.MerchantId}");
-                _logger.Debug($"Date: {signatureObject.GmtDateTime}");
-                _logger.Debug($"Host: {signatureObject.HostName}");
+                _logger.LogDebug($"v-c-merchant-id: {signatureObject.MerchantId}");
+                _logger.LogDebug($"Date: {signatureObject.GmtDateTime}");
+                _logger.LogDebug($"Host: {signatureObject.HostName}");
 
                 if (_merchantRequestSettings.RequestType.Equals("GET", StringComparison.InvariantCultureIgnoreCase) || _merchantRequestSettings.RequestType.Equals("DELETE", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    _logger.Debug("Content-Type: application/json");
+                    _logger.LogDebug("Content-Type: application/json");
                 }
                 else if (_merchantRequestSettings.RequestType.Equals("POST", StringComparison.InvariantCultureIgnoreCase) || _merchantRequestSettings.RequestType.Equals("PUT", StringComparison.InvariantCultureIgnoreCase) || _merchantRequestSettings.RequestType.Equals("PATCH", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    _logger.Debug("Content-Type: application/hal+json");
+                    _logger.LogDebug("Content-Type: application/hal+json");
                 }
 
                 return signatureObject;
             }
             catch (Exception e)
             {
-                _logger.Error(e.Message);
+                _logger.LogError(e, "An error occurred while generating digital signature");
                 throw e;
             }
         }
@@ -107,15 +102,15 @@ namespace AuthenticationSdk.core
         {
             try
             {
-                var tokenObject = (JwtToken) new JwtTokenGenerator(_merchantCredentialSettings, _merchantRequestSettings, _merchantMLESettings, isResponseMLEForApi).GetToken();
+                var tokenObject = (JwtToken) new JwtTokenGenerator(_merchantCredentialSettings, _merchantRequestSettings, _merchantMLESettings, isResponseMLEForApi, _loggerFactory).GetToken();
 
                 if (_merchantRequestSettings.RequestType.Equals("GET", StringComparison.InvariantCultureIgnoreCase) || _merchantRequestSettings.RequestType.Equals("DELETE", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    _logger.Debug("Content-Type: application/json");
+                    _logger.LogDebug("Content-Type: application/json");
                 }
                 else if (_merchantRequestSettings.RequestType.Equals("POST", StringComparison.InvariantCultureIgnoreCase) || _merchantRequestSettings.RequestType.Equals("PUT", StringComparison.InvariantCultureIgnoreCase) || _merchantRequestSettings.RequestType.Equals("PATCH", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    _logger.Debug("Content-Type: application/hal+json");
+                    _logger.LogDebug("Content-Type: application/hal+json");
                 }
 
                 //logUtility.LogDebugMessage(_logger, $"Authorization : Bearer {tokenObject.BearerToken}");
@@ -124,7 +119,7 @@ namespace AuthenticationSdk.core
             }
             catch (Exception e)
             {
-                _logger.Error(e.Message);
+                _logger.LogError(e, "An error occurred while generating authentication token");
                 throw e;
             }
         }
@@ -137,18 +132,18 @@ namespace AuthenticationSdk.core
 
                 if (_merchantRequestSettings.RequestType.Equals("GET", StringComparison.InvariantCultureIgnoreCase) || _merchantRequestSettings.RequestType.Equals("DELETE", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    _logger.Debug("Content-Type: application/json");
+                    _logger.LogDebug("Content-Type: application/json");
                 }
                 else if (_merchantRequestSettings.RequestType.Equals("POST", StringComparison.InvariantCultureIgnoreCase) || _merchantRequestSettings.RequestType.Equals("PUT", StringComparison.InvariantCultureIgnoreCase) || _merchantRequestSettings.RequestType.Equals("PATCH", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    _logger.Debug("Content-Type: application/hal+json");
+                    _logger.LogDebug("Content-Type: application/hal+json");
                 }
 
                 return tokenObject;
             }
             catch (Exception e)
             {
-                _logger.Error(e.Message);
+                _logger.LogError(e, "An error occurred while generating OAuth token");
                 throw e;
             }
         }
