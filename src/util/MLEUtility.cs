@@ -364,6 +364,17 @@ namespace AuthenticationSdk.util
         /// <exception cref="Exception">Thrown when response is not MLE-encrypted, token cannot be extracted, or decryption fails due to key mismatch or corruption.</exception>
         public static string DecryptMleResponsePayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, string mleResponseBody, ILoggerFactory loggerFactory = null)
         {
+            return DecryptMleResponsePayload(merchantCredentialSettings, merchantMLESettings, mleResponseBody, loggerFactory, CertificateCache.Default);
+        }
+
+        /// <summary>
+        /// Overload that accepts an explicit certificate cache (for dependency injection / testing).
+        /// <paramref name="cache"/> must not be null; call the overload without a cache parameter to use the default.
+        /// </summary>
+        public static string DecryptMleResponsePayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, string mleResponseBody, ILoggerFactory loggerFactory, ICache cache)
+        {
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
+
             ILogger logger = loggerFactory?.CreateLogger("MLEUtility") ?? NullLogger.Instance;
 
             if (!CheckIsMleEncryptedResponse(mleResponseBody))
@@ -371,7 +382,7 @@ namespace AuthenticationSdk.util
                 throw new Exception("Response body is not MLE encrypted.");
             }
 
-            var mlePrivateKey = GetMleResponsePrivateKey(merchantCredentialSettings, merchantMLESettings, loggerFactory);
+            var mlePrivateKey = GetMleResponsePrivateKey(merchantCredentialSettings, merchantMLESettings, loggerFactory, cache);
             string jweResponseToken = GetResponseMleToken(mleResponseBody, logger);
 
             if (string.IsNullOrEmpty(jweResponseToken))
@@ -476,13 +487,24 @@ namespace AuthenticationSdk.util
         /// <returns>The asymmetric private key used for decrypting MLE responses, or null if not configured.</returns>
         private static AsymmetricAlgorithm GetMleResponsePrivateKey(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory = null)
         {
+            return GetMleResponsePrivateKey(merchantCredentialSettings, merchantMLESettings, loggerFactory, CertificateCache.Default);
+        }
+
+        /// <summary>
+        /// Overload that accepts an explicit certificate cache (for dependency injection / testing).
+        /// <paramref name="cache"/> must not be null; call the overload without a cache parameter to use the default.
+        /// </summary>
+        private static AsymmetricAlgorithm GetMleResponsePrivateKey(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory, ICache cache)
+        {
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
+
             // First priority - if privateKey is given in merchant config return that
             if (merchantMLESettings.ResponseMlePrivateKey != null)
             {
                 return merchantMLESettings.ResponseMlePrivateKey;
             }
             // Second priority - get the privateKey from merchantConfig.ResponseMlePrivateKeyFilePath
-            var responseMlePrivateKey = Cache.GetMleResponsePrivateKeyFromFilePath(merchantCredentialSettings, merchantMLESettings, loggerFactory);
+            var responseMlePrivateKey = cache.GetMleResponsePrivateKeyFromFilePath(merchantCredentialSettings, merchantMLESettings, loggerFactory);
             return responseMlePrivateKey;
         }
 
@@ -498,6 +520,17 @@ namespace AuthenticationSdk.util
         /// <exception cref="Exception">Thrown when KID cannot be determined either through auto-extraction or manual configuration.</exception>
         public static string ValidateAndAutoExtractResponseMleKid(string keyIssuer, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory = null)
         {
+            return ValidateAndAutoExtractResponseMleKid(keyIssuer, merchantMLESettings, loggerFactory, CertificateCache.Default);
+        }
+
+        /// <summary>
+        /// Overload that accepts an explicit certificate cache (for dependency injection / testing).
+        /// <paramref name="cache"/> must not be null; call the overload without a cache parameter to use the default.
+        /// </summary>
+        public static string ValidateAndAutoExtractResponseMleKid(string keyIssuer, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory, ICache cache)
+        {
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
+
             ILogger logger = loggerFactory?.CreateLogger("MLEUtility") ?? NullLogger.Instance;
 
             // If ResponseMlePrivateKey object is provided directly, use configured responseMleKID
@@ -532,7 +565,7 @@ namespace AuthenticationSdk.util
             if (isP12File)
             {
                 logger.LogDebug("P12/PFX file detected, checking if it is a CyberSource certificate");
-                CachedMLEKId cachedData = Cache.GetMLEKIdDataFromCache(keyIssuer, merchantMLESettings, loggerFactory);
+                CachedMLEKId cachedData = cache.GetMLEKIdDataFromCache(keyIssuer, merchantMLESettings, loggerFactory);
 
                 if (cachedData != null)
                 {
@@ -643,6 +676,17 @@ namespace AuthenticationSdk.util
         /// <returns>A JSON object containing the encrypted request if encryption is successful; otherwise, the original unencrypted request body.</returns>
         public static object EncryptRequestPayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, object requestBody, ILoggerFactory loggerFactory = null)
         {
+            return EncryptRequestPayload(merchantCredentialSettings, merchantMLESettings, requestBody, loggerFactory, CertificateCache.Default);
+        }
+
+        /// <summary>
+        /// Overload that accepts an explicit certificate cache (for dependency injection / testing).
+        /// <paramref name="cache"/> must not be null; call the overload without a cache parameter to use the default.
+        /// </summary>
+        public static object EncryptRequestPayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, object requestBody, ILoggerFactory loggerFactory, ICache cache)
+        {
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
+
             if (requestBody == null)
             {
                 return null;
@@ -656,7 +700,7 @@ namespace AuthenticationSdk.util
             X509Certificate2 mleCertificate = null;
             try
             {
-                mleCertificate = GetRequestMLECertificate(merchantCredentialSettings, merchantMLESettings, loggerFactory);
+                mleCertificate = GetRequestMLECertificate(merchantCredentialSettings, merchantMLESettings, loggerFactory, cache);
             }
             catch (Exception)
             {
@@ -701,10 +745,21 @@ namespace AuthenticationSdk.util
         /// <returns>The X509Certificate2 used for MLE request encryption, or null if no certificate is configured.</returns>
         private static X509Certificate2 GetRequestMLECertificate(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory = null)
         {
+            return GetRequestMLECertificate(merchantCredentialSettings, merchantMLESettings, loggerFactory, CertificateCache.Default);
+        }
+
+        /// <summary>
+        /// Overload that accepts an explicit certificate cache (for dependency injection / testing).
+        /// <paramref name="cache"/> must not be null; call the overload without a cache parameter to use the default.
+        /// </summary>
+        private static X509Certificate2 GetRequestMLECertificate(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory, ICache cache)
+        {
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
+
             X509Certificate2 mleCertificate = null;
             try
             {
-                mleCertificate = Cache.GetRequestMLECertFromCache(merchantCredentialSettings, merchantMLESettings, loggerFactory);
+                mleCertificate = cache.GetRequestMLECertFromCache(merchantCredentialSettings, merchantMLESettings, loggerFactory);
             }
             catch (Exception)
             {

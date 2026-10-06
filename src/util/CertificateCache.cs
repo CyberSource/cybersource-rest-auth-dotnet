@@ -1,0 +1,855 @@
+using AuthenticationSdk.core;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Security;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Caching;
+using System.Security;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+
+namespace AuthenticationSdk.util
+{
+    /// <summary>
+    /// Singleton implementation of <see cref="ICache"/> that caches certificates, private keys,
+    /// MLE certificates/KIDs and public keys.
+    /// <para>
+    /// Registered as a singleton via <c>ServiceCollectionExtensions.AddCertificateCache</c>.
+    /// The static <see cref="Cache"/> class is a thin backward-compatible facade over <see cref="Default"/>.
+    /// The underlying store remains <see cref="MemoryCache.Default"/> so behaviour is identical to the
+    /// previous static implementation.
+    /// </para>
+    /// </summary>
+    public sealed class CertificateCache : ICache
+    {
+        /// <summary>
+        /// The single shared instance used by the static <see cref="Cache"/> facade and registered in DI.
+        /// The CLR guarantees this static initializer runs exactly once, in a thread-safe manner.
+        /// </summary>
+        public static readonly CertificateCache Default = new CertificateCache();
+
+        /// <summary>
+        /// Private to enforce the singleton; use <see cref="Default"/> or DI (<c>AddCertificateCache</c>).
+        /// </summary>
+        private CertificateCache() { }
+
+        /// <summary>
+        /// mutex to ensure that the operation is thread safe
+        /// </summary>
+        private readonly object mutex = new object();
+
+        private readonly object mutexForPrivateKeyFromPEM = new object();
+
+        private static readonly string regexForFileNameFromDirectory = "(^([a-z]|[A-Z]):(?=\\\\(?![\\0-\\37<>:\"/\\\\|?*])|\\/(?![\\0-\\37<>:\"/\\\\|?*])|$)|^\\\\(?=[\\\\\\/][^\\0-\\37<>:\"/\\\\|?*]+)|^(?=(\\\\|\\/)$)|^\\.(?=(\\\\|\\/)$)|^\\.\\.(?=(\\\\|\\/)$)|^(?=(\\\\|\\/)[^\\0-\\37<>:\"/\\\\|?*]+)|^\\.(?=(\\\\|\\/)[^\\0-\\37<>:\"/\\\\|?*]+)|^\\.\\.(?=(\\\\|\\/)[^\\0-\\37<>:\"/\\\\|?*]+))((\\\\|\\/)([^\\0-\\37<>:\"/\\\\|?*]+|(\\\\|\\/)$))*()$";
+
+        /// <summary>
+        /// Gets or sets the logger instance used for logging cache, certificate, and MLE key operations.
+        /// Defaults to <see cref="NullLogger.Instance"/> so that logging is a no-op until a logger is injected.
+        /// </summary>
+        public ILogger Logger { get; set; } = NullLogger.Instance;
+
+        private class CertInfo
+        {
+            public X509Certificate2Collection Certificates { get; set; }
+            public DateTime Timestamp { get; set; }
+            public X509Certificate2 MLECertificate { get; set; }
+        }
+
+        private class PrivateKeyInfo
+        {
+            public AsymmetricAlgorithm PrivateKey { get; set; }
+            public DateTime Timestamp { get; set; }
+        }
+
+        public X509Certificate2Collection FetchCachedCertificate(string p12FilePath, string keyPassword)
+        {
+            try
+            {
+                ObjectCache cache = MemoryCache.Default;
+                // Use the full canonical path as the cache key to prevent cross-tenant key collisions
+                // when multiple merchants have keystores with the same filename in different directories.
+                var certFile = Path.GetFullPath(p12FilePath);
+                // Read the entry once. Using Contains() followed by a separate indexer access is racy:
+                // a HostFileChangeMonitor eviction (e.g. after the P12 file changes) can drop the entry
+                // between the two calls, so the indexer would return null and throw. Reading once avoids this.
+                CertInfo certInfo = cache[certFile] as CertInfo;
+                if (certInfo == null || certInfo.Timestamp != File.GetLastWriteTime(p12FilePath))
+                {
+                    var policy = new CacheItemPolicy();
+                    var filePaths = new List<string>();
+                    filePaths.Add(certFile);
+                    policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
+
+                    X509Certificate2Collection certificateCollection = FetchCertificateCollectionFromP12File(p12FilePath, keyPassword);
+
+                    certInfo = new CertInfo
+                    {
+                        Certificates = certificateCollection,
+                        Timestamp = File.GetLastWriteTime(p12FilePath)
+                    };
+
+                    lock (mutex)
+                    {
+                        cache.Set(certFile, certInfo, policy);
+                    }
+                }
+
+                // Return from the local variable to avoid a TOCTOU race where a concurrent thread
+                // for a different tenant could overwrite the cache entry between Set and read.
+                return certInfo.Certificates;
+            }
+            catch (Exception e)
+            {
+                if (e.Message.StartsWith("The specified network password is not correct.", StringComparison.Ordinal))
+                {
+                    throw new Exception($"{Constants.ErrorPrefix} KeyPassword provided is incorrect");
+                }
+
+                throw;
+            }
+        }
+
+        [Obsolete("This method has been marked as Deprecated and will be removed in coming releases.", false)]
+        public RSAParameters FetchCachedRSAParameters(MerchantConfig merchantConfig)
+        {
+            lock (mutexForPrivateKeyFromPEM)
+            {
+                try
+                {
+                    var pemFilePath = merchantConfig.PemFileDirectory;
+                    ObjectCache cache = MemoryCache.Default;
+
+                    // Use the full canonical path as the cache key to prevent cross-tenant key collisions.
+                    var certFile = Path.GetFullPath(pemFilePath);
+
+                    if (!cache.Contains(certFile))
+                    {
+                        var policy = new CacheItemPolicy();
+                        var filePaths = new List<string>();
+                        var privateKey = File.ReadAllText(merchantConfig.PemFileDirectory);
+                        var cachedFilePath = Path.GetFullPath(pemFilePath);
+                        filePaths.Add(cachedFilePath);
+                        policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
+
+                        PemReader pemReader = new PemReader(new StringReader(privateKey));
+                        AsymmetricCipherKeyPair keyPair = (AsymmetricCipherKeyPair)pemReader.ReadObject();
+                        RSAParameters rsaParams = DotNetUtilities.ToRSAParameters((RsaPrivateCrtKeyParameters)keyPair.Private);
+
+                        cache.Set(certFile, rsaParams, policy);
+                    }
+                    return (RSAParameters)cache[certFile];
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError($"Error reading PEM file or caching RSA parameters: {e.Message}");
+                    throw new Exception($"{Constants.ErrorPrefix} Error reading PEM file or caching RSA parameters: {e.Message}", e);
+                }
+            }
+        }
+
+        public X509Certificate2 GetCertBasedOnKeyAlias(X509Certificate2Collection certs, String keyAlias)
+        {
+            foreach (var cert in certs)
+            {
+                if (cert.GetNameInfo(X509NameType.SimpleName, false).Equals(keyAlias, StringComparison.OrdinalIgnoreCase))
+                {
+                    return cert;
+                }
+            }
+            throw new Exception($"{Constants.ErrorPrefix} Certificate with alias {keyAlias} not found.");
+        }
+
+        public X509Certificate2 GetRequestMLECertFromCache(MerchantConfig merchantConfig)
+        {
+            string merchantId = merchantConfig.MerchantId;
+            string certificateIdentifier;
+            string certificateFilePath;
+
+            // Priority #1: Get cert from merchantConfig.mleForRequestPublicCertPath if certPath is provided
+            if (!string.IsNullOrEmpty(merchantConfig.MleForRequestPublicCertPath))
+            {
+                certificateIdentifier = Constants.MLE_CACHE_IDENTIFIER_FOR_CONFIG_CERT;
+                certificateFilePath = merchantConfig.MleForRequestPublicCertPath;
+            }
+            // Priority #2: If merchantConfig.mleForRequestPublicCertPath not provided by merchant then get mlecert from merchant p12 if provided and jwt auth type (not shared secret)
+            else if (Constants.AuthMechanismJwt.Equals(merchantConfig.AuthenticationType, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(merchantConfig.P12Keyfilepath) && !merchantConfig.IsSharedSecretKeyType)
+            {
+                certificateIdentifier = Constants.MLE_CACHE_IDENTIFIER_FOR_P12_CERT;
+                certificateFilePath = merchantConfig.P12Keyfilepath;
+            }
+            // Priority #3: Get mlecert from default mle cert in SDK as per CAS or PROD env.
+            else
+            {
+                Logger.LogDebug("The certificate to use for MLE for requests is not provided in the merchant configuration. Please ensure that the certificate path is provided.");
+                return null;
+            }
+
+            string cacheKey = $"{merchantId}_{certificateIdentifier}";
+            X509Certificate2 mleCertificate = GetMLECertBasedOnCacheKey(merchantConfig, cacheKey, certificateFilePath);
+
+            CertificateUtility.ValidateCertificateExpiry(mleCertificate, merchantConfig.KeyAlias, certificateIdentifier);
+            return mleCertificate;
+        }
+
+        private X509Certificate2 GetMLECertBasedOnCacheKey(MerchantConfig merchantConfig, string cacheKey, string certificateFilePath)
+        {
+            ObjectCache cache = MemoryCache.Default;
+
+            if (!cache.Contains(cacheKey))
+            {
+                SetupCache(merchantConfig, cacheKey, certificateFilePath);
+            }
+            else
+            {
+                CertInfo certInfo = (CertInfo) cache.Get(cacheKey);
+                if (certInfo == null || certInfo.Timestamp != File.GetLastWriteTime(certificateFilePath))
+                {
+                    SetupCache(merchantConfig, cacheKey, certificateFilePath);
+                }
+            }
+
+            return ((CertInfo)cache.Get(cacheKey)).MLECertificate;
+        }
+
+        private void SetupCache(MerchantConfig merchantConfig, string cacheKey, string certificateFilePath)
+        {
+            var policy = new CacheItemPolicy();
+            var filePaths = new List<string>();
+            var cachedFilePath = Path.GetFullPath(certificateFilePath);
+            filePaths.Add(cachedFilePath);
+            policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
+
+            ObjectCache cache = MemoryCache.Default;
+
+            if (cacheKey.EndsWith(Constants.MLE_CACHE_KEY_IDENTIFIER_FOR_RESPONSE_PRIVATE_KEY))
+            {
+                try
+                {
+                    string fileExtension = Path.GetExtension(certificateFilePath)?.TrimStart('.').ToLowerInvariant();
+                    AsymmetricAlgorithm mlePrivateKey = null;
+                    SecureString password = merchantConfig.ResponseMlePrivateKeyFilePassword;
+
+                    // Case 1 - PKCS#12 formats (.p12, .pfx)
+                    if (fileExtension.Equals("p12") || fileExtension.Equals("pfx"))
+                    {
+                        mlePrivateKey = Utility.ReadPrivateKeyFromP12(certificateFilePath, password);
+                    }
+                    // Case 2 - PEM-based formats (.pem, .key, .p8)
+                    else if (fileExtension.Equals("pem") || fileExtension.Equals("key") || fileExtension.Equals("p8"))
+                    {
+                        mlePrivateKey = (AsymmetricAlgorithm) Utility.ExtractPrivateKeyFromFile(certificateFilePath, password);
+                    }
+                    else
+                    {
+                        throw new Exception($"Unsupported Response MLE Private Key file format: {fileExtension}. Supported formats are: .p12, .pfx, .pem, .key, .p8");
+                    }
+
+                    PrivateKeyInfo privateKeyInfo = new PrivateKeyInfo
+                    {
+                        PrivateKey = mlePrivateKey,
+                        Timestamp = File.GetLastWriteTime(certificateFilePath)
+                    };
+
+                    lock (mutex)
+                    {
+                        cache.Set(cacheKey, privateKeyInfo, policy);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError($"Error loading MLE response private key from: {certificateFilePath}. Error: {e.Message}");
+                    throw new Exception($"Error loading MLE response private key from: {certificateFilePath}. Error: {e.Message}", e);
+                }
+                return;
+            }
+
+            // ... existing code for other cacheKey cases ...
+            X509Certificate2 mleCertificate = null;
+
+            if (cacheKey.EndsWith(Constants.MLE_CACHE_IDENTIFIER_FOR_CONFIG_CERT))
+            {
+                X509Certificate2Collection certificates = CertificateUtility.LoadCertificatesFromPemFile(certificateFilePath);
+
+                try
+                {
+                    mleCertificate = GetCertBasedOnKeyAlias(certificates, merchantConfig.RequestMleKeyAlias);
+                }
+                catch (Exception)
+                {
+                    if (mleCertificate == null)
+                    {
+                        // If no certificate found for the specified alias, fall back to first certificate
+                        string fileName = Path.GetFileName(certificateFilePath);
+                        Logger.LogWarning($"No certificate found for the specified requestMleKeyAlias '{merchantConfig.RequestMleKeyAlias}'. Using the first certificate from file {fileName} as the MLE request certificate.");
+                        mleCertificate = certificates[0];
+                    }
+                }
+            }
+
+            if (cacheKey.EndsWith(Constants.MLE_CACHE_IDENTIFIER_FOR_P12_CERT))
+            {
+                try
+                {
+                    mleCertificate = GetCertBasedOnKeyAlias(FetchCertificateCollectionFromP12File(merchantConfig.P12Keyfilepath, merchantConfig.KeyPass), merchantConfig.RequestMleKeyAlias);
+                }
+                catch (Exception)
+                {
+                    string fileName = Path.GetFileName(merchantConfig.P12Keyfilepath);
+                    Logger.LogError($"No certificate found for the specified requestMleKeyAlias '{merchantConfig.RequestMleKeyAlias}' in file {fileName}.");
+                    throw new ArgumentException($"No certificate found for the specified requestMleKeyAlias '{merchantConfig.RequestMleKeyAlias}' in file {fileName}.");
+                }
+            }
+
+            CertInfo certInfo = new CertInfo
+            {
+                MLECertificate = mleCertificate,
+                Timestamp = File.GetLastWriteTime(certificateFilePath)
+            };
+
+
+            lock(mutex)
+            {
+                cache.Set(cacheKey, certInfo, policy);
+            }
+        }
+
+        private X509Certificate2Collection FetchCertificateCollectionFromP12File(string p12FilePath, string keyPassword)
+        {
+            var certificates = new X509Certificate2Collection();
+            certificates.Import(p12FilePath, keyPassword, Utility.GetP12KeyStorageFlags());
+
+            //return all certs in p12
+            return certificates;
+        }
+        public AsymmetricAlgorithm GetMleResponsePrivateKeyFromFilePath(MerchantConfig merchantConfig)
+        {
+            string merchantId = merchantConfig.MerchantId;
+            string identifier = Constants.MLE_CACHE_KEY_IDENTIFIER_FOR_RESPONSE_PRIVATE_KEY;
+            string mleResponsePrivateKeyFilePath = merchantConfig.ResponseMlePrivateKeyFilePath;
+            string cacheKey = $"{mleResponsePrivateKeyFilePath}_{identifier}";
+
+            ObjectCache cache = MemoryCache.Default;
+
+            if (!cache.Contains(cacheKey))
+            {
+                SetupCache(merchantConfig, cacheKey, mleResponsePrivateKeyFilePath);
+            }
+            else
+            {
+                var responseMlePrivateKeyInfo = (PrivateKeyInfo)cache.Get(cacheKey);
+                if (responseMlePrivateKeyInfo == null || responseMlePrivateKeyInfo.Timestamp != File.GetLastWriteTime(mleResponsePrivateKeyFilePath))
+                {
+                    SetupCache(merchantConfig, cacheKey, mleResponsePrivateKeyFilePath);
+                }
+            }
+
+            var cachedResponseMlePrivateKeyInfo = (PrivateKeyInfo)cache.Get(cacheKey);
+
+            try
+            {
+                return cachedResponseMlePrivateKeyInfo.PrivateKey;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Error retrieving MLE response private key: {ex.Message}");
+                throw new Exception($"{Constants.ErrorPrefix} Failed to retrieve MLE response private key from cache.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Retrieves cached MLE KID data for a P12/PFX file, or caches it if not present.
+        /// </summary>
+        /// <param name="merchantConfig">The merchant configuration containing the private key file path</param>
+        /// <returns>CachedMLEKId containing the extracted KID (or null) and file timestamp</returns>
+        public CachedMLEKId GetMLEKIdDataFromCache(MerchantConfig merchantConfig)
+        {
+            string cacheKey = merchantConfig.ResponseMlePrivateKeyFilePath + Constants.RESPONSE_MLE_P12_PFX_CACHE_IDENTIFIER;
+            string filePath = merchantConfig.ResponseMlePrivateKeyFilePath;
+
+            ObjectCache cache = MemoryCache.Default;
+
+            if (!cache.Contains(cacheKey))
+            {
+                SetupMLEKIdCache(merchantConfig, cacheKey, filePath);
+            }
+            else
+            {
+                var cachedMLEKId = (CachedMLEKId)cache.Get(cacheKey);
+                if (cachedMLEKId == null || cachedMLEKId.LastModifiedTimeStamp != File.GetLastWriteTime(filePath))
+                {
+                    SetupMLEKIdCache(merchantConfig, cacheKey, filePath);
+                }
+            }
+
+            return (CachedMLEKId)cache.Get(cacheKey);
+        }
+
+        /// <summary>
+        /// Sets up the MLE KID cache by extracting the KID from a CyberSource P12/PFX certificate.
+        /// </summary>
+        /// <param name="merchantConfig">The merchant configuration</param>
+        /// <param name="cacheKey">The cache key to use</param>
+        /// <param name="filePath">The path to the P12/PFX file</param>
+        private void SetupMLEKIdCache(MerchantConfig merchantConfig, string cacheKey, string filePath)
+        {
+            try
+            {
+                var policy = new CacheItemPolicy();
+                var filePaths = new List<string>();
+                var cachedFilePath = Path.GetFullPath(filePath);
+                filePaths.Add(cachedFilePath);
+                policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
+
+                ObjectCache cache = MemoryCache.Default;
+
+                bool useMetaKeyFlag = false;
+                bool.TryParse(merchantConfig.UseMetaKey, out useMetaKeyFlag);
+                string responseMleKeyAlias = useMetaKeyFlag ? merchantConfig.PortfolioId : merchantConfig.MerchantId;
+
+                string extractedKid = null;
+                bool isCyberSourceP12 = false;
+
+                // Check if this is a CyberSource-generated P12
+                isCyberSourceP12 = CertificateUtility.IsP12GeneratedByCyberSource(filePath, merchantConfig.ResponseMlePrivateKeyFilePassword);
+
+                if (isCyberSourceP12)
+                {
+                    Logger.LogDebug("Detected CyberSource-generated P12 file, attempting to extract KID");
+
+                    extractedKid = CertificateUtility.ExtractResponseMleKidFromP12(
+                        filePath,
+                        merchantConfig.ResponseMlePrivateKeyFilePassword,
+                        responseMleKeyAlias
+                    );
+
+                    if (!string.IsNullOrEmpty(extractedKid))
+                    {
+                        Logger.LogDebug($"Successfully extracted KID from CyberSource P12: {extractedKid}");
+                    }
+                }
+                else
+                {
+                    Logger.LogDebug("P12 file is not CyberSource-generated, KID will not be auto-extracted");
+                }
+
+                CachedMLEKId cachedMLEKId = new CachedMLEKId
+                {
+                    Kid = extractedKid,
+                    LastModifiedTimeStamp = File.GetLastWriteTime(filePath)
+                };
+
+                lock (mutex)
+                {
+                    cache.Set(cacheKey, cachedMLEKId, policy);
+                }
+
+                Logger.LogDebug($"MLE KID cache setup complete for file: {filePath}");
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"Error setting up MLE KID cache for file: {filePath}. Error: {e.Message}");
+
+                // Cache a null KID to indicate failure
+                CachedMLEKId fallbackCache = new CachedMLEKId
+                {
+                    Kid = null,
+                    LastModifiedTimeStamp = File.GetLastWriteTime(filePath)
+                };
+
+                ObjectCache cache = MemoryCache.Default;
+                var policy = new CacheItemPolicy();
+
+                lock (mutex)
+                {
+                    cache.Set(cacheKey, fallbackCache, policy);
+                }
+            }
+        }
+        public void AddPublicKeyToCache(string publickey, string runEnvironment, string kid)
+        {
+            // Construct cache key similar to PHP logic
+            string cacheKey = $"{Constants.PUBLIC_KEY_CACHE_IDENTIFIER}_{runEnvironment}_{kid}";
+
+            ObjectCache cache = MemoryCache.Default;
+
+            var policy = new CacheItemPolicy();
+            // Optionally, set expiration or change monitors if needed
+
+            lock (mutex)
+            {
+                cache.Set(cacheKey, publickey, policy);
+            }
+        }
+        public string GetPublicKeyFromCache(string runEnvironment, string keyId)
+        {
+            string cacheKey = $"{Constants.PUBLIC_KEY_CACHE_IDENTIFIER}_{runEnvironment}_{keyId}";
+            ObjectCache cache = MemoryCache.Default;
+
+            if (cache.Contains(cacheKey))
+            {
+                return cache.Get(cacheKey) as string;
+            }
+            throw new Exception($"Public key not found in cache for [RunEnvironment: {runEnvironment}, KeyId: {keyId}]");
+        }
+
+        #region NEW METHODS
+        /// <summary>
+        /// Retrieves the cached MLE response private key from file, or loads and caches it if not present.
+        /// </summary>
+        /// <param name="merchantCredentialSettings">Object of IMerchantCredentialSettings containing merchant credentials.</param>
+        /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing merchant MLE configuration.</param>
+        /// <returns>The asymmetric private key used for decrypting MLE responses.</returns>
+        /// <exception cref="Exception">Thrown when the private key fails to load or retrieve from cache.</exception>
+        public AsymmetricAlgorithm GetMleResponsePrivateKeyFromFilePath(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory = null)
+        {
+            ILogger logger = loggerFactory?.CreateLogger("Cache") ?? NullLogger.Instance;
+
+            string merchantId = merchantCredentialSettings.MerchantId;
+            string identifier = Constants.MLE_CACHE_KEY_IDENTIFIER_FOR_RESPONSE_PRIVATE_KEY;
+            string mleResponsePrivateKeyFilePath = merchantMLESettings.ResponseMlePrivateKeyFilePath;
+            string cacheKey = $"{mleResponsePrivateKeyFilePath}_{identifier}";
+
+            ObjectCache cache = MemoryCache.Default;
+
+            // Read once and reuse the local value. Contains() + a later Get() is racy: a
+            // HostFileChangeMonitor eviction can drop the entry in between, so the later Get()
+            // returns null and dereferencing it throws. Reading once avoids that TOCTOU race.
+            var cachedResponseMlePrivateKeyInfo = cache.Get(cacheKey) as PrivateKeyInfo;
+            if (cachedResponseMlePrivateKeyInfo == null || cachedResponseMlePrivateKeyInfo.Timestamp != File.GetLastWriteTime(mleResponsePrivateKeyFilePath))
+            {
+                cachedResponseMlePrivateKeyInfo = (PrivateKeyInfo)SetupCache(merchantCredentialSettings, merchantMLESettings, cacheKey, mleResponsePrivateKeyFilePath, loggerFactory);
+            }
+
+            try
+            {
+                return cachedResponseMlePrivateKeyInfo.PrivateKey;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Error retrieving MLE response private key: {ex.Message}");
+                throw new Exception($"{Constants.ErrorPrefix} Failed to retrieve MLE response private key from cache.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Sets up the cache for MLE response private key by loading it from the specified certificate file.
+        /// Supports multiple file formats including P12, PFX, PEM, KEY, and P8.
+        /// </summary>
+        /// <param name="merchantCredentialSettings">Object of IMerchantCredentialSettings containing merchant credentials.</param>
+        /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing merchant MLE configuration.</param>
+        /// <param name="cacheKey">The cache key to use for storing the private key.</param>
+        /// <param name="certificateFilePath">The full file path to the certificate or private key file.</param>
+        /// <param name="loggerFactory">Optional ILoggerFactory for logging purposes.</param>
+        /// <exception cref="Exception">Thrown when the file format is unsupported or the key fails to load.</exception>
+        private object SetupCache(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, string cacheKey, string certificateFilePath, ILoggerFactory loggerFactory = null)
+        {
+            ILogger logger = loggerFactory?.CreateLogger("Cache") ?? NullLogger.Instance;
+
+            var policy = new CacheItemPolicy();
+            var filePaths = new List<string>();
+            var cachedFilePath = Path.GetFullPath(certificateFilePath);
+            filePaths.Add(cachedFilePath);
+            policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
+
+            ObjectCache cache = MemoryCache.Default;
+
+            if (cacheKey.EndsWith(Constants.MLE_CACHE_KEY_IDENTIFIER_FOR_RESPONSE_PRIVATE_KEY))
+            {
+                PrivateKeyInfo privateKeyInfo;
+                try
+                {
+                    string fileExtension = Path.GetExtension(certificateFilePath)?.TrimStart('.').ToLowerInvariant();
+                    AsymmetricAlgorithm mlePrivateKey = null;
+                    SecureString password = merchantMLESettings.ResponseMlePrivateKeyFilePassword;
+
+                    // Case 1 - PKCS#12 formats (.p12, .pfx)
+                    if (fileExtension.Equals("p12") || fileExtension.Equals("pfx"))
+                    {
+                        mlePrivateKey = Utility.ReadPrivateKeyFromP12(certificateFilePath, password);
+                    }
+                    // Case 2 - PEM-based formats (.pem, .key, .p8)
+                    else if (fileExtension.Equals("pem") || fileExtension.Equals("key") || fileExtension.Equals("p8"))
+                    {
+                        mlePrivateKey = (AsymmetricAlgorithm)Utility.ExtractPrivateKeyFromFile(certificateFilePath, password);
+                    }
+                    else
+                    {
+                        throw new Exception($"Unsupported Response MLE Private Key file format: {fileExtension}. Supported formats are: .p12, .pfx, .pem, .key, .p8");
+                    }
+
+                    privateKeyInfo = new PrivateKeyInfo
+                    {
+                        PrivateKey = mlePrivateKey,
+                        Timestamp = File.GetLastWriteTime(certificateFilePath)
+                    };
+
+                    lock (mutex)
+                    {
+                        cache.Set(cacheKey, privateKeyInfo, policy);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.LogError($"Error loading MLE response private key from: {certificateFilePath}. Error: {e.Message}");
+                    throw new Exception($"Error loading MLE response private key from: {certificateFilePath}. Error: {e.Message}", e);
+                }
+                return privateKeyInfo;
+            }
+
+            // ... existing code for other cacheKey cases ...
+            X509Certificate2 mleCertificate = null;
+
+            if (cacheKey.EndsWith(Constants.MLE_CACHE_IDENTIFIER_FOR_CONFIG_CERT))
+            {
+                X509Certificate2Collection certificates = CertificateUtility.LoadCertificatesFromPemFile(certificateFilePath);
+
+                try
+                {
+                    mleCertificate = GetCertBasedOnKeyAlias(certificates, merchantMLESettings.RequestMleKeyAlias);
+                }
+                catch (Exception)
+                {
+                    if (mleCertificate == null)
+                    {
+                        // If no certificate found for the specified alias, fall back to first certificate
+                        string fileName = Path.GetFileName(certificateFilePath);
+                        logger.LogWarning($"No certificate found for the specified requestMleKeyAlias '{merchantMLESettings.RequestMleKeyAlias}'. Using the first certificate from file {fileName} as the MLE request certificate.");
+                        mleCertificate = certificates[0];
+                    }
+                }
+            }
+
+            if (cacheKey.EndsWith(Constants.MLE_CACHE_IDENTIFIER_FOR_P12_CERT))
+            {
+                try
+                {
+                    mleCertificate = GetCertBasedOnKeyAlias(FetchCertificateCollectionFromP12File(merchantCredentialSettings.P12Keyfilepath, merchantCredentialSettings.KeyPass), merchantMLESettings.RequestMleKeyAlias);
+                }
+                catch (Exception ex)
+                {
+                    string fileName = Path.GetFileName(merchantCredentialSettings.P12Keyfilepath);
+
+                    if (ex.Message.Contains("The specified network password is not correct"))
+                    {
+                        logger.LogError($"Error occurred while loading MLE certificate for Request from {fileName} in Merchant Config: {ex.Message}");
+                        throw new ArgumentException($"Error occurred while loading MLE certificate for Request from {fileName} in Merchant Config: {ex.Message}");
+                    }
+
+                    logger.LogError($"No certificate found for the specified requestMleKeyAlias '{merchantMLESettings.RequestMleKeyAlias}' in file {fileName}.");
+                    throw new ArgumentException($"No certificate found for the specified requestMleKeyAlias '{merchantMLESettings.RequestMleKeyAlias}' in file {fileName}.");
+                }
+            }
+
+            CertInfo certInfo = new CertInfo
+            {
+                MLECertificate = mleCertificate,
+                Timestamp = File.GetLastWriteTime(certificateFilePath)
+            };
+
+
+            lock (mutex)
+            {
+                cache.Set(cacheKey, certInfo, policy);
+            }
+
+            return certInfo;
+        }
+
+        /// <summary>
+        /// Retrieves cached MLE KID data for a P12/PFX file, or caches it if not present.
+        /// Extracts the Key ID (KID) from CyberSource-generated P12/PFX certificates for use in MLE response decryption.
+        /// </summary>
+        /// <param name="keyIssuer">The key issuer for the MLE response.</param>
+        /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing merchant MLE credentials.</param>
+        /// <param name="loggerFactory">Optional ILoggerFactory for logging purposes.</param>
+        /// <returns>CachedMLEKId containing the extracted KID (or null if not a CyberSource P12) and file timestamp.</returns>
+        public CachedMLEKId GetMLEKIdDataFromCache(string keyIssuer, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory = null)
+        {
+            string cacheKey = merchantMLESettings.ResponseMlePrivateKeyFilePath + Constants.RESPONSE_MLE_P12_PFX_CACHE_IDENTIFIER;
+            string filePath = merchantMLESettings.ResponseMlePrivateKeyFilePath;
+
+            ObjectCache cache = MemoryCache.Default;
+
+            if (!cache.Contains(cacheKey))
+            {
+                SetupMLEKIdCache(keyIssuer, merchantMLESettings, cacheKey, filePath, loggerFactory);
+            }
+            else
+            {
+                var cachedMLEKId = (CachedMLEKId)cache.Get(cacheKey);
+                if (cachedMLEKId == null || cachedMLEKId.LastModifiedTimeStamp != File.GetLastWriteTime(filePath))
+                {
+                    SetupMLEKIdCache(keyIssuer, merchantMLESettings, cacheKey, filePath, loggerFactory);
+                }
+            }
+
+            return (CachedMLEKId)cache.Get(cacheKey);
+        }
+
+        /// <summary>
+        /// Sets up the MLE KID cache by extracting the KID from a CyberSource P12/PFX certificate.
+        /// If the file is not CyberSource-generated or KID extraction fails, caches a null KID value.
+        /// </summary>
+        /// <param name="keyIssuer">The key issuer for the MLE response.</param>
+        /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing merchant MLE credentials.</param>
+        /// <param name="cacheKey">The cache key to use for storing the KID data.</param>
+        /// <param name="filePath">The path to the P12/PFX file.</param>
+        /// <param name="loggerFactory">Optional ILoggerFactory for logging purposes.</param>
+        private void SetupMLEKIdCache(string keyIssuer, IMerchantMLESettings merchantMLESettings, string cacheKey, string filePath, ILoggerFactory loggerFactory = null)
+        {
+            ILogger logger = loggerFactory?.CreateLogger("Cache") ?? NullLogger.Instance;
+
+            try
+            {
+                var policy = new CacheItemPolicy();
+                var filePaths = new List<string>();
+                var cachedFilePath = Path.GetFullPath(filePath);
+                filePaths.Add(cachedFilePath);
+                policy.ChangeMonitors.Add(new HostFileChangeMonitor(filePaths));
+
+                ObjectCache cache = MemoryCache.Default;
+
+                string responseMleKeyAlias = keyIssuer;
+
+                string extractedKid = null;
+                bool isCyberSourceP12 = false;
+
+                // Check if this is a CyberSource-generated P12
+                isCyberSourceP12 = CertificateUtility.IsP12GeneratedByCyberSource(filePath, merchantMLESettings.ResponseMlePrivateKeyFilePassword);
+
+                if (isCyberSourceP12)
+                {
+                    logger.LogDebug("Detected CyberSource-generated P12 file, attempting to extract KID");
+
+                    extractedKid = CertificateUtility.ExtractResponseMleKidFromP12(
+                        filePath,
+                        merchantMLESettings.ResponseMlePrivateKeyFilePassword,
+                        responseMleKeyAlias
+                    );
+
+                    if (!string.IsNullOrEmpty(extractedKid))
+                    {
+                        logger.LogDebug($"Successfully extracted KID from CyberSource P12: {extractedKid}");
+                    }
+                }
+                else
+                {
+                    logger.LogDebug("P12 file is not CyberSource-generated, KID will not be auto-extracted");
+                }
+
+                CachedMLEKId cachedMLEKId = new CachedMLEKId
+                {
+                    Kid = extractedKid,
+                    LastModifiedTimeStamp = File.GetLastWriteTime(filePath)
+                };
+
+                lock (mutex)
+                {
+                    cache.Set(cacheKey, cachedMLEKId, policy);
+                }
+
+                logger.LogDebug($"MLE KID cache setup complete for file: {filePath}");
+            }
+            catch (Exception e)
+            {
+                logger.LogError($"Error setting up MLE KID cache for file: {filePath}. Error: {e.Message}");
+
+                // Cache a null KID to indicate failure
+                CachedMLEKId fallbackCache = new CachedMLEKId
+                {
+                    Kid = null,
+                    LastModifiedTimeStamp = File.GetLastWriteTime(filePath)
+                };
+
+                ObjectCache cache = MemoryCache.Default;
+                var policy = new CacheItemPolicy();
+
+                lock (mutex)
+                {
+                    cache.Set(cacheKey, fallbackCache, policy);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the cached MLE request certificate from file, or loads and caches it if not present.
+        /// Implements a priority-based search: config-provided path, P12 file for JWT auth, or default SDK certificate.
+        /// </summary>
+        /// <param name="merchantCredentialSettings">Object of IMerchantCredentialSettings containing merchant credentials.</param>
+        /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing merchant MLE configuration.</param>
+        /// <param name="loggerFactory">Object of ILoggerFactory for logging purposes.</param>
+        /// <returns>The X509Certificate2 used for MLE request encryption, or null if no certificate is configured.</returns>
+        public X509Certificate2 GetRequestMLECertFromCache(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory = null)
+        {
+            ILogger logger = loggerFactory?.CreateLogger("Cache") ?? NullLogger.Instance;
+
+            string merchantId = merchantCredentialSettings.MerchantId;
+            string certificateIdentifier;
+            string certificateFilePath;
+
+            if (string.IsNullOrEmpty(merchantMLESettings.MleForRequestPublicCertPath?.Trim()) && merchantCredentialSettings.IsSharedSecretKeyType())
+            {
+                logger.LogError("Merchant is using shared secret key type and has not provided a certificate path for MLE request encryption. Please review the value of `mleForRequestPublicCertPath` in the merchant configuration.");
+                throw new ArgumentException("Merchant is using shared secret key type and has not provided a certificate path for MLE request encryption. Please review the value of `mleForRequestPublicCertPath` in the merchant configuration.");
+            }
+
+            // Priority #1: Get cert from merchantConfig.mleForRequestPublicCertPath if certPath is provided
+            if (!string.IsNullOrEmpty(merchantMLESettings.MleForRequestPublicCertPath))
+            {
+                certificateIdentifier = Constants.MLE_CACHE_IDENTIFIER_FOR_CONFIG_CERT;
+                certificateFilePath = merchantMLESettings.MleForRequestPublicCertPath;
+            }
+            // Priority #2: If merchantConfig.mleForRequestPublicCertPath not provided by merchant then get mlecert from merchant p12 if provided and jwt auth type (not shared secret)
+            else if (Constants.AuthMechanismJwt.Equals(merchantCredentialSettings.AuthenticationType, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(merchantCredentialSettings.P12Keyfilepath) && !merchantCredentialSettings.IsSharedSecretKeyType())
+            {
+                certificateIdentifier = Constants.MLE_CACHE_IDENTIFIER_FOR_P12_CERT;
+                certificateFilePath = merchantCredentialSettings.P12Keyfilepath;
+            }
+            // Priority #3: Get mlecert from default mle cert in SDK as per CAS or PROD env.
+            else
+            {
+                logger.LogDebug("The certificate to use for MLE for requests is not provided in the merchant configuration. Please ensure that the certificate path is provided.");
+                return null;
+            }
+
+            string cacheKey = $"{merchantId}_{certificateIdentifier}";
+            X509Certificate2 mleCertificate = GetMLECertBasedOnCacheKey(merchantCredentialSettings, merchantMLESettings, cacheKey, certificateFilePath, loggerFactory);
+
+            CertificateUtility.ValidateCertificateExpiry(mleCertificate, merchantCredentialSettings.KeyAlias, certificateIdentifier, loggerFactory);
+            return mleCertificate;
+        }
+
+        /// <summary>
+        /// Retrieves the cached MLE request certificate based on the cache key and certificate file path.
+        /// Uses cache invalidation based on file modification time to ensure fresh data.
+        /// </summary>
+        /// <param name="merchantCredentialSettings">Object of IMerchantCredentialSettings containing merchant credentials.</param>
+        /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing merchant MLE configuration.</param>
+        /// <param name="cacheKey">The unique cache key identifying this certificate.</param>
+        /// <param name="certificateFilePath">The full file path to the certificate file.</param>
+        /// <param name="loggerFactory">Optional ILoggerFactory for logging purposes.</param>
+        /// <returns>The X509Certificate2 from cache or newly loaded from file.</returns>
+        private X509Certificate2 GetMLECertBasedOnCacheKey(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, string cacheKey, string certificateFilePath, ILoggerFactory loggerFactory = null)
+        {
+            ObjectCache cache = MemoryCache.Default;
+
+            // Read the entry once. Using Contains() followed by a separate Get() is racy: a
+            // HostFileChangeMonitor eviction (or a concurrent overwrite) can drop the entry between
+            // the two calls, making the final Get() return null and throw a NullReferenceException.
+            // Reading once and returning from the local variable avoids that TOCTOU race.
+            CertInfo certInfo = cache.Get(cacheKey) as CertInfo;
+            if (certInfo == null || certInfo.Timestamp != File.GetLastWriteTime(certificateFilePath))
+            {
+                certInfo = (CertInfo)SetupCache(merchantCredentialSettings, merchantMLESettings, cacheKey, certificateFilePath, loggerFactory);
+            }
+
+            return certInfo.MLECertificate;
+        }
+        #endregion
+    }
+}

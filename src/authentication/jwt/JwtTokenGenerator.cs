@@ -37,6 +37,7 @@ namespace AuthenticationSdk.authentication.jwt
         private readonly bool _isResponseMLEForApi;
         private readonly bool _isSharedSecret;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly ICache _cache;
         private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
         {
             WriteIndented = false
@@ -45,15 +46,27 @@ namespace AuthenticationSdk.authentication.jwt
 
         #region NEW CONSTRUCTOR
         public JwtTokenGenerator(IMerchantCredentialSettings merchantCredentialSettings, IMerchantRequestSettings merchantRequestSettings, IMerchantMLESettings merchantMLESettings, bool isResponseMLEForApi, ILoggerFactory loggerFactory = null)
+            : this(merchantCredentialSettings, merchantRequestSettings, merchantMLESettings, isResponseMLEForApi, loggerFactory, CertificateCache.Default)
         {
+        }
+
+        /// <summary>
+        /// Constructor overload that accepts an explicit certificate cache (for dependency injection / testing).
+        /// <paramref name="cache"/> must not be null; use the overload without a cache parameter for the default.
+        /// </summary>
+        public JwtTokenGenerator(IMerchantCredentialSettings merchantCredentialSettings, IMerchantRequestSettings merchantRequestSettings, IMerchantMLESettings merchantMLESettings, bool isResponseMLEForApi, ILoggerFactory loggerFactory, ICache cache)
+        {
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
+
             _isResponseMLEForApi = isResponseMLEForApi;
             _merchantCredentialSettings = merchantCredentialSettings;
             _merchantRequestSettings = merchantRequestSettings;
             _merchantMLESettings = merchantMLESettings;
             _loggerFactory = loggerFactory;
+            _cache = cache;
             _isSharedSecret = merchantCredentialSettings.IsSharedSecretKeyType();
 
-            _jwtToken = new JwtToken(_merchantCredentialSettings, _merchantRequestSettings, _isSharedSecret);
+            _jwtToken = new JwtToken(_merchantCredentialSettings, _merchantRequestSettings, _isSharedSecret, _cache);
         }
         #endregion
 
@@ -202,7 +215,7 @@ namespace AuthenticationSdk.authentication.jwt
             if (_isResponseMLEForApi)
             {
                 // Validate and auto-extract Response MLE KID if needed
-                string validatedKid = MLEUtility.ValidateAndAutoExtractResponseMleKid(issuer, _merchantMLESettings, _loggerFactory);
+                string validatedKid = MLEUtility.ValidateAndAutoExtractResponseMleKid(issuer, _merchantMLESettings, _loggerFactory, _cache);
                 jwtPayload["v-c-response-mle-kid"] = validatedKid;
             }
 
