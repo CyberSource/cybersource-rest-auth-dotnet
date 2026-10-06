@@ -55,15 +55,28 @@ namespace AuthenticationSdk.core
         private readonly IMerchantRequestSettings _merchantRequestSettings;
         private readonly IMerchantCredentialSettings _merchantCredentialSettings;
         private readonly IMerchantMLESettings _merchantMLESettings;
+        private readonly ICache _cache;
         #endregion Properties
 
         #region Constructor
         public Authorize(IMerchantCredentialSettings merchantCredentialSettings, IMerchantRequestSettings merchantRequestSettings, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory = null)
+            : this(merchantCredentialSettings, merchantRequestSettings, merchantMLESettings, loggerFactory, CertificateCache.Default)
         {
+        }
+
+        /// <summary>
+        /// Constructor overload that accepts an explicit certificate cache (for dependency injection / testing).
+        /// <paramref name="cache"/> must not be null; use the overload without a cache parameter for the default.
+        /// </summary>
+        public Authorize(IMerchantCredentialSettings merchantCredentialSettings, IMerchantRequestSettings merchantRequestSettings, IMerchantMLESettings merchantMLESettings, ILoggerFactory loggerFactory, ICache cache)
+        {
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
+
             _merchantRequestSettings = merchantRequestSettings;
             _merchantCredentialSettings = merchantCredentialSettings;
             _merchantMLESettings = merchantMLESettings;
             _loggerFactory = loggerFactory;
+            _cache = cache;
 
             _logger = loggerFactory?.CreateLogger<Authorize>() ?? NullLogger<Authorize>.Instance;
         }
@@ -102,7 +115,7 @@ namespace AuthenticationSdk.core
         {
             try
             {
-                var tokenObject = (JwtToken) new JwtTokenGenerator(_merchantCredentialSettings, _merchantRequestSettings, _merchantMLESettings, isResponseMLEForApi, _loggerFactory).GetToken();
+                var tokenObject = (JwtToken) new JwtTokenGenerator(_merchantCredentialSettings, _merchantRequestSettings, _merchantMLESettings, isResponseMLEForApi, _loggerFactory, _cache).GetToken();
 
                 if (_merchantRequestSettings.RequestType.Equals("GET", StringComparison.InvariantCultureIgnoreCase) || _merchantRequestSettings.RequestType.Equals("DELETE", StringComparison.InvariantCultureIgnoreCase))
                 {

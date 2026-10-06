@@ -29,9 +29,21 @@ namespace AuthenticationSdk.authentication.jwt
         /// <summary>
         /// Constructor for JWT with SHARED_SECRET (HS256).
         /// Does not load P12 or certificates — uses merchantKeyId and merchantsecretKey for HMAC signing.
+        /// Uses the shared singleton <see cref="CertificateCache.Default"/>, preserving the previous static-cache behaviour.
         /// </summary>
         public JwtToken(IMerchantCredentialSettings merchantCredentialSettings, IMerchantRequestSettings merchantRequestSettings, bool isSharedSecret)
+            : this(merchantCredentialSettings, merchantRequestSettings, isSharedSecret, CertificateCache.Default)
         {
+        }
+
+        /// <summary>
+        /// Constructor overload that accepts an explicit certificate cache (for dependency injection / testing).
+        /// </summary>
+        /// <param name="cache">Certificate cache to use. Must not be null; use the parameterless overload for the default.</param>
+        public JwtToken(IMerchantCredentialSettings merchantCredentialSettings, IMerchantRequestSettings merchantRequestSettings, bool isSharedSecret, ICache cache)
+        {
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
+
             RequestJsonData = merchantRequestSettings.RequestJsonData;
             HostName = merchantCredentialSettings.HostName;
 
@@ -46,8 +58,8 @@ namespace AuthenticationSdk.authentication.jwt
 
                 KeyAlias = merchantCredentialSettings.KeyAlias;
                 KeyPass = merchantCredentialSettings.KeyPass;
-                X509Certificate2Collection certs = Cache.FetchCachedCertificate(P12FilePath, KeyPass);
-                Certificate = Cache.GetCertBasedOnKeyAlias(certs, merchantCredentialSettings.KeyAlias);
+                X509Certificate2Collection certs = cache.FetchCachedCertificate(P12FilePath, KeyPass);
+                Certificate = cache.GetCertBasedOnKeyAlias(certs, merchantCredentialSettings.KeyAlias);
             }
         }
         #endregion
