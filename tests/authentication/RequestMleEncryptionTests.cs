@@ -109,6 +109,39 @@ namespace AuthenticationSdkTests.NetCore.authentication
 
         #endregion
 
+        #region JWE "cty" (content type) header
+
+        [TestCase("application/json")]
+        [TestCase("application/hal+json")]
+        [TestCase("application/json; charset=utf-8")]
+        public void RequestMle_ContentTypeSupplied_SetsJweCtyToExactValue(string contentType)
+        {
+            object result = MLEUtility.EncryptRequestPayload(
+                JwtP12Credentials(), RequestMleEnabled(certPath: null, alias: KeyAlias), SamplePayload,
+                loggerFactory: null, contentType: contentType);
+
+            string jwe = ExtractEncryptedRequest(result);
+            JsonObject header = DecodeJweHeader(jwe);
+            Assert.That(header["cty"]!.GetValue<string>(), Is.EqualTo(contentType),
+                "The JWE 'cty' header must equal the exact Content-Type selected by the API operation, " +
+                "including parameters such as charset, and must not be inferred from Accept.");
+        }
+
+        [Test]
+        public void RequestMle_ContentTypeOmitted_JweHeaderHasNoCty()
+        {
+            // Preserves prior behavior for callers that do not supply a content type.
+            object result = MLEUtility.EncryptRequestPayload(
+                JwtP12Credentials(), RequestMleEnabled(certPath: null, alias: KeyAlias), SamplePayload);
+
+            string jwe = ExtractEncryptedRequest(result);
+            JsonObject header = DecodeJweHeader(jwe);
+            Assert.That(header.ContainsKey("cty"), Is.False,
+                "No 'cty' header should be present when the caller does not supply a content type.");
+        }
+
+        #endregion
+
         #region JWT with shared secret
 
         [Test]

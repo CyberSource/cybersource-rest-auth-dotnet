@@ -202,7 +202,12 @@ namespace AuthenticationSdk.util
         /// Encrypts a byte payload as a JWE compact token using RSA-OAEP-256 + AES-256-GCM
         /// via BouncyCastle.Cryptography — identical output format to jose-jwt JWT.EncodeBytes.
         /// </summary>
-        internal static string EncryptJweCompact(byte[] plainTextBytes, RSA rsaPublicKey, string kid)
+        /// <param name="contentType">
+        /// The JWE "cty" (content type) header, describing the media type of <paramref name="plainTextBytes"/>
+        /// (for example, the API operation's selected request Content-Type). Omitted from the header when
+        /// null or blank, preserving prior behavior for callers that do not supply it.
+        /// </param>
+        internal static string EncryptJweCompact(byte[] plainTextBytes, RSA rsaPublicKey, string kid, string contentType = null)
         {
             // Build the protected header
             long iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -213,6 +218,10 @@ namespace AuthenticationSdk.util
                 ["kid"] = kid,
                 ["iat"] = iat
             };
+            if (!string.IsNullOrWhiteSpace(contentType))
+            {
+                headerObj["cty"] = contentType;
+            }
             string headerJson = headerObj.ToJsonString(new JsonSerializerOptions{ WriteIndented = false });
             string headerEncoded = Base64UrlEncoder.Encode(Encoding.UTF8.GetBytes(headerJson));
 

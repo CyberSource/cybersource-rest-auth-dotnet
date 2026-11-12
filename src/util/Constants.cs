@@ -56,6 +56,9 @@ namespace AuthenticationSdk.util
         public static readonly string DefaultKeepAliveTime = "300000"; // Time in milliseconds
         public static readonly string MLE_CACHE_IDENTIFIER_FOR_CONFIG_CERT = "mleCertFromMerchantConfig";
 
+        // Algorithm the SDK requests CyberSource use to encrypt MLE responses (RFC 7518 §4.3)
+        public static readonly string ResponseMleAlgorithm = "RSA-OAEP-256";
+
         public static readonly string MLE_CACHE_IDENTIFIER_FOR_P12_CERT = "mleCertFromP12";
 
         public static readonly string MLE_CACHE_KEY_IDENTIFIER_FOR_RESPONSE_PRIVATE_KEY = "mleResponsePrivateKeyFromFile";

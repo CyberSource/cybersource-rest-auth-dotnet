@@ -217,6 +217,7 @@ namespace AuthenticationSdk.authentication.jwt
                 // Validate and auto-extract Response MLE KID if needed
                 string validatedKid = MLEUtility.ValidateAndAutoExtractResponseMleKid(issuer, _merchantMLESettings, _loggerFactory, _cache);
                 jwtPayload["v-c-response-mle-kid"] = validatedKid;
+                jwtPayload["v-c-response-mle-algo"] = Constants.ResponseMleAlgorithm;
             }
 
             return jwtPayload;
