@@ -62,7 +62,7 @@ namespace AuthenticationSdk.util
             return isMLEForAPI;
         }
 
-        public static object EncryptRequestPayload(MerchantConfig merchantConfig, object requestBody)
+        public static object EncryptRequestPayload(MerchantConfig merchantConfig, object requestBody, string contentType = null)
         {
             if (requestBody == null)
             {
@@ -93,7 +93,7 @@ namespace AuthenticationSdk.util
             string serialNumber = GetSerialNumberFromCertificate(mleCertificate, merchantConfig);
             var payloadBytes = Encoding.UTF8.GetBytes(payload);
             var rsa = mleCertificate.GetRSAPublicKey();
-            var jweToken = JWEUtilty.EncryptJweCompact(payloadBytes, rsa, serialNumber);
+            var jweToken = JWEUtilty.EncryptJweCompact(payloadBytes, rsa, serialNumber, contentType);
 
             string mleRequest = CreateJsonString(jweToken);
             logger.LogDebug(logUtility.MaskSensitiveData(Constants.LOG_REQUEST_AFTER_MLE + mleRequest));
@@ -673,17 +673,22 @@ namespace AuthenticationSdk.util
         /// <param name="merchantMLESettings">Object of IMerchantMLESettings containing MLE configuration including the public certificate settings.</param>
         /// <param name="requestBody">The request payload object to be encrypted.</param>
         /// <param name="loggerFactory">Optional logger factory for logging.</param>
+        /// <param name="contentType">
+        /// The API operation's selected request Content-Type (for example, "application/json"), used as the
+        /// JWE "cty" header so the plaintext media type is described accurately. Omitted from the header when
+        /// null or blank.
+        /// </param>
         /// <returns>A JSON object containing the encrypted request if encryption is successful; otherwise, the original unencrypted request body.</returns>
-        public static object EncryptRequestPayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, object requestBody, ILoggerFactory loggerFactory = null)
+        public static object EncryptRequestPayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, object requestBody, ILoggerFactory loggerFactory = null, string contentType = null)
         {
-            return EncryptRequestPayload(merchantCredentialSettings, merchantMLESettings, requestBody, loggerFactory, CertificateCache.Default);
+            return EncryptRequestPayload(merchantCredentialSettings, merchantMLESettings, requestBody, loggerFactory, CertificateCache.Default, contentType);
         }
 
         /// <summary>
         /// Overload that accepts an explicit certificate cache (for dependency injection / testing).
         /// <paramref name="cache"/> must not be null; call the overload without a cache parameter to use the default.
         /// </summary>
-        public static object EncryptRequestPayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, object requestBody, ILoggerFactory loggerFactory, ICache cache)
+        public static object EncryptRequestPayload(IMerchantCredentialSettings merchantCredentialSettings, IMerchantMLESettings merchantMLESettings, object requestBody, ILoggerFactory loggerFactory, ICache cache, string contentType = null)
         {
             if (cache == null) throw new ArgumentNullException(nameof(cache));
 
@@ -726,7 +731,7 @@ namespace AuthenticationSdk.util
             string serialNumber = GetSerialNumberFromCertificate(mleCertificate, loggerFactory);
             var payloadBytes = System.Text.Encoding.UTF8.GetBytes(payload);
             var rsa = mleCertificate.GetRSAPublicKey();
-            var jweToken = JWEUtilty.EncryptJweCompact(payloadBytes, rsa, serialNumber);
+            var jweToken = JWEUtilty.EncryptJweCompact(payloadBytes, rsa, serialNumber, contentType);
 
 
             string mleRequest = CreateJsonString(jweToken);

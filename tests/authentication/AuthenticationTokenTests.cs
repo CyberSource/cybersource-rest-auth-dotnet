@@ -207,6 +207,35 @@ namespace AuthenticationSdkTests.NetCore.authentication
 
         #endregion
 
+        #region Response MLE header claims
+
+        [Test]
+        public void JwtToken_ResponseMleEnabled_IncludesResponseMleAlgAndKidClaims()
+        {
+            var authorize = new Authorize(JwtP12Credentials(), Request("GET", null), ResponseMleSettings());
+
+            var token = authorize.GetToken(isResponseMLEForApi: true);
+            var payload = DecodeSegment(token.BearerToken.Split('.')[1]);
+
+            // testrest.p12 is a CyberSource-generated certificate, so its kid is auto-extracted.
+            Assert.That(payload["v-c-response-mle-kid"]!.GetValue<string>(), Is.EqualTo(ExpectedP12Kid));
+            Assert.That(payload["v-c-response-mle-algo"]!.GetValue<string>(), Is.EqualTo("RSA-OAEP-256"));
+        }
+
+        [Test]
+        public void JwtToken_ResponseMleDisabled_OmitsResponseMleClaims()
+        {
+            var authorize = new Authorize(JwtP12Credentials(), Request("GET", null), MleSettings());
+
+            var token = authorize.GetToken(isResponseMLEForApi: false);
+            var payload = DecodeSegment(token.BearerToken.Split('.')[1]);
+
+            Assert.That(payload["v-c-response-mle-kid"], Is.Null);
+            Assert.That(payload["v-c-response-mle-algo"], Is.Null);
+        }
+
+        #endregion
+
         #region Settings builders
 
         private static MerchantCredentialSettings JwtP12Credentials()
@@ -258,6 +287,16 @@ namespace AuthenticationSdkTests.NetCore.authentication
         {
             // MLE is not exercised by these tests; an empty configuration disables it.
             return new MerchantMLESettings(new Dictionary<string, string>());
+        }
+
+        private static MerchantMLESettings ResponseMleSettings()
+        {
+            return new MerchantMLESettings(new Dictionary<string, string>
+            {
+                { "enableResponseMleGlobally", "true" },
+                { "responseMlePrivateKeyFilePath", Path.Combine(ResourceDir, KeyFilename + ".p12") },
+                { "responseMlePrivateKeyFilePassword", KeyPass }
+            });
         }
 
         #endregion
